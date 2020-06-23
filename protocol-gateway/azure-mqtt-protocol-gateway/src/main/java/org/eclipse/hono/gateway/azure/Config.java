@@ -66,7 +66,20 @@ public class Config {
      */
     @Bean
     public AzureIotHubMqttGateway azureIotHubMqttGateway() {
-        return new AzureIotHubMqttGateway(amqpClientConfig(), mqttGatewayConfig(), demoDevice());
+        final DemoDeviceConfiguration demoDeviceConfig = demoDevice();
+        final ClientConfigProperties amqpClientConfig = amqpClientConfig();
+
+        if (demoDeviceConfig.getTenantId() == null || demoDeviceConfig.getDeviceId() == null) {
+            throw new IllegalArgumentException("Demo device is not configured.");
+        }
+        if (amqpClientConfig.getUsername() == null || amqpClientConfig.getPassword() == null) {
+            throw new IllegalArgumentException("Gateway credentials are not configured.");
+        }
+        if (amqpClientConfig.getHost() == null) {
+            throw new IllegalArgumentException("AMQP host is not configured.");
+        }
+
+        return new AzureIotHubMqttGateway(amqpClientConfig, mqttGatewayConfig(), demoDeviceConfig);
     }
 
     /**

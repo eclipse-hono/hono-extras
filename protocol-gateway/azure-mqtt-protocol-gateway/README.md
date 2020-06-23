@@ -48,6 +48,21 @@ Since there is only one device in this example implementation anyway, the creden
 
 ## Prerequisites
 
+### Registering Devices
+
+The demo device and the gateway need to be registered in Hono's device registry. For the gateway credentials must be created. 
+The [Getting started](https://www.eclipse.org/hono/getting-started/#registering-devices) guide shows how to do this.
+
+Alternatively, the script `scripts/create_demo_devices.sh` can be used to register the devices and create credentials:
+~~~sh
+# in directory: protocol-gateway/azure-mqtt-protocol-gateway/scripts/
+bash create_demo_devices.sh
+~~~
+
+After completion the script prints the configuration properties. Copy the output into the 
+file `protocol-gateway/azure-mqtt-protocol-gateway/src/main/resources/application.properties`. 
+
+
 ### Configuration
 
 The protocol gateway needs the configuration of:
@@ -58,14 +73,8 @@ The protocol gateway needs the configuration of:
 
 By default, the gateway will connect to the AMQP adapter of the [Hono Sandbox](https://www.eclipse.org/hono/sandbox/).
 However, it can also be configured to connect to a local instance.
-The default configuration can be found in the file `protocol-gateway/azure-mqtt-protocol-gateway/src/main/resources/application.yml` 
+The default configuration can be found in the file `protocol-gateway/azure-mqtt-protocol-gateway/src/main/resources/application.properties` 
 and can be customized using [Spring Boot Configuration](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-external-config). 
-
-
-### Registering Devices
-
-The demo device to be used needs to be registered in Hono's device registry. 
-The [Getting started](https://www.eclipse.org/hono/getting-started/#registering-devices) guide shows how to register a device.
  
  
 ### Starting a Receiver
@@ -96,8 +105,7 @@ on this port with TLS enabled and a demo certificate, run:
 
 ~~~sh
 # in directory: protocol-gateway/azure-mqtt-protocol-gateway/
-mvn clean install
-java -jar target/azure-protocol-gateway-example-*-exec.jar --spring.profiles.active=ssl
+mvn spring-boot:run -Dspring-boot.run.profiles=ssl
 ~~~
 **NB** Do not forget to build the template project before, as shown above.
 
@@ -105,7 +113,7 @@ With the [Eclipse Mosquitto](https://mosquitto.org/) command line client, for ex
 
 ~~~sh
 # in directory: protocol-gateway/azure-mqtt-protocol-gateway
-mosquitto_pub -d -h localhost -p 8883 -i '4712' -u 'demo1' -P 'demo-secret'  -t "devices/4712/messages/events/" -m "hello world" -V mqttv311 --cafile target/config/hono-demo-certs-jar/trusted-certs.pem -q 1
+mosquitto_pub -d -h localhost -p 8883 -i '4712' -u 'demo1' -P 'demo-secret'  -t "devices/4712/messages/events/" -m "hello world" -V mqttv311 --cafile target/config/hono-demo-certs-jar/trusted-certs.pem
 ~~~
 
 Existing hardware devices might need to be configured to accept the used certificate. 
