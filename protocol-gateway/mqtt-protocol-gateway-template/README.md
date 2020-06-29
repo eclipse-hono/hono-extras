@@ -96,7 +96,7 @@ can no longer simply be scaled horizontally. The template allows to use any of t
 Gateways must be registered as devices in Hono's device registry, and the corresponding credentials for authentication must be created.
 
 If all devices connecting to the protocol gateway belong to the same tenant, the credentials of the gateway device
-can be configured in the `ClientConfigProperties`, which are passed in the constructor.
+can be configured in the `ClientConfigProperties`, which are passed in the constructor of the class `AbstractMqttProtocolGateway`.
 If devices of different tenants are to be connected, the credentials must be determined dynamically, as described below.
 
 

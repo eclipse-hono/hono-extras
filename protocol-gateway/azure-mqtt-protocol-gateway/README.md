@@ -4,7 +4,7 @@ This Protocol Gateway shows how to use Hono's Protocol Gateway Template to imple
 The MQTT-API of "Azure IoT Hub" serves as a working example. Parts of its API are mapped to Hono's communication patterns.
 
 Full compatibility with the Azure IoT Hub is not a design goal of this example. It is supposed to behave similarly for 
-the "happy path", but cannot treat all errors or misuse in the same way as the former.  
+the "happy path", but cannot treat all errors or misuse in the same way as the former.
 
 Supported are the following types of messages:
 
@@ -50,7 +50,7 @@ Since there is only one device in this example implementation anyway, the creden
 
 ### Registering Devices
 
-The demo device and the gateway need to be registered in Hono's device registry. For the gateway credentials must be created. 
+The demo device and the gateway need to be registered in Hono's device registry. For the gateway, credentials must be created. 
 The [Getting started](https://www.eclipse.org/hono/getting-started/#registering-devices) guide shows how to do this.
 
 Alternatively, the script `scripts/create_demo_devices.sh` can be used to register the devices and create credentials:
@@ -69,7 +69,7 @@ The protocol gateway needs the configuration of:
 
 1. the AMQP adapter of a running Hono instance to connect to
 2. the MQTT server 
-3. the Demo-Device to use.
+3. the demo device to use.
 
 By default, the gateway will connect to the AMQP adapter of the [Hono Sandbox](https://www.eclipse.org/hono/sandbox/).
 However, it can also be configured to connect to a local instance.
@@ -113,7 +113,7 @@ With the [Eclipse Mosquitto](https://mosquitto.org/) command line client, for ex
 
 ~~~sh
 # in directory: protocol-gateway/azure-mqtt-protocol-gateway
-mosquitto_pub -d -h localhost -p 8883 -i '4712' -u 'demo1' -P 'demo-secret'  -t "devices/4712/messages/events/" -m "hello world" -V mqttv311 --cafile target/config/hono-demo-certs-jar/trusted-certs.pem
+mosquitto_pub -d -h localhost -p 8883 -i '4712' -u 'demo1' -P 'demo-secret' -t "devices/4712/messages/events/" -m "hello world" -V mqttv311 --cafile target/config/hono-demo-certs-jar/trusted-certs.pem
 ~~~
 
 Existing hardware devices might need to be configured to accept the used certificate. 
@@ -151,14 +151,15 @@ mosquitto_sub -v -h localhost -u "demo1" -P "demo-secret" -t 'devices/4712/messa
 mosquitto_sub -v -h localhost -u "demo1" -P "demo-secret" -t '$iothub/methods/POST/#' -q 1
 ~~~
 
-When Mosquitto receives the command, in the terminal should appear something like this:
+When Mosquitto receives the command, the output in the terminal should look like this: 
 ~~~sh
 $iothub/methods/POST/setBrightness/?$rid=0100bba05d61-7027-4131-9a9d-30238b9ec9bb {"brightness": 87}
 ~~~
 
 **Respond to a command**
  
-To send a response the ID after `rid=` can be copied and pasted into a new terminal to send a response like this:
+When sending a response, the request id must be added. The ID after `rid=` can be copied from the received message 
+and pasted into a new terminal to publish the response like this:
 ~~~sh
 export RID=0100bba05d61-7027-4131-9a9d-30238b9ec9bb
 mosquitto_pub -d -h localhost -u 'demo1' -P 'demo-secret' -t "\$iothub/methods/res/200/?\$rid=$RID" -m '{"success": true}' -q 1
