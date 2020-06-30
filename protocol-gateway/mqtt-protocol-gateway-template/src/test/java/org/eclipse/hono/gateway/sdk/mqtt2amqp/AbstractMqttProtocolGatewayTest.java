@@ -49,9 +49,6 @@ import org.eclipse.hono.client.device.amqp.internal.AmqpAdapterClientCommandResp
 import org.eclipse.hono.client.device.amqp.internal.AmqpAdapterClientEventSenderImpl;
 import org.eclipse.hono.client.device.amqp.internal.AmqpAdapterClientTelemetrySenderImpl;
 import org.eclipse.hono.config.ClientConfigProperties;
-import org.eclipse.hono.gateway.sdk.mqtt2amqp.CommandSubscription;
-import org.eclipse.hono.gateway.sdk.mqtt2amqp.MqttDownstreamContext;
-import org.eclipse.hono.gateway.sdk.mqtt2amqp.MqttProtocolGatewayConfig;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.CommandResponseMessage;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.DownstreamMessage;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.TelemetryMessage;
@@ -93,11 +90,11 @@ import io.vertx.proton.ProtonSender;
 @Timeout(value = 10, timeUnit = TimeUnit.SECONDS)
 public class AbstractMqttProtocolGatewayTest {
 
-    private final ClientConfigProperties amqpClientConfig = new ClientConfigProperties();
-    private final Vertx vertx = mock(Vertx.class);
-    private final ProtonSender protonSender = mockProtonSender();
-    private final NetServer netServer = mock(NetServer.class);
-    private final AmqpAdapterClientFactory amqpAdapterClientFactory = mock(AmqpAdapterClientFactory.class);
+    private ClientConfigProperties amqpClientConfig;
+    private Vertx vertx;
+    private ProtonSender protonSender;
+    private NetServer netServer;
+    private AmqpAdapterClientFactory amqpAdapterClientFactory;
     private Consumer<Message> commandHandler;
 
     /**
@@ -105,9 +102,15 @@ public class AbstractMqttProtocolGatewayTest {
      */
     @BeforeEach
     public void setUp() {
-        final HonoConnection connection = mockHonoConnection(vertx, amqpClientConfig);
+        amqpAdapterClientFactory = mock(AmqpAdapterClientFactory.class);
+        netServer = mock(NetServer.class);
+        vertx = mock(Vertx.class);
+        protonSender = mockProtonSender();
 
         when(amqpAdapterClientFactory.connect()).thenReturn(Future.succeededFuture());
+
+        amqpClientConfig = new ClientConfigProperties();
+        final HonoConnection connection = mockHonoConnection(vertx, amqpClientConfig, protonSender);
 
         final Future<EventSender> eventSender = AmqpAdapterClientEventSenderImpl
                 .createWithAnonymousLinkAddress(connection, TestMqttProtocolGateway.TENANT_ID, s -> {
@@ -849,9 +852,11 @@ public class AbstractMqttProtocolGatewayTest {
      *
      * @param vertx The vert.x instance to use.
      * @param props The client properties to use.
+     * @param protonSender The proton sender to use.
      * @return The connection.
      */
-    private HonoConnection mockHonoConnection(final Vertx vertx, final ClientConfigProperties props) {
+    private HonoConnection mockHonoConnection(final Vertx vertx, final ClientConfigProperties props,
+            final ProtonSender protonSender) {
 
         final Tracer tracer = NoopTracerFactory.create();
         final HonoConnection connection = mock(HonoConnection.class);

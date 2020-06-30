@@ -68,11 +68,10 @@ public class AzureIotHubMqttGatewayTest {
     private static final String directMessageTopicFilter = AzureIotHubMqttGateway.DIRECT_METHOD_TOPIC_FILTER;
 
     private final Device device = new Device(TENANT_ID, DEVICE_ID);
-    private final Message commandMessage = mock(Message.class);
-
     private final Buffer payload = new JsonObject().put("a-key", "a-value").toBuffer();
     private final DemoDeviceConfiguration demoDeviceConfig = new DemoDeviceConfiguration();
 
+    private Message commandMessage;
     private AzureIotHubMqttGateway underTest;
 
     /**
@@ -81,6 +80,7 @@ public class AzureIotHubMqttGatewayTest {
     @BeforeEach
     public void setUp() {
 
+        commandMessage = mock(Message.class);
         when(commandMessage.getBody()).thenReturn(new Data(new Binary(payload.getBytes())));
         when(commandMessage.getMessageId()).thenReturn(MESSAGE_ID);
         when(commandMessage.getCorrelationId()).thenReturn(CORRELATION_ID);
