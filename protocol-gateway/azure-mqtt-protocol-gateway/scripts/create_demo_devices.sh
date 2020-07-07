@@ -24,12 +24,13 @@
 ################################################################################
 #                                CONFIGURATION
 #
-REGISTRY_IP=hono.eclipseprojects.io
 DEVICE_TO_CREATE="4712" # If changed, change it in the mosquitto requests as well
 GATEWAY_TO_CREATE="gw"
 GATEWAY_PASSWORD="gw-secret"
 # TENANT_TO_USE="" # Set this to use an existing tenant
 ################################################################################
+
+REGISTRY_IP=${REGISTRY_IP:-hono.eclipseprojects.io}
 
 set -e # exit script on error
 
