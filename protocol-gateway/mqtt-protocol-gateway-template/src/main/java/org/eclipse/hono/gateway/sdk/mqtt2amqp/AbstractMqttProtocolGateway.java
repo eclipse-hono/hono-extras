@@ -434,11 +434,20 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
 
     private Future<Void> connectGatewayToAmqpAdapter(final String tenantId, final ClientConfigProperties clientConfig) {
 
-        final AmqpAdapterClientFactory factory = clientFactoryPerTenant
-                .computeIfAbsent(tenantId, key -> createTenantClientFactory(key, clientConfig));
+        final AmqpAdapterClientFactory amqpAdapterClientFactory = clientFactoryPerTenant.get(tenantId);
+        if (amqpAdapterClientFactory != null) {
+            return amqpAdapterClientFactory.isConnected(clientConfig.getConnectTimeout());
+        } else {
 
-        return factory.connect() // returns successfully if already connected
-                .map(con -> null);
+            final AmqpAdapterClientFactory factory = createTenantClientFactory(tenantId, clientConfig);
+            clientFactoryPerTenant.put(tenantId, factory);
+
+            return factory.connect()
+                    .map(con -> {
+                        log.debug("Connected to AMQP adapter");
+                        return null;
+                    });
+        }
     }
 
     /**
