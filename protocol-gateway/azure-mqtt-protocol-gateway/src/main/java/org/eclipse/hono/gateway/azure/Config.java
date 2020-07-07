@@ -56,7 +56,9 @@ public class Config {
     @Bean
     @ConfigurationProperties(prefix = "hono.client.amqp")
     public ClientConfigProperties amqpClientConfig() {
-        return new ClientConfigProperties();
+        final ClientConfigProperties amqpClientConfig = new ClientConfigProperties();
+        amqpClientConfig.setServerRole("AMQP Adapter");
+        return amqpClientConfig;
     }
 
     /**
