@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.message.Message;
@@ -79,6 +80,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.MqttServerOptions;
+import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
@@ -577,6 +579,43 @@ public class AbstractMqttProtocolGatewayTest {
                 + TestMqttProtocolGateway.DEVICE_ID;
         assertThat(messageCaptor.getValue().getAddress()).isEqualTo(expectedAddress);
 
+    }
+
+    /**
+     * Verifies that when a message is being rejected by the remote, the connection to the device is closed.
+     */
+    @Test
+    public void sendEventClosesEndpointWhenMessageIsRejected() {
+
+        // GIVEN a protocol gateway that sends every MQTT publish message as an event downstream and a connected MQTT
+        // endpoint
+        final TestMqttProtocolGateway gateway = createGateway();
+        final MqttEndpoint mqttEndpoint = connectTestDevice(gateway);
+
+        // WHEN sending a MQTT message...
+        ProtocolGatewayTestHelper.sendMessage(mqttEndpoint, Buffer.buffer("payload1"), "topic/1");
+        // ... that gets rejected by the remote
+        rejectAmqpMessage();
+
+        // THEN the endpoint has been closed
+        assertThat(mqttEndpoint.isConnected()).isFalse();
+        // ... and the callback onDeviceConnectionClose() has been invoked
+        assertThat(gateway.isConnectionClosed()).isTrue();
+
+    }
+
+    private void rejectAmqpMessage() {
+
+        @SuppressWarnings("unchecked")
+        final ArgumentCaptor<Handler<ProtonDelivery>> handlerArgumentCaptor = ArgumentCaptor.forClass(Handler.class);
+
+        verify(protonSender).send(any(), handlerArgumentCaptor.capture());
+
+        ProtonDelivery protonDelivery = mock(ProtonDelivery.class);
+        when(protonDelivery.getRemoteState()).thenReturn(new Rejected());
+        when(protonDelivery.remotelySettled()).thenReturn(true);
+
+        handlerArgumentCaptor.getValue().handle(protonDelivery);
     }
 
     /**
