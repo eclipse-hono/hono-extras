@@ -17,14 +17,7 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.hono.auth.Device;
-import org.eclipse.hono.client.device.amqp.AmqpAdapterClientFactory;
 import org.eclipse.hono.config.ClientConfigProperties;
-import org.eclipse.hono.gateway.sdk.mqtt2amqp.Command;
-import org.eclipse.hono.gateway.sdk.mqtt2amqp.CommandSubscriptionsManager;
-import org.eclipse.hono.gateway.sdk.mqtt2amqp.Credentials;
-import org.eclipse.hono.gateway.sdk.mqtt2amqp.MqttCommandContext;
-import org.eclipse.hono.gateway.sdk.mqtt2amqp.MqttDownstreamContext;
-import org.eclipse.hono.gateway.sdk.mqtt2amqp.MqttProtocolGatewayConfig;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.DownstreamMessage;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.EventMessage;
 
@@ -66,15 +59,15 @@ class TestMqttProtocolGateway extends AbstractMqttProtocolGateway {
     private final AtomicBoolean startupComplete = new AtomicBoolean();
     private final AtomicBoolean shutdownStarted = new AtomicBoolean();
     private final AtomicBoolean connectionClosed = new AtomicBoolean();
-    private final AmqpAdapterClientFactory amqpAdapterClientFactory;
 
     private CommandSubscriptionsManager commandSubscriptionsManager;
 
     TestMqttProtocolGateway(final ClientConfigProperties clientConfigProperties,
-            final MqttProtocolGatewayConfig mqttProtocolGatewayConfig, final Vertx vertx,
-            final AmqpAdapterClientFactory amqpAdapterClientFactory) {
-        super(clientConfigProperties, mqttProtocolGatewayConfig);
-        this.amqpAdapterClientFactory = amqpAdapterClientFactory;
+            final MqttProtocolGatewayConfig mqttProtocolGatewayConfig,
+            final Vertx vertx,
+            final MultiTenantConnectionManager tenantConnectionManager) {
+
+        super(clientConfigProperties, mqttProtocolGatewayConfig, tenantConnectionManager);
         super.vertx = vertx;
     }
 
@@ -113,12 +106,6 @@ class TestMqttProtocolGateway extends AbstractMqttProtocolGateway {
      */
     public CommandSubscriptionsManager getCommandSubscriptionsManager() {
         return commandSubscriptionsManager;
-    }
-
-    @Override
-    AmqpAdapterClientFactory createTenantClientFactory(final String tenantId,
-            final ClientConfigProperties clientConfig) {
-        return amqpAdapterClientFactory;
     }
 
     @Override

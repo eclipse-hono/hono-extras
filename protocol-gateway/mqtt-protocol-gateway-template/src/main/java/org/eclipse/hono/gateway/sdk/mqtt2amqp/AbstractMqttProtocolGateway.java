@@ -19,7 +19,6 @@ import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,10 +31,8 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.hono.auth.Device;
 import org.eclipse.hono.client.ClientErrorException;
-import org.eclipse.hono.client.HonoConnection;
 import org.eclipse.hono.client.MessageConsumer;
 import org.eclipse.hono.client.ServiceInvocationException;
-import org.eclipse.hono.client.device.amqp.AmqpAdapterClientFactory;
 import org.eclipse.hono.config.ClientConfigProperties;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.CommandResponseMessage;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.DownstreamMessage;
@@ -84,7 +81,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
 
     private final ClientConfigProperties amqpClientConfig;
     private final MqttProtocolGatewayConfig mqttGatewayConfig;
-    private final Map<String, AmqpAdapterClientFactory> clientFactoryPerTenant = new HashMap<>();
+    private final MultiTenantConnectionManager tenantConnectionManager;
 
     private MqttServer server;
 
@@ -104,11 +101,30 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
      */
     public AbstractMqttProtocolGateway(final ClientConfigProperties amqpClientConfig,
             final MqttProtocolGatewayConfig mqttGatewayConfig) {
+
+        this(amqpClientConfig, mqttGatewayConfig, new MultiTenantConnectionManagerImpl());
+    }
+
+    /**
+     * This constructor is only visible for testing purposes.
+     *
+     * @param amqpClientConfig The AMQP client configuration.
+     * @param mqttGatewayConfig The configuration of the protocol gateway.
+     * @param tenantConnectionManager The tenant connection manager to be used.
+     * @throws NullPointerException if any of the parameters is {@code null}.
+     * @see AbstractMqttProtocolGateway#AbstractMqttProtocolGateway(ClientConfigProperties, MqttProtocolGatewayConfig)
+     */
+    AbstractMqttProtocolGateway(final ClientConfigProperties amqpClientConfig,
+            final MqttProtocolGatewayConfig mqttGatewayConfig,
+            final MultiTenantConnectionManager tenantConnectionManager) {
+
         Objects.requireNonNull(amqpClientConfig);
         Objects.requireNonNull(mqttGatewayConfig);
+        Objects.requireNonNull(tenantConnectionManager);
 
         this.amqpClientConfig = amqpClientConfig;
         this.mqttGatewayConfig = mqttGatewayConfig;
+        this.tenantConnectionManager = tenantConnectionManager;
     }
 
     /**
@@ -355,7 +371,11 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
                         : Future.succeededFuture(authenticateDevice));
 
         authAttempt
-                .compose(this::connectGatewayToAmqpAdapter)
+                .compose(authenticatedDevice -> {
+                    final String tenantId = authenticatedDevice.getTenantId();
+                    return getTenantConfig(tenantId)
+                            .compose(config -> connectGatewayToAmqpAdapter(tenantId, config, endpoint));
+                })
                 .onComplete(result -> {
                     if (result.succeeded()) {
                         registerHandlers(endpoint, authAttempt.result());
@@ -414,12 +434,10 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
         }
     }
 
-    private Future<Void> connectGatewayToAmqpAdapter(final Device authenticatedDevice) {
-
-        final String tenantId = authenticatedDevice.getTenantId();
+    private Future<ClientConfigProperties> getTenantConfig(final String tenantId) {
 
         if (amqpClientConfig.getUsername() != null && amqpClientConfig.getPassword() != null) {
-            return connectGatewayToAmqpAdapter(tenantId, amqpClientConfig);
+            return Future.succeededFuture(amqpClientConfig);
         } else {
             return provideGatewayCredentials(tenantId)
                     .compose(credentials -> {
@@ -427,43 +445,19 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
                         tenantConfig.setUsername(credentials.getUsername());
                         tenantConfig.setPassword(credentials.getPassword());
 
-                        return connectGatewayToAmqpAdapter(tenantId, tenantConfig);
+                        return Future.succeededFuture(tenantConfig);
                     });
         }
     }
 
-    private Future<Void> connectGatewayToAmqpAdapter(final String tenantId, final ClientConfigProperties clientConfig) {
+    private Future<Void> connectGatewayToAmqpAdapter(final String tenantId,
+            final ClientConfigProperties clientConfig,
+            final MqttEndpoint endpoint) {
+        return tenantConnectionManager.connect(tenantId, vertx, clientConfig)
+                .onSuccess(v -> tenantConnectionManager.addEndpoint(tenantId, endpoint))
+                .onFailure(e -> log.info("Failed to connect to Hono [tenant-id: {}, username: {}]", tenantId,
+                        clientConfig.getUsername()));
 
-        final AmqpAdapterClientFactory amqpAdapterClientFactory = clientFactoryPerTenant.get(tenantId);
-        if (amqpAdapterClientFactory != null) {
-            return amqpAdapterClientFactory.isConnected(clientConfig.getConnectTimeout());
-        } else {
-
-            final AmqpAdapterClientFactory factory = createTenantClientFactory(tenantId, clientConfig);
-            clientFactoryPerTenant.put(tenantId, factory);
-
-            return factory.connect()
-                    .map(con -> {
-                        log.debug("Connected to AMQP adapter");
-                        return null;
-                    });
-        }
-    }
-
-    /**
-     * Returns a new {@link AmqpAdapterClientFactory} with a new AMQP connection for the given tenant.
-     * <p>
-     * This method is only visible for testing purposes.
-     *
-     * @param tenantId The tenant to be connected.
-     * @param clientConfig The client properties to use for the connection.
-     * @return The factory. Note that the underlying AMQP connection will not be established until
-     *         {@link AmqpAdapterClientFactory#connect()} is invoked.
-     */
-    AmqpAdapterClientFactory createTenantClientFactory(final String tenantId,
-            final ClientConfigProperties clientConfig) {
-        final HonoConnection connection = HonoConnection.newConnection(vertx, clientConfig);
-        return AmqpAdapterClientFactory.create(connection, tenantId);
     }
 
     private void registerHandlers(final MqttEndpoint endpoint, final Device authenticatedDevice) {
@@ -473,21 +467,27 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
                         MqttDownstreamContext.fromPublishPacket(message, endpoint, authenticatedDevice)));
 
         final CommandSubscriptionsManager cmdSubscriptionsManager = createCommandHandler(vertx);
-        endpoint.closeHandler(v -> close(endpoint, cmdSubscriptionsManager));
+        endpoint.closeHandler(v -> cleanupConnections(endpoint, cmdSubscriptionsManager, authenticatedDevice));
         endpoint.publishAcknowledgeHandler(cmdSubscriptionsManager::handlePubAck);
         endpoint.subscribeHandler(msg -> onSubscribe(endpoint, authenticatedDevice, msg, cmdSubscriptionsManager));
         endpoint.unsubscribeHandler(msg -> onUnsubscribe(endpoint, authenticatedDevice, msg, cmdSubscriptionsManager));
 
     }
 
-    private void close(final MqttEndpoint endpoint, final CommandSubscriptionsManager cmdSubscriptionsManager) {
+    private void cleanupConnections(final MqttEndpoint endpoint,
+            final CommandSubscriptionsManager cmdSubscriptionsManager,
+            final Device authenticatedDevice) {
+
+        log.info("closing connection to device {}", authenticatedDevice.toString());
+
         onDeviceConnectionClose(endpoint);
         cmdSubscriptionsManager.removeAllSubscriptions();
-        if (endpoint.isConnected()) {
-            log.debug("closing connection with client [client ID: {}]", endpoint.clientIdentifier());
-            endpoint.close();
-        } else {
-            log.trace("connection to client is already closed");
+
+        final String tenantId = authenticatedDevice.getTenantId();
+        final boolean amqpLinkClosed = tenantConnectionManager.closeEndpoint(tenantId, endpoint);
+
+        if (amqpLinkClosed) {
+            log.info("closing AMQP connection for tenant [{}]", tenantId);
         }
     }
 
@@ -585,8 +585,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
         }
 
         if (ctx.deviceEndpoint().isConnected()) {
-            log.info("closing connection to device {}", ctx.authenticatedDevice().toString());
-            ctx.deviceEndpoint().close();
+            ctx.deviceEndpoint().close(); // cleanupConnections() will be called by close handler
         }
     }
 
@@ -594,7 +593,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
             final Map<String, ?> properties, final byte[] payload, final String contentType,
             final boolean waitForOutcome) {
 
-        return clientFactoryPerTenant.get(tenantId).getOrCreateTelemetrySender()
+        return tenantConnectionManager.getOrCreateTelemetrySender(tenantId)
                 .compose(sender -> {
                     if (waitForOutcome) {
                         log.trace(
@@ -616,7 +615,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
         log.trace("sending event message [tenantId: {}, deviceId: {}, contentType: {}, properties: {}]",
                 tenantId, deviceId, contentType, properties);
 
-        return clientFactoryPerTenant.get(tenantId).getOrCreateEventSender()
+        return tenantConnectionManager.getOrCreateEventSender(tenantId)
                 .compose(sender -> sender.send(deviceId, payload, contentType, properties));
     }
 
@@ -628,7 +627,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
                 "sending command response [tenantId: {}, deviceId: {}, targetAddress: {}, correlationId: {}, status: {}, contentType: {}, properties: {}]",
                 tenantId, deviceId, targetAddress, correlationId, status, contentType, properties);
 
-        return clientFactoryPerTenant.get(tenantId).getOrCreateCommandResponseSender()
+        return tenantConnectionManager.getOrCreateCommandResponseSender(tenantId)
                 .compose(sender -> sender.sendCommandResponse(deviceId, targetAddress, correlationId, status, payload,
                         contentType, properties));
     }
@@ -733,7 +732,9 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
 
     private Future<MessageConsumer> createCommandConsumer(final MqttEndpoint endpoint,
             final CommandSubscriptionsManager cmdSubscriptionsManager, final Device authenticatedDevice) {
-        return clientFactoryPerTenant.get(authenticatedDevice.getTenantId()).createDeviceSpecificCommandConsumer(
+
+        return tenantConnectionManager.createDeviceSpecificCommandConsumer(
+                authenticatedDevice.getTenantId(),
                 authenticatedDevice.getDeviceId(),
                 cmd -> handleCommand(endpoint, cmd, cmdSubscriptionsManager, authenticatedDevice));
     }
@@ -887,6 +888,9 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
 
         final Promise<Void> stopTracker = Promise.promise();
         beforeShutdown(stopTracker);
+
+        tenantConnectionManager.closeAllTenants();
+
         stopTracker.future().onComplete(v -> {
             if (server != null) {
                 server.close(stopPromise);
