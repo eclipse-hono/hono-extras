@@ -14,8 +14,6 @@
 package org.eclipse.hono.gateway.sdk.mqtt2amqp;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.eclipse.hono.gateway.sdk.mqtt2amqp.TestMqttProtocolGateway.GW_PASSWORD;
-import static org.eclipse.hono.gateway.sdk.mqtt2amqp.TestMqttProtocolGateway.GW_USERNAME;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -465,7 +463,7 @@ public class AbstractMqttProtocolGatewayTest {
         // WHEN the gateway connects
         connectTestDevice(gateway);
 
-        ArgumentCaptor<ClientConfigProperties> configPropertiesArgumentCaptor = ArgumentCaptor
+        final ArgumentCaptor<ClientConfigProperties> configPropertiesArgumentCaptor = ArgumentCaptor
                 .forClass(ClientConfigProperties.class);
 
         verify(tenantConnectionManager).connect(anyString(), any(), configPropertiesArgumentCaptor.capture());
@@ -473,8 +471,8 @@ public class AbstractMqttProtocolGatewayTest {
         final ClientConfigProperties clientConfig = configPropertiesArgumentCaptor.getValue();
 
         // THEN the AMQP connection is authenticated with the provided credentials...
-        assertThat(clientConfig.getUsername()).isEqualTo(GW_USERNAME);
-        assertThat(clientConfig.getPassword()).isEqualTo(GW_PASSWORD);
+        assertThat(clientConfig.getUsername()).isEqualTo(TestMqttProtocolGateway.GW_USERNAME);
+        assertThat(clientConfig.getPassword()).isEqualTo(TestMqttProtocolGateway.GW_PASSWORD);
 
         // ... and not with the credentials from the configuration
         assertThat(clientConfig.getUsername()).isNotEqualTo(configWithoutCredentials.getUsername());
@@ -503,7 +501,7 @@ public class AbstractMqttProtocolGatewayTest {
         // WHEN the gateway connects
         connectTestDevice(gateway);
 
-        ArgumentCaptor<ClientConfigProperties> configPropertiesArgumentCaptor = ArgumentCaptor
+        final ArgumentCaptor<ClientConfigProperties> configPropertiesArgumentCaptor = ArgumentCaptor
                 .forClass(ClientConfigProperties.class);
 
         verify(tenantConnectionManager).connect(anyString(), any(), configPropertiesArgumentCaptor.capture());
@@ -515,8 +513,8 @@ public class AbstractMqttProtocolGatewayTest {
         assertThat(clientConfig.getPassword()).isEqualTo(password);
 
         // ... and not with the credentials from the implementation
-        assertThat(clientConfig.getUsername()).isNotEqualTo(GW_USERNAME);
-        assertThat(clientConfig.getPassword()).isNotEqualTo(GW_PASSWORD);
+        assertThat(clientConfig.getUsername()).isNotEqualTo(TestMqttProtocolGateway.GW_USERNAME);
+        assertThat(clientConfig.getPassword()).isNotEqualTo(TestMqttProtocolGateway.GW_PASSWORD);
     }
 
     /**
@@ -611,7 +609,7 @@ public class AbstractMqttProtocolGatewayTest {
 
         verify(protonSender).send(any(), handlerArgumentCaptor.capture());
 
-        ProtonDelivery protonDelivery = mock(ProtonDelivery.class);
+        final ProtonDelivery protonDelivery = mock(ProtonDelivery.class);
         when(protonDelivery.getRemoteState()).thenReturn(new Rejected());
         when(protonDelivery.remotelySettled()).thenReturn(true);
 
