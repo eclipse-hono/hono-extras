@@ -29,6 +29,9 @@ import io.vertx.mqtt.MqttEndpoint;
 
 /**
  * Manages connections for multiple tenants.
+ * <p>
+ * <b>NB</b> The {@link #connect(String, Vertx, ClientConfigProperties)} method needs to be invoked before calling any
+ * of the other methods.
  */
 public interface MultiTenantConnectionManager {
 
@@ -48,8 +51,10 @@ public interface MultiTenantConnectionManager {
      *
      * @param tenantId The tenant to which the endpoint belongs.
      * @param mqttEndpoint The endpoint to be added.
+     * @return A future indicating the outcome of the operation. The future will succeed if the endpoint has been added
+     *         successfully. Otherwise the future will fail with a failure message indicating the cause of the failure.
      */
-    void addEndpoint(String tenantId, MqttEndpoint mqttEndpoint);
+    Future<Void> addEndpoint(String tenantId, MqttEndpoint mqttEndpoint);
 
     /**
      * Closes the given MQTT endpoint and if there are no other open endpoints for this tenant, it closes the
@@ -57,9 +62,11 @@ public interface MultiTenantConnectionManager {
      *
      * @param tenantId The tenant to which the endpoint belongs.
      * @param mqttEndpoint The endpoint to be closed.
-     * @return {@code true} if the AMQP connection and all endpoints have been closed.
+     * @return A future indicating the outcome of the operation. The future will succeed with a boolean that is
+     *         {@code true} if the AMQP connection (and all MQTT endpoints) have been closed. If an error occurs, the
+     *         future will fail with a failure message indicating the cause of the failure.
      */
-    boolean closeEndpoint(String tenantId, MqttEndpoint mqttEndpoint);
+    Future<Boolean> closeEndpoint(String tenantId, MqttEndpoint mqttEndpoint);
 
     /**
      * Closes all connections, MQTT connections as well as AMQP connections for all tenants.

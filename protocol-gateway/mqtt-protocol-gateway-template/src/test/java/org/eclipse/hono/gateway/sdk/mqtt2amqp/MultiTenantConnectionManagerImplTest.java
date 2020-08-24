@@ -18,7 +18,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.eclipse.hono.config.ClientConfigProperties;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -57,7 +56,7 @@ public class MultiTenantConnectionManagerImplTest {
         connectionManager.connect(TENANT_ID, vertx, new ClientConfigProperties());
         connectionManager.addEndpoint(TENANT_ID, endpoint);
 
-        assertThat(connectionManager.closeEndpoint(TENANT_ID, endpoint)).isTrue();
+        assertThat(connectionManager.closeEndpoint(TENANT_ID, endpoint).result()).isTrue();
 
     }
 
@@ -71,7 +70,7 @@ public class MultiTenantConnectionManagerImplTest {
         connectionManager.addEndpoint(TENANT_ID, endpoint);
         connectionManager.addEndpoint(TENANT_ID, mock(MqttEndpoint.class));
 
-        assertThat(connectionManager.closeEndpoint(TENANT_ID, endpoint)).isFalse();
+        assertThat(connectionManager.closeEndpoint(TENANT_ID, endpoint).result()).isFalse();
 
     }
 
@@ -85,26 +84,23 @@ public class MultiTenantConnectionManagerImplTest {
 
         connectionManager.closeAllTenants();
 
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> connectionManager.addEndpoint(TENANT_ID, endpoint));
+        assertThat(connectionManager.addEndpoint(TENANT_ID, endpoint).failed()).isTrue();
     }
 
     /**
-     * Verifies that trying to add an endpoint without connecting the tenant first, throws an exception.
+     * Verifies that trying to add an endpoint without connecting the tenant first fails.
      */
     @Test
     public void addEndpointFailsIfNotConnected() {
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> connectionManager.addEndpoint(TENANT_ID, endpoint));
+        assertThat(connectionManager.addEndpoint(TENANT_ID, endpoint).failed()).isTrue();
     }
 
     /**
-     * Verifies that trying to close an endpoint without connecting the tenant first, throws an exception.
+     * Verifies that trying to close an endpoint without connecting the tenant first fails.
      */
     @Test
     public void closeEndpointFailsIfNotConnected() {
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> connectionManager.closeEndpoint(TENANT_ID, endpoint));
+        assertThat(connectionManager.closeEndpoint(TENANT_ID, endpoint).failed()).isTrue();
     }
 
     /**
@@ -114,20 +110,17 @@ public class MultiTenantConnectionManagerImplTest {
     @Test
     public void futureFailsIfNotConnected() {
 
-        assertThat(connectionManager.getOrCreateTelemetrySender(TENANT_ID).cause())
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(connectionManager.getOrCreateTelemetrySender(TENANT_ID).failed()).isTrue();
 
-        assertThat(connectionManager.getOrCreateEventSender(TENANT_ID).cause())
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(connectionManager.getOrCreateEventSender(TENANT_ID).failed()).isTrue();
 
-        assertThat(connectionManager.getOrCreateCommandResponseSender(TENANT_ID).cause())
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(connectionManager.getOrCreateCommandResponseSender(TENANT_ID).failed()).isTrue();
 
         assertThat(connectionManager.createDeviceSpecificCommandConsumer(TENANT_ID, "device-id", msg -> {
-        }).cause()).isInstanceOf(IllegalArgumentException.class);
+        }).failed()).isTrue();
 
         assertThat(connectionManager.createCommandConsumer(TENANT_ID, msg -> {
-        }).cause()).isInstanceOf(IllegalArgumentException.class);
+        }).failed()).isTrue();
 
     }
 

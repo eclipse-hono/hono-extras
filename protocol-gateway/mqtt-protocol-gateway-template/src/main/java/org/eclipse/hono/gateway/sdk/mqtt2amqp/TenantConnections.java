@@ -111,8 +111,6 @@ class TenantConnections {
 
     /**
      * Closes all MQTT endpoints and the AMQP connection.
-     *
-     * @throws IllegalStateException if this instance is already closed.
      */
     public void closeAllConnections() {
         log.info("closing all AMQP connections");
@@ -132,7 +130,7 @@ class TenantConnections {
     }
 
     private void closeThisInstance() {
-        getAmqpAdapterClientFactory().disconnect();
+        amqpAdapterClientFactory.disconnect();
         closed = true;
     }
 

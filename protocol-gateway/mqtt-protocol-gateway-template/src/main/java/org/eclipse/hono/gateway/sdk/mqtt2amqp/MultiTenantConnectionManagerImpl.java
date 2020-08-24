@@ -45,7 +45,7 @@ public class MultiTenantConnectionManagerImpl implements MultiTenantConnectionMa
         connectionsPerTenant.computeIfAbsent(tenantId, k -> new TenantConnections(k, vertx, clientConfig).connect());
 
         return getTenantConnections(tenantId)
-                .isConnected(clientConfig.getConnectTimeout())
+                .compose(tenantConnections -> tenantConnections.isConnected(clientConfig.getConnectTimeout()))
                 .onFailure(ex -> {
                     final TenantConnections failedTenant = connectionsPerTenant.remove(tenantId);
                     if (failedTenant != null) {
@@ -55,19 +55,25 @@ public class MultiTenantConnectionManagerImpl implements MultiTenantConnectionMa
     }
 
     @Override
-    public void addEndpoint(final String tenantId, final MqttEndpoint mqttEndpoint) {
-        getTenantConnections(tenantId).addEndpoint(mqttEndpoint);
+    public Future<Void> addEndpoint(final String tenantId, final MqttEndpoint mqttEndpoint) {
+        return getTenantConnections(tenantId)
+                .map(tenantConnections -> {
+                    tenantConnections.addEndpoint(mqttEndpoint);
+                    return null;
+                });
     }
 
     @Override
-    public boolean closeEndpoint(final String tenantId, final MqttEndpoint mqttEndpoint) {
+    public Future<Boolean> closeEndpoint(final String tenantId, final MqttEndpoint mqttEndpoint) {
 
-        final boolean amqpLinkClosed = getTenantConnections(tenantId).closeEndpoint(mqttEndpoint);
-        if (amqpLinkClosed) {
-            connectionsPerTenant.remove(tenantId);
-        }
+        return getTenantConnections(tenantId)
+                .map(tenantConnections -> tenantConnections.closeEndpoint(mqttEndpoint))
+                .onSuccess(amqpLinkClosed -> {
+                    if (amqpLinkClosed) {
+                        connectionsPerTenant.remove(tenantId);
+                    }
+                });
 
-        return amqpLinkClosed;
     }
 
     @Override
@@ -78,64 +84,49 @@ public class MultiTenantConnectionManagerImpl implements MultiTenantConnectionMa
 
     @Override
     public Future<TelemetrySender> getOrCreateTelemetrySender(final String tenantId) {
-        try {
-            return getAmqpAdapterClientFactory(tenantId).getOrCreateTelemetrySender();
-        } catch (Exception ex) {
-            return Future.failedFuture(ex);
-        }
+        return getAmqpAdapterClientFactory(tenantId).compose(AmqpAdapterClientFactory::getOrCreateTelemetrySender);
     }
 
     @Override
     public Future<EventSender> getOrCreateEventSender(final String tenantId) {
-        try {
-            return getAmqpAdapterClientFactory(tenantId).getOrCreateEventSender();
-        } catch (Exception ex) {
-            return Future.failedFuture(ex);
-        }
+        return getAmqpAdapterClientFactory(tenantId).compose(AmqpAdapterClientFactory::getOrCreateEventSender);
     }
 
     @Override
     public Future<CommandResponder> getOrCreateCommandResponseSender(final String tenantId) {
-        try {
-            return getAmqpAdapterClientFactory(tenantId).getOrCreateCommandResponseSender();
-        } catch (Exception ex) {
-            return Future.failedFuture(ex);
-        }
+        return getAmqpAdapterClientFactory(tenantId)
+                .compose(AmqpAdapterClientFactory::getOrCreateCommandResponseSender);
     }
 
     @Override
     public Future<MessageConsumer> createDeviceSpecificCommandConsumer(final String tenantId, final String deviceId,
             final Consumer<Message> messageHandler) {
 
-        try {
-            return getAmqpAdapterClientFactory(tenantId).createDeviceSpecificCommandConsumer(deviceId, messageHandler);
-        } catch (Exception ex) {
-            return Future.failedFuture(ex);
-        }
+        return getAmqpAdapterClientFactory(tenantId)
+                .compose(factory -> factory.createDeviceSpecificCommandConsumer(deviceId, messageHandler));
+
     }
 
     @Override
     public Future<MessageConsumer> createCommandConsumer(final String tenantId,
             final Consumer<Message> messageHandler) {
 
-        try {
-            return getAmqpAdapterClientFactory(tenantId).createCommandConsumer(messageHandler);
-        } catch (Exception ex) {
-            return Future.failedFuture(ex);
-        }
+        return getAmqpAdapterClientFactory(tenantId).compose(factory -> factory.createCommandConsumer(messageHandler));
+
     }
 
-    private TenantConnections getTenantConnections(final String tenantId) throws IllegalArgumentException {
+    private Future<TenantConnections> getTenantConnections(final String tenantId) throws IllegalArgumentException {
         final TenantConnections tenantConnections = connectionsPerTenant.get(tenantId);
         if (tenantConnections == null) {
-            throw new IllegalArgumentException("tenant [" + tenantId + "] is not connected");
+            return Future.failedFuture("tenant [" + tenantId + "] is not connected");
         } else {
-            return tenantConnections;
+            return Future.succeededFuture(tenantConnections);
         }
     }
 
-    private AmqpAdapterClientFactory getAmqpAdapterClientFactory(final String tenantId)
+    private Future<AmqpAdapterClientFactory> getAmqpAdapterClientFactory(final String tenantId)
             throws IllegalStateException, IllegalArgumentException {
-        return getTenantConnections(tenantId).getAmqpAdapterClientFactory();
+        return getTenantConnections(tenantId)
+                .compose(tenantConnections -> Future.succeededFuture(tenantConnections.getAmqpAdapterClientFactory()));
     }
 }

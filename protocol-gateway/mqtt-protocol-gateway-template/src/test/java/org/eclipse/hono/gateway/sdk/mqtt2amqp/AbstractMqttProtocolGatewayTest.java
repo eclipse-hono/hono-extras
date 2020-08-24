@@ -109,7 +109,8 @@ public class AbstractMqttProtocolGatewayTest {
 
         tenantConnectionManager = mock(MultiTenantConnectionManager.class);
         when(tenantConnectionManager.connect(anyString(), any(), any())).thenReturn(Future.succeededFuture());
-        when(tenantConnectionManager.closeEndpoint(anyString(), any())).thenReturn(true);
+        when(tenantConnectionManager.addEndpoint(anyString(), any())).thenReturn(Future.succeededFuture());
+        when(tenantConnectionManager.closeEndpoint(anyString(), any())).thenReturn(Future.succeededFuture(true));
 
         amqpClientConfig = new ClientConfigProperties();
         final HonoConnection connection = mockHonoConnection(vertx, amqpClientConfig, protonSender);

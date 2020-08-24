@@ -454,9 +454,9 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
             final ClientConfigProperties clientConfig,
             final MqttEndpoint endpoint) {
         return tenantConnectionManager.connect(tenantId, vertx, clientConfig)
-                .onSuccess(v -> tenantConnectionManager.addEndpoint(tenantId, endpoint))
                 .onFailure(e -> log.info("Failed to connect to Hono [tenant-id: {}, username: {}]", tenantId,
-                        clientConfig.getUsername()));
+                        clientConfig.getUsername()))
+                .compose(v -> tenantConnectionManager.addEndpoint(tenantId, endpoint));
 
     }
 
@@ -484,11 +484,12 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
         cmdSubscriptionsManager.removeAllSubscriptions();
 
         final String tenantId = authenticatedDevice.getTenantId();
-        final boolean amqpLinkClosed = tenantConnectionManager.closeEndpoint(tenantId, endpoint);
-
-        if (amqpLinkClosed) {
-            log.info("closing AMQP connection for tenant [{}]", tenantId);
-        }
+        tenantConnectionManager.closeEndpoint(tenantId, endpoint)
+                .onSuccess(amqpLinkClosed -> {
+                    if (amqpLinkClosed) {
+                        log.info("closing AMQP connection for tenant [{}]", tenantId);
+                    }
+                });
     }
 
     /**
