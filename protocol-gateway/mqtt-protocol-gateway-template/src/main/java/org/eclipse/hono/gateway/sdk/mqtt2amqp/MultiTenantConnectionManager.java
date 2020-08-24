@@ -62,7 +62,7 @@ public interface MultiTenantConnectionManager {
     boolean closeEndpoint(String tenantId, MqttEndpoint mqttEndpoint);
 
     /**
-     * Closes all connections, MQTT connections as well as AMQP for all tenants.
+     * Closes all connections, MQTT connections as well as AMQP connections for all tenants.
      */
     void closeAllTenants();
 
