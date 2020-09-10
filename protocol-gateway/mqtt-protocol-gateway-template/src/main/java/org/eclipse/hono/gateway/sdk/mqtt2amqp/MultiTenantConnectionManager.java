@@ -36,7 +36,7 @@ import io.vertx.mqtt.MqttEndpoint;
 public interface MultiTenantConnectionManager {
 
     /**
-     * Connect to Hono's AMQP adapter with the given configuration.
+     * Connects to Hono's AMQP adapter with the given configuration.
      *
      * @param tenantId The tenant to connect.
      * @param vertx The Vert.x instance to use for the connection.

@@ -487,7 +487,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
         tenantConnectionManager.closeEndpoint(tenantId, endpoint)
                 .onSuccess(amqpLinkClosed -> {
                     if (amqpLinkClosed) {
-                        log.info("closing AMQP connection for tenant [{}]", tenantId);
+                        log.info("closed AMQP connection for tenant [{}]", tenantId);
                     }
                 });
     }

@@ -14,14 +14,13 @@
 package org.eclipse.hono.gateway.sdk.mqtt2amqp;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.eclipse.hono.client.HonoConnection;
 import org.eclipse.hono.client.device.amqp.AmqpAdapterClientFactory;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -44,18 +43,8 @@ public class TenantConnectionsTest {
     public void setUp() {
         amqpAdapterClientFactory = mock(AmqpAdapterClientFactory.class);
 
-        tenantConnections = new TenantConnections(amqpAdapterClientFactory);
+        tenantConnections = new TenantConnections(amqpAdapterClientFactory, "a-tenant-id");
         endpoint = mock(MqttEndpoint.class);
-    }
-
-    /**
-     * Verifies that the connect method returns the instance.
-     */
-    @Test
-    public void connectReturnsTheInstance() {
-        when(amqpAdapterClientFactory.connect()).thenReturn(Future.succeededFuture(mock(HonoConnection.class)));
-
-        assertThat(tenantConnections.connect()).isEqualTo(tenantConnections);
     }
 
     /**
@@ -90,7 +79,7 @@ public class TenantConnectionsTest {
 
         tenantConnections.closeEndpoint(endpoint);
 
-        Assertions.assertThrows(IllegalStateException.class, () -> tenantConnections.getAmqpAdapterClientFactory());
+        assertThat(tenantConnections.getAmqpAdapterClientFactory().failed()).isTrue();
     }
 
     /**
@@ -103,7 +92,7 @@ public class TenantConnectionsTest {
 
         tenantConnections.closeEndpoint(endpoint);
 
-        assertThat(tenantConnections.getAmqpAdapterClientFactory()).isNotNull();
+        assertThat(tenantConnections.getAmqpAdapterClientFactory().succeeded()).isTrue();
     }
 
     /**
@@ -116,7 +105,7 @@ public class TenantConnectionsTest {
 
         tenantConnections.closeAllConnections();
 
-        Assertions.assertThrows(IllegalStateException.class, () -> tenantConnections.getAmqpAdapterClientFactory());
+        assertThat(tenantConnections.getAmqpAdapterClientFactory().failed()).isTrue();
     }
 
     /**
@@ -124,8 +113,22 @@ public class TenantConnectionsTest {
      */
     @Test
     public void isConnectedDelegatesToClientFactory() {
+        when(amqpAdapterClientFactory.isConnected(anyLong())).thenReturn(Future.succeededFuture());
+
         tenantConnections.isConnected(5L);
         verify(amqpAdapterClientFactory).isConnected(eq(5L));
+    }
+
+    /**
+     * Verifies that the connect() method delegates the call to the client factory.
+     */
+    @Test
+    public void connectDelegatesToClientFactory() {
+        when(amqpAdapterClientFactory.connect()).thenReturn(Future.succeededFuture());
+
+        tenantConnections.connect();
+        verify(amqpAdapterClientFactory).connect();
+
     }
 
 }

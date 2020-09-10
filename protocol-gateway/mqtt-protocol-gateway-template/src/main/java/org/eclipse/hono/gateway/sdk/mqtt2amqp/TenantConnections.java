@@ -16,6 +16,7 @@ package org.eclipse.hono.gateway.sdk.mqtt2amqp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.hono.client.ConnectionLifecycle;
 import org.eclipse.hono.client.HonoConnection;
 import org.eclipse.hono.client.ServerErrorException;
 import org.eclipse.hono.client.device.amqp.AmqpAdapterClientFactory;
@@ -44,6 +45,7 @@ class TenantConnections {
 
     private final AmqpAdapterClientFactory amqpAdapterClientFactory;
     private final Logger log = LoggerFactory.getLogger(getClass());
+    private final String tenantId;
 
     private boolean closed = false;
 
@@ -55,37 +57,40 @@ class TenantConnections {
      * @param clientConfig The client configuration to be used by the HonoConnection.
      */
     TenantConnections(final String tenantId, final Vertx vertx, final ClientConfigProperties clientConfig) {
-        this(AmqpAdapterClientFactory.create(HonoConnection.newConnection(vertx, clientConfig), tenantId));
+        this(AmqpAdapterClientFactory.create(HonoConnection.newConnection(vertx, clientConfig), tenantId), tenantId);
     }
 
     /**
      * Creates a new instance for the given {@link AmqpAdapterClientFactory}.
+     * <p>
+     * <b>This constructor is for testing purposes only.</b>
      *
      * @param amqpAdapterClientFactory The AmqpAdapterClientFactory to use for creating AMQP clients.
+     * @param tenantId The ID of the tenant whose connections are to be managed
      */
-    TenantConnections(final AmqpAdapterClientFactory amqpAdapterClientFactory) {
+    TenantConnections(final AmqpAdapterClientFactory amqpAdapterClientFactory, final String tenantId) {
         this.amqpAdapterClientFactory = amqpAdapterClientFactory;
+        this.tenantId = tenantId;
     }
 
     /**
      * Opens a connection to Hono's AMQP protocol adapter for the tenant to be managed.
      *
-     * @return This instance for fluent use.
-     * @throws IllegalStateException if this instance is already closed.
+     * @return A future indicating the outcome of the operation.
      */
-    public TenantConnections connect() {
-        getAmqpAdapterClientFactory().connect().onSuccess(con -> log.debug("Connected to AMQP adapter"));
-        return this;
+    public Future<HonoConnection> connect() {
+        return getAmqpAdapterClientFactory().compose(ConnectionLifecycle::connect)
+                .onSuccess(con -> log.debug("Connected to AMQP adapter"));
     }
 
     /**
      * Adds an MQTT endpoint for the tenant.
      *
      * @param mqttEndpoint The endpoint to add.
+     * @return A future indicating the outcome of the operation.
      */
-    public void addEndpoint(final MqttEndpoint mqttEndpoint) {
-        checkNotClosed();
-        mqttEndpoints.add(mqttEndpoint);
+    public Future<Void> addEndpoint(final MqttEndpoint mqttEndpoint) {
+        return failIfClosed().onSuccess(v -> mqttEndpoints.add(mqttEndpoint));
     }
 
     /**
@@ -94,7 +99,6 @@ class TenantConnections {
      *
      * @param mqttEndpoint The endpoint to be closed.
      * @return {@code true} if the AMQP connection has been closed.
-     * @throws IllegalStateException if this instance is already closed.
      */
     public boolean closeEndpoint(final MqttEndpoint mqttEndpoint) {
 
@@ -139,27 +143,29 @@ class TenantConnections {
      *
      * @param connectTimeout The maximum number of milliseconds to wait for an ongoing connection attempt to finish.
      * @return A succeeded future if this connection is established. Otherwise, the future will be failed with a
-     *         {@link ServerErrorException}.
-     * @throws IllegalStateException if this instance is already closed.
+     *         {@link ServerErrorException}, or an {@link IllegalStateException} if this instance is already closed.
      */
     public Future<Void> isConnected(final long connectTimeout) {
-        return getAmqpAdapterClientFactory().isConnected(connectTimeout);
+        return getAmqpAdapterClientFactory().compose(f -> f.isConnected(connectTimeout));
     }
 
     /**
      * Returns the AmqpAdapterClientFactory for the tenant.
      *
-     * @return The AmqpAdapterClientFactory.
-     * @throws IllegalStateException if this instance is already closed.
+     * @return A future containing the AmqpAdapterClientFactory, or, if this instance is already closed, a failed
+     *         future.
      */
-    public AmqpAdapterClientFactory getAmqpAdapterClientFactory() throws IllegalStateException {
-        checkNotClosed();
-        return amqpAdapterClientFactory;
+    public Future<AmqpAdapterClientFactory> getAmqpAdapterClientFactory() {
+        return failIfClosed().map(amqpAdapterClientFactory);
     }
 
-    private void checkNotClosed() throws IllegalStateException {
+    private Future<Void> failIfClosed() {
         if (closed) {
-            throw new IllegalStateException("all connections for this tenant are already closed");
+            final Exception ex = new IllegalStateException("connections for this tenant are already closed");
+            log.warn("This should not happen", ex);
+            return Future.failedFuture(ex);
+        } else {
+            return Future.succeededFuture();
         }
     }
 }

@@ -42,7 +42,11 @@ public class MultiTenantConnectionManagerImpl implements MultiTenantConnectionMa
     @Override
     public Future<Void> connect(final String tenantId, final Vertx vertx, final ClientConfigProperties clientConfig) {
 
-        connectionsPerTenant.computeIfAbsent(tenantId, k -> new TenantConnections(k, vertx, clientConfig).connect());
+        connectionsPerTenant.computeIfAbsent(tenantId, k -> {
+            final TenantConnections tenantConnections = new TenantConnections(k, vertx, clientConfig);
+            tenantConnections.connect();
+            return tenantConnections;
+        });
 
         return getTenantConnections(tenantId)
                 .compose(tenantConnections -> tenantConnections.isConnected(clientConfig.getConnectTimeout()))
@@ -57,10 +61,7 @@ public class MultiTenantConnectionManagerImpl implements MultiTenantConnectionMa
     @Override
     public Future<Void> addEndpoint(final String tenantId, final MqttEndpoint mqttEndpoint) {
         return getTenantConnections(tenantId)
-                .map(tenantConnections -> {
-                    tenantConnections.addEndpoint(mqttEndpoint);
-                    return null;
-                });
+                .compose(tenantConnections -> tenantConnections.addEndpoint(mqttEndpoint));
     }
 
     @Override
@@ -115,7 +116,7 @@ public class MultiTenantConnectionManagerImpl implements MultiTenantConnectionMa
 
     }
 
-    private Future<TenantConnections> getTenantConnections(final String tenantId) throws IllegalArgumentException {
+    private Future<TenantConnections> getTenantConnections(final String tenantId) {
         final TenantConnections tenantConnections = connectionsPerTenant.get(tenantId);
         if (tenantConnections == null) {
             return Future.failedFuture("tenant [" + tenantId + "] is not connected");
@@ -124,9 +125,7 @@ public class MultiTenantConnectionManagerImpl implements MultiTenantConnectionMa
         }
     }
 
-    private Future<AmqpAdapterClientFactory> getAmqpAdapterClientFactory(final String tenantId)
-            throws IllegalStateException, IllegalArgumentException {
-        return getTenantConnections(tenantId)
-                .compose(tenantConnections -> Future.succeededFuture(tenantConnections.getAmqpAdapterClientFactory()));
+    private Future<AmqpAdapterClientFactory> getAmqpAdapterClientFactory(final String tenantId) {
+        return getTenantConnections(tenantId).compose(TenantConnections::getAmqpAdapterClientFactory);
     }
 }
