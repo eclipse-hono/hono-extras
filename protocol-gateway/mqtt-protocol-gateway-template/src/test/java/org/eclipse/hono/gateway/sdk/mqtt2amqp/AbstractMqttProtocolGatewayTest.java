@@ -35,12 +35,12 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.message.impl.MessageImpl;
 import org.eclipse.hono.client.HonoConnection;
-import org.eclipse.hono.client.device.amqp.AmqpAdapterClientFactory;
 import org.eclipse.hono.client.device.amqp.CommandResponder;
 import org.eclipse.hono.client.device.amqp.EventSender;
 import org.eclipse.hono.client.device.amqp.TelemetrySender;
@@ -79,6 +79,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.MqttServerOptions;
+import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
@@ -94,7 +95,7 @@ public class AbstractMqttProtocolGatewayTest {
     private Vertx vertx;
     private ProtonSender protonSender;
     private NetServer netServer;
-    private AmqpAdapterClientFactory amqpAdapterClientFactory;
+    private MultiTenantConnectionManager tenantConnectionManager;
     private Consumer<Message> commandHandler;
 
     /**
@@ -102,12 +103,14 @@ public class AbstractMqttProtocolGatewayTest {
      */
     @BeforeEach
     public void setUp() {
-        amqpAdapterClientFactory = mock(AmqpAdapterClientFactory.class);
         netServer = mock(NetServer.class);
         vertx = mock(Vertx.class);
         protonSender = mockProtonSender();
 
-        when(amqpAdapterClientFactory.connect()).thenReturn(Future.succeededFuture());
+        tenantConnectionManager = mock(MultiTenantConnectionManager.class);
+        when(tenantConnectionManager.connect(anyString(), any(), any())).thenReturn(Future.succeededFuture());
+        when(tenantConnectionManager.addEndpoint(anyString(), any())).thenReturn(Future.succeededFuture());
+        when(tenantConnectionManager.closeEndpoint(anyString(), any())).thenReturn(Future.succeededFuture(true));
 
         amqpClientConfig = new ClientConfigProperties();
         final HonoConnection connection = mockHonoConnection(vertx, amqpClientConfig, protonSender);
@@ -115,21 +118,21 @@ public class AbstractMqttProtocolGatewayTest {
         final Future<EventSender> eventSender = AmqpAdapterClientEventSenderImpl
                 .createWithAnonymousLinkAddress(connection, TestMqttProtocolGateway.TENANT_ID, s -> {
                 });
-        when(amqpAdapterClientFactory.getOrCreateEventSender()).thenReturn(eventSender);
+        when(tenantConnectionManager.getOrCreateEventSender(anyString())).thenReturn(eventSender);
 
         final Future<TelemetrySender> telemetrySender = AmqpAdapterClientTelemetrySenderImpl
                 .createWithAnonymousLinkAddress(connection, TestMqttProtocolGateway.TENANT_ID, s -> {
                 });
-        when(amqpAdapterClientFactory.getOrCreateTelemetrySender()).thenReturn(telemetrySender);
+        when(tenantConnectionManager.getOrCreateTelemetrySender(anyString())).thenReturn(telemetrySender);
 
         final Future<CommandResponder> commandResponseSender = AmqpAdapterClientCommandResponseSender
                 .createWithAnonymousLinkAddress(connection, TestMqttProtocolGateway.TENANT_ID, s -> {
                 });
-        when(amqpAdapterClientFactory.getOrCreateCommandResponseSender()).thenReturn(commandResponseSender);
+        when(tenantConnectionManager.getOrCreateCommandResponseSender(anyString())).thenReturn(commandResponseSender);
 
-        when(amqpAdapterClientFactory.createDeviceSpecificCommandConsumer(anyString(), any()))
+        when(tenantConnectionManager.createDeviceSpecificCommandConsumer(anyString(), anyString(), any()))
                 .thenAnswer(invocation -> {
-                    final Consumer<Message> msgHandler = invocation.getArgument(1);
+                    final Consumer<Message> msgHandler = invocation.getArgument(2);
                     setCommandHandler(msgHandler);
                     return AmqpAdapterClientCommandConsumer.create(connection, TestMqttProtocolGateway.TENANT_ID,
                             TestMqttProtocolGateway.DEVICE_ID,
@@ -380,7 +383,7 @@ public class AbstractMqttProtocolGatewayTest {
 
         // GIVEN a protocol gateway configured with a trust anchor
         final TestMqttProtocolGateway gateway = new TestMqttProtocolGateway(amqpClientConfig,
-                new MqttProtocolGatewayConfig(), vertx, amqpAdapterClientFactory) {
+                new MqttProtocolGatewayConfig(), vertx, tenantConnectionManager) {
 
             @Override
             protected Future<Set<TrustAnchor>> getTrustAnchors(final List<X509Certificate> certificates) {
@@ -405,7 +408,7 @@ public class AbstractMqttProtocolGatewayTest {
 
         // GIVEN a protocol gateway configured with a trust anchor
         final TestMqttProtocolGateway gateway = new TestMqttProtocolGateway(amqpClientConfig,
-                new MqttProtocolGatewayConfig(), vertx, amqpAdapterClientFactory) {
+                new MqttProtocolGatewayConfig(), vertx, tenantConnectionManager) {
 
             @Override
             protected Future<Set<TrustAnchor>> getTrustAnchors(final List<X509Certificate> certificates) {
@@ -432,7 +435,8 @@ public class AbstractMqttProtocolGatewayTest {
     public void testConnectFailsWhenGatewayCouldNotConnect() {
 
         // GIVEN a protocol gateway where establishing a connection to Hono's AMQP adapter fails
-        when(amqpAdapterClientFactory.connect()).thenReturn(Future.failedFuture("Connect failed"));
+        when(tenantConnectionManager.connect(anyString(), any(), any()))
+                .thenReturn(Future.failedFuture("Connect failed"));
 
         final TestMqttProtocolGateway gateway = createGateway();
 
@@ -455,26 +459,25 @@ public class AbstractMqttProtocolGatewayTest {
         // ... and where the gateway credentials are resolved by the implementation
         final ClientConfigProperties configWithoutCredentials = new ClientConfigProperties();
         final AbstractMqttProtocolGateway gateway = new TestMqttProtocolGateway(configWithoutCredentials,
-                new MqttProtocolGatewayConfig(), vertx, amqpAdapterClientFactory) {
-
-            @Override
-            AmqpAdapterClientFactory createTenantClientFactory(final String tenantId,
-                    final ClientConfigProperties clientConfig) {
-
-                // THEN the AMQP connection is authenticated with the provided credentials...
-                assertThat(clientConfig.getUsername()).isEqualTo(GW_USERNAME);
-                assertThat(clientConfig.getPassword()).isEqualTo(GW_PASSWORD);
-
-                // ... and not with the credentials from the configuration
-                assertThat(clientConfig.getUsername()).isNotEqualTo(configWithoutCredentials.getUsername());
-                assertThat(clientConfig.getPassword()).isNotEqualTo(configWithoutCredentials.getPassword());
-
-                return super.createTenantClientFactory(tenantId, clientConfig);
-            }
-        };
+                new MqttProtocolGatewayConfig(), vertx, tenantConnectionManager);
 
         // WHEN the gateway connects
         connectTestDevice(gateway);
+
+        final ArgumentCaptor<ClientConfigProperties> configPropertiesArgumentCaptor = ArgumentCaptor
+                .forClass(ClientConfigProperties.class);
+
+        verify(tenantConnectionManager).connect(anyString(), any(), configPropertiesArgumentCaptor.capture());
+
+        final ClientConfigProperties clientConfig = configPropertiesArgumentCaptor.getValue();
+
+        // THEN the AMQP connection is authenticated with the provided credentials...
+        assertThat(clientConfig.getUsername()).isEqualTo(TestMqttProtocolGateway.GW_USERNAME);
+        assertThat(clientConfig.getPassword()).isEqualTo(TestMqttProtocolGateway.GW_PASSWORD);
+
+        // ... and not with the credentials from the configuration
+        assertThat(clientConfig.getUsername()).isNotEqualTo(configWithoutCredentials.getUsername());
+        assertThat(clientConfig.getPassword()).isNotEqualTo(configWithoutCredentials.getPassword());
 
     }
 
@@ -494,27 +497,25 @@ public class AbstractMqttProtocolGatewayTest {
 
         // GIVEN a protocol gateway where the AMQP config does contains credentials
         final AbstractMqttProtocolGateway gateway = new TestMqttProtocolGateway(configWithCredentials,
-                new MqttProtocolGatewayConfig(), vertx, amqpAdapterClientFactory) {
-
-            @Override
-            AmqpAdapterClientFactory createTenantClientFactory(final String tenantId,
-                    final ClientConfigProperties clientConfig) {
-
-                // THEN the AMQP connection is authenticated with the configured credentials...
-                assertThat(clientConfig.getUsername()).isEqualTo(username);
-                assertThat(clientConfig.getPassword()).isEqualTo(password);
-
-                // ... and not with the credentials from the implementation
-                assertThat(clientConfig.getUsername()).isNotEqualTo(GW_USERNAME);
-                assertThat(clientConfig.getPassword()).isNotEqualTo(GW_PASSWORD);
-
-                return super.createTenantClientFactory(tenantId, clientConfig);
-            }
-        };
+                new MqttProtocolGatewayConfig(), vertx, tenantConnectionManager);
 
         // WHEN the gateway connects
         connectTestDevice(gateway);
 
+        final ArgumentCaptor<ClientConfigProperties> configPropertiesArgumentCaptor = ArgumentCaptor
+                .forClass(ClientConfigProperties.class);
+
+        verify(tenantConnectionManager).connect(anyString(), any(), configPropertiesArgumentCaptor.capture());
+
+        final ClientConfigProperties clientConfig = configPropertiesArgumentCaptor.getValue();
+
+        // THEN the AMQP connection is authenticated with the configured credentials...
+        assertThat(clientConfig.getUsername()).isEqualTo(username);
+        assertThat(clientConfig.getPassword()).isEqualTo(password);
+
+        // ... and not with the credentials from the implementation
+        assertThat(clientConfig.getUsername()).isNotEqualTo(TestMqttProtocolGateway.GW_USERNAME);
+        assertThat(clientConfig.getPassword()).isNotEqualTo(TestMqttProtocolGateway.GW_PASSWORD);
     }
 
     /**
@@ -580,6 +581,43 @@ public class AbstractMqttProtocolGatewayTest {
     }
 
     /**
+     * Verifies that when a message is being rejected by the remote, the connection to the device is closed.
+     */
+    @Test
+    public void sendEventClosesEndpointWhenMessageIsRejected() {
+
+        // GIVEN a protocol gateway that sends every MQTT publish message as an event downstream and a connected MQTT
+        // endpoint
+        final TestMqttProtocolGateway gateway = createGateway();
+        final MqttEndpoint mqttEndpoint = connectTestDevice(gateway);
+
+        // WHEN sending a MQTT message...
+        ProtocolGatewayTestHelper.sendMessage(mqttEndpoint, Buffer.buffer("payload1"), "topic/1");
+        // ... that gets rejected by the remote
+        rejectAmqpMessage();
+
+        // THEN the endpoint has been closed
+        assertThat(mqttEndpoint.isConnected()).isFalse();
+        // ... and the callback onDeviceConnectionClose() has been invoked
+        assertThat(gateway.isConnectionClosed()).isTrue();
+
+    }
+
+    private void rejectAmqpMessage() {
+
+        @SuppressWarnings("unchecked")
+        final ArgumentCaptor<Handler<ProtonDelivery>> handlerArgumentCaptor = ArgumentCaptor.forClass(Handler.class);
+
+        verify(protonSender).send(any(), handlerArgumentCaptor.capture());
+
+        final ProtonDelivery protonDelivery = mock(ProtonDelivery.class);
+        when(protonDelivery.getRemoteState()).thenReturn(new Rejected());
+        when(protonDelivery.remotelySettled()).thenReturn(true);
+
+        handlerArgumentCaptor.getValue().handle(protonDelivery);
+    }
+
+    /**
      * Verifies that a telemetry message is being sent to the right address.
      */
     @Test
@@ -590,7 +628,7 @@ public class AbstractMqttProtocolGatewayTest {
         // GIVEN a protocol gateway that sends every MQTT publish messages as telemetry messages downstream and a
         // connected MQTT endpoint
         final TestMqttProtocolGateway gateway = new TestMqttProtocolGateway(amqpClientConfig,
-                new MqttProtocolGatewayConfig(), vertx, amqpAdapterClientFactory) {
+                new MqttProtocolGatewayConfig(), vertx, tenantConnectionManager) {
 
             @Override
             protected Future<DownstreamMessage> onPublishedMessage(final MqttDownstreamContext ctx) {
@@ -627,7 +665,7 @@ public class AbstractMqttProtocolGatewayTest {
         // GIVEN a protocol gateway that sends every MQTT publish messages as command response messages downstream and a
         // connected MQTT endpoint
         final TestMqttProtocolGateway gateway = new TestMqttProtocolGateway(amqpClientConfig,
-                new MqttProtocolGatewayConfig(), vertx, amqpAdapterClientFactory) {
+                new MqttProtocolGatewayConfig(), vertx, tenantConnectionManager) {
 
             @Override
             protected Future<DownstreamMessage> onPublishedMessage(final MqttDownstreamContext ctx) {
@@ -924,7 +962,7 @@ public class AbstractMqttProtocolGatewayTest {
     }
 
     private TestMqttProtocolGateway createGateway(final MqttProtocolGatewayConfig gatewayServerConfig) {
-        return new TestMqttProtocolGateway(amqpClientConfig, gatewayServerConfig, vertx, amqpAdapterClientFactory);
+        return new TestMqttProtocolGateway(amqpClientConfig, gatewayServerConfig, vertx, tenantConnectionManager);
     }
 
 }
