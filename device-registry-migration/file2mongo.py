@@ -6,6 +6,7 @@ from uuid import uuid4
 from enum import Enum
 from typing import Dict
 from datetime import datetime
+from collections import Counter
 
 
 class Collection(Enum):
@@ -32,18 +33,22 @@ class HonoResourceTransformer:
             output = transform_func(dump)
             print(json.dumps(output, indent=4))
 
-    def _transform_credentials_item(self, tenant: str, item: Dict):
-        return {
-            'tenant-id': tenant,
-            'device-id': item['device-id'],
-            'version': str(uuid4()),
-            'updatedOn': self.updated_on,
-            'credentials': [{
+    def _transform_credentials_item(self, tenant: str, device_id: str, item_list: list):
+        credentials = []
+        for item in item_list:
+            credential = {
                 'auth-id': item['auth-id'],
                 'type': item['type'],
                 'secrets': item['secrets'],
                 'enabled': True
-            }]
+            }
+            credentials.append(credential)
+        return {
+            'tenant-id': tenant,
+            'device-id': device_id,
+            'version': str(uuid4()),
+            'updatedOn': self.updated_on,
+            'credentials': credentials
         }
 
     def _transform_credentials(self, dump: Dict):
@@ -52,8 +57,10 @@ class HonoResourceTransformer:
             tenant_id = tenant_obj['tenant']
             if tenant_id in IGNORED_TENANTS:
                 continue
-            for item in tenant_obj['credentials']:
-                transformed = self._transform_credentials_item(tenant_id, item)
+            device_list = [x['device-id'] for x in tenant_obj['credentials']]
+            for device in Counter(device_list).keys():
+                item_list = [x for x in tenant_obj['credentials'] if x['device-id'] == device]
+                transformed = self._transform_credentials_item(tenant_id, device, item_list)
                 credentials.append(transformed)
         return credentials
 
