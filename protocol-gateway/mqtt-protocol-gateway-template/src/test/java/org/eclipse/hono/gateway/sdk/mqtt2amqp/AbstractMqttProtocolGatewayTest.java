@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -24,6 +24,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
@@ -63,13 +66,13 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 import io.netty.handler.codec.mqtt.MqttTopicSubscription;
 import io.opentracing.Tracer;
 import io.opentracing.noop.NoopTracerFactory;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.ClientAuth;
+import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.NetServer;
 import io.vertx.core.net.PemTrustOptions;
@@ -104,7 +107,7 @@ public class AbstractMqttProtocolGatewayTest {
     @BeforeEach
     public void setUp() {
         netServer = mock(NetServer.class);
-        vertx = mock(Vertx.class);
+        vertx = mock(VertxInternal.class);
         protonSender = mockProtonSender();
 
         tenantConnectionManager = mock(MultiTenantConnectionManager.class);
@@ -140,11 +143,7 @@ public class AbstractMqttProtocolGatewayTest {
                 });
 
         when(vertx.createNetServer(any())).thenReturn(netServer);
-        when(netServer.listen(anyInt(), anyString(), ProtocolGatewayTestHelper.anyHandler())).then(invocation -> {
-            final Handler<AsyncResult<NetServer>> handler = invocation.getArgument(2);
-            handler.handle(Future.succeededFuture(netServer));
-            return netServer;
-        });
+        when(netServer.listen(anyInt(), anyString())).thenReturn(Future.succeededFuture(netServer));
 
         doAnswer(invocation -> {
             final Promise<Void> handler = invocation.getArgument(0);
@@ -191,7 +190,7 @@ public class AbstractMqttProtocolGatewayTest {
     @Test
     public void testMqttServerConfigWithTls() {
 
-        final String keyStorePath = "src/test/resources/emptyKeyStoreFile.p12";
+        final String keyStorePath = getResourceFilePath("emptyKeyStoreFile.p12");
         final List<String> enabledProtocols = Arrays.asList("TLSv1", "TLSv1.1", "TLSv1.2");
 
         // GIVEN a protocol gateway with TLS configured
@@ -207,7 +206,9 @@ public class AbstractMqttProtocolGatewayTest {
 
         // THEN the TLS configuration is correct
         assertThat(serverOptions.isSsl()).isTrue();
-        assertThat(serverOptions.getKeyCertOptions()).isEqualTo(new PfxOptions().setPath(keyStorePath));
+        assertThat(serverOptions.getKeyCertOptions()).isInstanceOf(PfxOptions.class);
+        assertThat(((PfxOptions) serverOptions.getKeyCertOptions()).toJson()).isEqualTo(
+                new PfxOptions().setPath(keyStorePath).toJson());
 
         final LinkedHashSet<String> expectedEnabledSecureProtocols = new LinkedHashSet<>(enabledProtocols);
         assertThat(serverOptions.getEnabledSecureTransportProtocols()).isEqualTo(expectedEnabledSecureProtocols);
@@ -225,8 +226,8 @@ public class AbstractMqttProtocolGatewayTest {
     @Test
     public void testMqttServerConfigWithTlsAndClientAuth() {
 
-        final String keyStorePath = "src/test/resources/emptyKeyStoreFile.p12";
-        final String trustStorePath = "src/test/resources/emptyTrustStoreFile.pem";
+        final String keyStorePath = getResourceFilePath("emptyKeyStoreFile.p12");
+        final String trustStorePath = getResourceFilePath("emptyTrustStoreFile.pem");
         final List<String> enabledProtocols = Arrays.asList("TLSv1", "TLSv1.1", "TLSv1.2");
 
         // GIVEN a protocol gateway with client certificate based authentication (and TLS) configured
@@ -242,11 +243,15 @@ public class AbstractMqttProtocolGatewayTest {
         final MqttServerOptions serverOptions = gateway.getMqttServerOptions();
 
         // THEN the trust options are set from the configuration and client certificate based authentication is enabled
-        assertThat(serverOptions.getTrustOptions()).isEqualTo(new PemTrustOptions().addCertPath(trustStorePath));
+        assertThat(serverOptions.getTrustOptions()).isInstanceOf(PemTrustOptions.class);
+        assertThat(((PemTrustOptions) serverOptions.getTrustOptions()).toJson()).isEqualTo(
+                new PemTrustOptions().addCertPath(trustStorePath).toJson());
         assertThat(serverOptions.getClientAuth()).isEqualTo(ClientAuth.REQUEST);
 
         assertThat(serverOptions.isSsl()).isTrue();
-        assertThat(serverOptions.getKeyCertOptions()).isEqualTo(new PfxOptions().setPath(keyStorePath));
+        assertThat(serverOptions.getKeyCertOptions()).isInstanceOf(PfxOptions.class);
+        assertThat(((PfxOptions) serverOptions.getKeyCertOptions()).toJson()).isEqualTo(
+                new PfxOptions().setPath(keyStorePath).toJson());
     }
 
     /**
@@ -275,7 +280,7 @@ public class AbstractMqttProtocolGatewayTest {
         startupTracker.future().onComplete(ctx.succeeding(s -> {
 
             ctx.verify(() -> {
-                verify(netServer).listen(eq(port), eq(bindAddress), ProtocolGatewayTestHelper.anyHandler());
+                verify(netServer).listen(eq(port), eq(bindAddress));
                 assertThat(gateway.isStartupComplete()).isTrue();
             });
             ctx.completeNow();
@@ -965,4 +970,15 @@ public class AbstractMqttProtocolGatewayTest {
         return new TestMqttProtocolGateway(amqpClientConfig, gatewayServerConfig, vertx, tenantConnectionManager);
     }
 
+    private String getResourceFilePath(final String filename) {
+        final URL resource = getClass().getClassLoader().getResource(filename);
+        if (resource != null) {
+            try {
+                return Paths.get(resource.toURI()).toFile().getAbsolutePath();
+            } catch (final URISyntaxException e) {
+                // cannot happen - URL created by class loader
+            }
+        }
+        return null;
+    }
 }

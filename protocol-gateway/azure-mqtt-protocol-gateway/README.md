@@ -75,6 +75,13 @@ By default, the gateway will connect to the AMQP adapter of the [Hono Sandbox](h
 However, it can also be configured to connect to a local instance.
 The default configuration can be found in the file `protocol-gateway/azure-mqtt-protocol-gateway/src/main/resources/application.properties` 
 and can be customized using [Spring Boot Configuration](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-external-config). 
+
+If connecting to a local Hono instance deployed via the [IoT Packages](https://www.eclipse.org/packages/) Hono Helm chart,
+the `hono.client.amqp.host` configuration property has to be set to the IP of the AMQP adapter service (obtainable e.g.
+via `kubectl get service eclipse-hono-adapter-amqp-vertx --output=jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}" -n hono`).
+If the example certificates provided with the chart are used, `hono.client.amqp.trustStorePath` has to set to the CA
+certificates file (i.e. [trusted-certs.pem](https://github.com/eclipse/packages/blob/master/charts/hono/example/certs/trusted-certs.pem))
+and `hono.client.amqp.hostnameVerificationRequired` has to be set to `false`.
  
  
 ### Starting a Receiver
@@ -101,7 +108,9 @@ mvn spring-boot:run
 ## Enable TLS 
 
 Azure IoT Hub only provides connections with TLS and only offers port 8883. To start the protocol gateway listening
-on this port with TLS enabled and a demo certificate, run:
+on this port with TLS enabled, first adapt the `src/main/resources/application-ssl.properties` configuration file and
+enter certificate and private key file paths in `hono.server.mqtt.certPath` and `hono.server.mqtt.keyPath`.
+Then run:
 
 ~~~sh
 # in directory: protocol-gateway/azure-mqtt-protocol-gateway/
@@ -109,11 +118,13 @@ mvn spring-boot:run -Dspring-boot.run.profiles=ssl
 ~~~
 **NB** Do not forget to build the template project before, as shown above.
 
-With the [Eclipse Mosquitto](https://mosquitto.org/) command line client, for example, sending an event message would then look like this:
+With the [Eclipse Mosquitto](https://mosquitto.org/) command line client, for example, sending an event message would
+then look like this, with the `--cafile` parameter adapted to reference the CA certificates file corresponding to the
+used server certificate:
 
 ~~~sh
 # in directory: protocol-gateway/azure-mqtt-protocol-gateway
-mosquitto_pub -d -h localhost -p 8883 -i '4712' -u 'demo1' -P 'demo-secret' -t "devices/4712/messages/events/" -m "hello world" -V mqttv311 --cafile target/config/hono-demo-certs-jar/trusted-certs.pem
+mosquitto_pub -d -h localhost -p 8883 -i '4712' -u 'demo1' -P 'demo-secret' -t "devices/4712/messages/events/" -m "hello world" -V mqttv311 --cafile <path>/trusted-certs.pem
 ~~~
 
 Existing hardware devices might need to be configured to accept the used certificate. 
