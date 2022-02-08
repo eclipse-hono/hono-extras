@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -43,8 +43,6 @@ import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.messages.MqttPublishMessage;
 import io.vertx.mqtt.messages.MqttSubscribeMessage;
 import io.vertx.mqtt.messages.MqttUnsubscribeMessage;
-import io.vertx.mqtt.messages.impl.MqttSubscribeMessageImpl;
-import io.vertx.mqtt.messages.impl.MqttUnsubscribeMessageImpl;
 
 /**
  * Support for mocking MQTT connections to a {@link AbstractMqttProtocolGateway}.
@@ -94,7 +92,7 @@ public final class ProtocolGatewayTestHelper {
         try {
             when(sslSession.getPeerCertificates()).thenReturn(new Certificate[] { deviceCertificate });
         } catch (SSLPeerUnverifiedException e) {
-            throw new RuntimeException("this should not be possible", e);
+            return null; // this should not be possible
         }
         when(endpoint.sslSession()).thenReturn(sslSession);
 
@@ -141,7 +139,7 @@ public final class ProtocolGatewayTestHelper {
         verify(endpoint).subscribeHandler(captor.capture());
 
         final int messageId = newRandomMessageId();
-        captor.getValue().handle(new MqttSubscribeMessageImpl(messageId, Arrays.asList(subscriptions)));
+        captor.getValue().handle(MqttSubscribeMessage.create(messageId, Arrays.asList(subscriptions)));
 
         return messageId;
     }
@@ -163,7 +161,7 @@ public final class ProtocolGatewayTestHelper {
         verify(endpoint).unsubscribeHandler(captor.capture());
 
         final int messageId = newRandomMessageId();
-        captor.getValue().handle(new MqttUnsubscribeMessageImpl(messageId, Arrays.asList(topics)));
+        captor.getValue().handle(MqttUnsubscribeMessage.create(messageId, Arrays.asList(topics)));
 
         return messageId;
     }
@@ -195,6 +193,7 @@ public final class ProtocolGatewayTestHelper {
      * Returns a self signed certificate.
      *
      * @return A new X.509 certificate.
+     * @throws RuntimeException if certificate creation failed.
      */
     public static X509Certificate createCertificate() {
         final SelfSignedCertificate selfSignedCert = SelfSignedCertificate.create("eclipse.org");
