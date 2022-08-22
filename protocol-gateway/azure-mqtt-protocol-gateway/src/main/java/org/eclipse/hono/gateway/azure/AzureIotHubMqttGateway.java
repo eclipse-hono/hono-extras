@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2020, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -22,7 +22,7 @@ import java.util.Optional;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.eclipse.hono.auth.Device;
 import org.eclipse.hono.client.ClientErrorException;
-import org.eclipse.hono.config.ClientConfigProperties;
+import org.eclipse.hono.client.amqp.config.ClientConfigProperties;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.AbstractMqttProtocolGateway;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.Command;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.MqttCommandContext;
@@ -32,6 +32,7 @@ import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.CommandResponseMessage;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.DownstreamMessage;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.EventMessage;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.TelemetryMessage;
+import org.eclipse.hono.util.QoS;
 
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.Future;
@@ -212,7 +213,7 @@ public class AzureIotHubMqttGateway extends AbstractMqttProtocolGateway {
 
         final DownstreamMessage result;
         if (MqttQoS.AT_MOST_ONCE.equals(ctx.qosLevel())) {
-            result = new TelemetryMessage(payload, false);
+            result = new TelemetryMessage(payload, QoS.AT_MOST_ONCE);
         } else {
             result = new EventMessage(payload);
         }

@@ -51,7 +51,7 @@ Since there is only one device in this example implementation anyway, the creden
 ### Registering Devices
 
 The demo device and the gateway need to be registered in Hono's device registry. For the gateway, credentials must be created. 
-The [Getting started](https://www.eclipse.org/hono/getting-started/#registering-devices) guide shows how to do this.
+The [Getting started](https://www.eclipse.org/hono/docs/getting-started/#registering-devices) guide shows how to do this.
 
 Alternatively, the script `scripts/create_demo_devices.sh` can be used to register the devices and create credentials:
 ~~~sh
@@ -87,7 +87,7 @@ and `hono.client.amqp.hostnameVerificationRequired` has to be set to `false`.
 ### Starting a Receiver
 
 Telemetry and event messages need an application that consumes the messages. 
-The [Getting started](https://www.eclipse.org/hono/getting-started/#starting-the-example-application) guide shows how to start the example application that receives the messages.
+The [Getting started](https://www.eclipse.org/hono/docs/getting-started/#starting-the-example-application) guide shows how to start the example application that receives the messages.
  
  
 ## Starting the Protocol Gateway
@@ -148,7 +148,7 @@ mosquitto_pub -d -h localhost -i '4712' -u 'demo1' -P 'demo-secret' -t 'devices/
 ### Commands 
 
 The example application can be used to send commands. 
-The [Getting started](https://www.eclipse.org/hono/getting-started/#advanced-sending-commands-to-a-device) shows a walk-through example.
+The [Getting started](https://www.eclipse.org/hono/docs/getting-started/#advanced-sending-commands-to-a-device) shows a walk-through example.
 
 **Subscribe for one-way commands**
  

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2020, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -18,12 +18,12 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.apache.qpid.proton.message.Message;
-import org.eclipse.hono.client.MessageConsumer;
-import org.eclipse.hono.client.device.amqp.AmqpAdapterClientFactory;
+import org.eclipse.hono.client.amqp.config.ClientConfigProperties;
+import org.eclipse.hono.client.command.CommandConsumer;
+import org.eclipse.hono.client.device.amqp.AmqpAdapterClient;
 import org.eclipse.hono.client.device.amqp.CommandResponder;
 import org.eclipse.hono.client.device.amqp.EventSender;
 import org.eclipse.hono.client.device.amqp.TelemetrySender;
-import org.eclipse.hono.config.ClientConfigProperties;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -74,7 +74,6 @@ public class MultiTenantConnectionManagerImpl implements MultiTenantConnectionMa
                         connectionsPerTenant.remove(tenantId);
                     }
                 });
-
     }
 
     @Override
@@ -85,35 +84,32 @@ public class MultiTenantConnectionManagerImpl implements MultiTenantConnectionMa
 
     @Override
     public Future<TelemetrySender> getOrCreateTelemetrySender(final String tenantId) {
-        return getAmqpAdapterClientFactory(tenantId).compose(AmqpAdapterClientFactory::getOrCreateTelemetrySender);
+        return getAmqpAdapterClient(tenantId).map(client -> client);
     }
 
     @Override
     public Future<EventSender> getOrCreateEventSender(final String tenantId) {
-        return getAmqpAdapterClientFactory(tenantId).compose(AmqpAdapterClientFactory::getOrCreateEventSender);
+        return getAmqpAdapterClient(tenantId).map(client -> client);
     }
 
     @Override
     public Future<CommandResponder> getOrCreateCommandResponseSender(final String tenantId) {
-        return getAmqpAdapterClientFactory(tenantId)
-                .compose(AmqpAdapterClientFactory::getOrCreateCommandResponseSender);
+        return getAmqpAdapterClient(tenantId).map(client -> client);
     }
 
     @Override
-    public Future<MessageConsumer> createDeviceSpecificCommandConsumer(final String tenantId, final String deviceId,
+    public Future<CommandConsumer> createDeviceSpecificCommandConsumer(final String tenantId, final String deviceId,
             final Consumer<Message> messageHandler) {
 
-        return getAmqpAdapterClientFactory(tenantId)
-                .compose(factory -> factory.createDeviceSpecificCommandConsumer(deviceId, messageHandler));
-
+        return getAmqpAdapterClient(tenantId)
+                .compose(client -> client.createDeviceSpecificCommandConsumer(tenantId, deviceId, messageHandler));
     }
 
     @Override
-    public Future<MessageConsumer> createCommandConsumer(final String tenantId,
+    public Future<CommandConsumer> createCommandConsumer(final String tenantId,
             final Consumer<Message> messageHandler) {
 
-        return getAmqpAdapterClientFactory(tenantId).compose(factory -> factory.createCommandConsumer(messageHandler));
-
+        return getAmqpAdapterClient(tenantId).compose(client -> client.createCommandConsumer(messageHandler));
     }
 
     private Future<TenantConnections> getTenantConnections(final String tenantId) {
@@ -125,7 +121,7 @@ public class MultiTenantConnectionManagerImpl implements MultiTenantConnectionMa
         }
     }
 
-    private Future<AmqpAdapterClientFactory> getAmqpAdapterClientFactory(final String tenantId) {
-        return getTenantConnections(tenantId).compose(TenantConnections::getAmqpAdapterClientFactory);
+    private Future<AmqpAdapterClient> getAmqpAdapterClient(final String tenantId) {
+        return getTenantConnections(tenantId).compose(TenantConnections::getAmqpAdapterClient);
     }
 }

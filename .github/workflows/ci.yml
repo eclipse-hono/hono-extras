@@ -22,12 +22,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 11
+      - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          distribution: 'temurin'
-          java-version: 11
-          cache: 'maven'
+          distribution: "temurin"
+          java-version: "17"
+          cache: "maven"
       - name: Build MQTT Protocol Gateway Template
         working-directory: ./protocol-gateway/mqtt-protocol-gateway-template
         run: mvn install -B -e -DcreateJavadoc=true
