@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2020, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,7 +17,7 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.hono.auth.Device;
-import org.eclipse.hono.config.ClientConfigProperties;
+import org.eclipse.hono.client.amqp.config.ClientConfigProperties;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.DownstreamMessage;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.EventMessage;
 

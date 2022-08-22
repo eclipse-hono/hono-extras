@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2016, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.eclipse.hono.client.MessageConsumer;
+import org.eclipse.hono.client.command.CommandConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +45,7 @@ final class CommandSubscriptionsManager {
     private final Map<Integer, PendingCommandRequest> waitingForAcknowledgement = new ConcurrentHashMap<>();
     private final Vertx vertx;
     private final MqttProtocolGatewayConfig config;
-    private Future<MessageConsumer> commandConsumer;
+    private Future<CommandConsumer> commandConsumer;
 
     /**
      * Creates a new CommandSubscriptionsManager instance.
@@ -115,7 +115,7 @@ final class CommandSubscriptionsManager {
      * @return The QoS of the subscription or {@link MqttQoS#FAILURE} if the consumer could not be opened.
      */
     public Future<MqttQoS> addSubscription(final CommandSubscription subscription,
-            final Supplier<Future<MessageConsumer>> commandConsumerSupplier) {
+            final Supplier<Future<CommandConsumer>> commandConsumerSupplier) {
 
         Objects.requireNonNull(subscription);
         Objects.requireNonNull(commandConsumerSupplier);
@@ -166,15 +166,13 @@ final class CommandSubscriptionsManager {
         subscriptions.keySet().forEach(this::removeSubscription);
     }
 
-    private void closeCommandConsumer(final MessageConsumer consumer) {
-        consumer.close(cls -> {
-            if (cls.succeeded()) {
-                LOG.debug("Command consumer closed");
-                commandConsumer = null;
-            } else {
-                LOG.error("Error closing command consumer", cls.cause());
-            }
-        });
+    private void closeCommandConsumer(final CommandConsumer consumer) {
+        consumer.close(null)
+                .onFailure(thr -> LOG.error("Error closing command consumer", thr))
+                .onSuccess(v -> {
+                    LOG.debug("Command consumer closed");
+                    commandConsumer = null;
+                });
     }
 
     private long startTimer(final Integer msgId) {

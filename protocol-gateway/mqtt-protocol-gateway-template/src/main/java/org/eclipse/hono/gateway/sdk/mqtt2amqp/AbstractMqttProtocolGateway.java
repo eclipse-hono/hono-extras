@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2020, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -31,13 +31,14 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.hono.auth.Device;
 import org.eclipse.hono.client.ClientErrorException;
-import org.eclipse.hono.client.MessageConsumer;
 import org.eclipse.hono.client.ServiceInvocationException;
-import org.eclipse.hono.config.ClientConfigProperties;
+import org.eclipse.hono.client.amqp.config.ClientConfigProperties;
+import org.eclipse.hono.client.command.CommandConsumer;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.CommandResponseMessage;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.DownstreamMessage;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.EventMessage;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.TelemetryMessage;
+import org.eclipse.hono.util.QoS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +50,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.ClientAuth;
 import io.vertx.core.net.KeyCertOptions;
 import io.vertx.core.net.NetServerOptions;
@@ -506,7 +508,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
 
     /**
      * Invoked when a device publishes a message.
-     *
+     * <p>
      * Invokes {@link #onPublishedMessage(MqttDownstreamContext)}, uploads the message to Hono's AMQP adapter.
      * Afterwards it invokes {@link #onMessageSent(MqttDownstreamContext)} if the message has been forwarded
      * successfully or if a the message could not be delivered, {@link #onMessageUndeliverable(MqttDownstreamContext)}.
@@ -536,22 +538,16 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
         final String tenantId = ctx.authenticatedDevice().getTenantId();
         final String deviceId = ctx.authenticatedDevice().getDeviceId();
         final Map<String, Object> properties = downstreamMessage.getApplicationProperties();
-        final byte[] payload = downstreamMessage.getPayload();
+        final Buffer payload = downstreamMessage.getPayload();
         final String contentType = downstreamMessage.getContentType();
 
-        if (downstreamMessage instanceof TelemetryMessage) {
-
-            final TelemetryMessage telemetryMessage = (TelemetryMessage) downstreamMessage;
-            return sendTelemetry(tenantId, deviceId, properties, payload, contentType,
-                    telemetryMessage.shouldWaitForOutcome());
+        if (downstreamMessage instanceof TelemetryMessage telemetryMessage) {
+            return sendTelemetry(tenantId, deviceId, properties, payload, contentType, telemetryMessage.getQos());
 
         } else if (downstreamMessage instanceof EventMessage) {
-
             return sendEvent(tenantId, deviceId, properties, payload, contentType);
 
-        } else if (downstreamMessage instanceof CommandResponseMessage) {
-
-            final CommandResponseMessage response = (CommandResponseMessage) downstreamMessage;
+        } else if (downstreamMessage instanceof CommandResponseMessage response) {
             return sendCommandResponse(tenantId, deviceId, response.getTargetAddress(tenantId, deviceId),
                     response.getCorrelationId(), response.getStatus(), payload, contentType, properties);
 
@@ -591,51 +587,50 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
     }
 
     private Future<ProtonDelivery> sendTelemetry(final String tenantId, final String deviceId,
-            final Map<String, ?> properties, final byte[] payload, final String contentType,
-            final boolean waitForOutcome) {
+            final Map<String, Object> properties, final Buffer payload, final String contentType,
+            final QoS qos) {
 
         return tenantConnectionManager.getOrCreateTelemetrySender(tenantId)
                 .compose(sender -> {
-                    if (waitForOutcome) {
-                        log.trace(
-                                "sending telemetry message and wait for outcome [tenantId: {}, deviceId: {}, contentType: {}, properties: {}]",
+                    if (qos == QoS.AT_LEAST_ONCE) {
+                        log.trace("sending telemetry message and waiting for outcome [tenantId: {}, deviceId: {}, contentType: {}, properties: {}]",
                                 tenantId, deviceId, contentType, properties);
-                        return sender.sendAndWaitForOutcome(deviceId, payload, contentType, properties);
                     } else {
-                        log.trace(
-                                "sending telemetry message [tenantId: {}, deviceId: {}, contentType: {}, properties: {}]",
+                        log.trace("sending telemetry message [tenantId: {}, deviceId: {}, contentType: {}, properties: {}]",
                                 tenantId, deviceId, contentType, properties);
-                        return sender.send(deviceId, payload, contentType, properties);
                     }
+                    // TODO properties not used here - not supported in Hono 2.x
+                    return sender.sendTelemetry(qos, payload, contentType, tenantId, deviceId, null);
                 });
     }
 
     private Future<ProtonDelivery> sendEvent(final String tenantId, final String deviceId,
-            final Map<String, ?> properties, final byte[] payload, final String contentType) {
+            final Map<String, Object> properties, final Buffer payload, final String contentType) {
 
         log.trace("sending event message [tenantId: {}, deviceId: {}, contentType: {}, properties: {}]",
                 tenantId, deviceId, contentType, properties);
 
+        // TODO properties not used here - not supported in Hono 2.x
         return tenantConnectionManager.getOrCreateEventSender(tenantId)
-                .compose(sender -> sender.send(deviceId, payload, contentType, properties));
+                .compose(sender -> sender.sendEvent(payload, contentType, tenantId, deviceId, null));
     }
 
     private Future<ProtonDelivery> sendCommandResponse(final String tenantId, final String deviceId,
-            final String targetAddress, final String correlationId, final int status, final byte[] payload,
-            final String contentType, final Map<String, ?> properties) {
+            final String targetAddress, final String correlationId, final int status, final Buffer payload,
+            final String contentType, final Map<String, Object> properties) {
 
-        log.trace(
-                "sending command response [tenantId: {}, deviceId: {}, targetAddress: {}, correlationId: {}, status: {}, contentType: {}, properties: {}]",
+        log.trace("sending command response [tenantId: {}, deviceId: {}, targetAddress: {}, correlationId: {}, status: {}, contentType: {}, properties: {}]",
                 tenantId, deviceId, targetAddress, correlationId, status, contentType, properties);
 
+        // TODO properties not used here - not supported in Hono 2.x
         return tenantConnectionManager.getOrCreateCommandResponseSender(tenantId)
-                .compose(sender -> sender.sendCommandResponse(deviceId, targetAddress, correlationId, status, payload,
-                        contentType, properties));
+                .compose(sender -> sender.sendCommandResponse(targetAddress, correlationId, status,
+                        payload, contentType, null));
     }
 
     /**
      * Invoked when a device sends an MQTT <em>SUBSCRIBE</em> packet.
-     *
+     * <p>
      * It invokes {@link #isTopicFilterValid(String, String, String, String)} for each topic filter in the subscribe
      * packet. If there is a valid topic filter and no command consumer already exists for this device, this method
      * opens a device-specific command consumer for receiving commands from applications for the device.
@@ -731,7 +726,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
         }
     }
 
-    private Future<MessageConsumer> createCommandConsumer(final MqttEndpoint endpoint,
+    private Future<CommandConsumer> createCommandConsumer(final MqttEndpoint endpoint,
             final CommandSubscriptionsManager cmdSubscriptionsManager, final Device authenticatedDevice) {
 
         return tenantConnectionManager.createDeviceSpecificCommandConsumer(
