@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2020, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.eclipse.hono.client.device.amqp.AmqpAdapterClientFactory;
+import org.eclipse.hono.client.device.amqp.AmqpAdapterClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -34,16 +34,16 @@ public class TenantConnectionsTest {
 
     private TenantConnections tenantConnections;
     private MqttEndpoint endpoint;
-    private AmqpAdapterClientFactory amqpAdapterClientFactory;
+    private AmqpAdapterClient amqpAdapterClient;
 
     /**
      * Sets up common fixture.
      */
     @BeforeEach
     public void setUp() {
-        amqpAdapterClientFactory = mock(AmqpAdapterClientFactory.class);
+        amqpAdapterClient = mock(AmqpAdapterClient.class);
 
-        tenantConnections = new TenantConnections(amqpAdapterClientFactory, "a-tenant-id");
+        tenantConnections = new TenantConnections(amqpAdapterClient, "a-tenant-id");
         endpoint = mock(MqttEndpoint.class);
     }
 
@@ -79,7 +79,7 @@ public class TenantConnectionsTest {
 
         tenantConnections.closeEndpoint(endpoint);
 
-        assertThat(tenantConnections.getAmqpAdapterClientFactory().failed()).isTrue();
+        assertThat(tenantConnections.getAmqpAdapterClient().failed()).isTrue();
     }
 
     /**
@@ -92,7 +92,7 @@ public class TenantConnectionsTest {
 
         tenantConnections.closeEndpoint(endpoint);
 
-        assertThat(tenantConnections.getAmqpAdapterClientFactory().succeeded()).isTrue();
+        assertThat(tenantConnections.getAmqpAdapterClient().succeeded()).isTrue();
     }
 
     /**
@@ -101,11 +101,11 @@ public class TenantConnectionsTest {
     @Test
     public void instanceIsClosedWhenInvokingClose() {
 
-        tenantConnections.getAmqpAdapterClientFactory();
+        tenantConnections.getAmqpAdapterClient();
 
         tenantConnections.closeAllConnections();
 
-        assertThat(tenantConnections.getAmqpAdapterClientFactory().failed()).isTrue();
+        assertThat(tenantConnections.getAmqpAdapterClient().failed()).isTrue();
     }
 
     /**
@@ -113,10 +113,10 @@ public class TenantConnectionsTest {
      */
     @Test
     public void isConnectedDelegatesToClientFactory() {
-        when(amqpAdapterClientFactory.isConnected(anyLong())).thenReturn(Future.succeededFuture());
+        when(amqpAdapterClient.isConnected(anyLong())).thenReturn(Future.succeededFuture());
 
         tenantConnections.isConnected(5L);
-        verify(amqpAdapterClientFactory).isConnected(eq(5L));
+        verify(amqpAdapterClient).isConnected(eq(5L));
     }
 
     /**
@@ -124,10 +124,10 @@ public class TenantConnectionsTest {
      */
     @Test
     public void connectDelegatesToClientFactory() {
-        when(amqpAdapterClientFactory.connect()).thenReturn(Future.succeededFuture());
+        when(amqpAdapterClient.connect()).thenReturn(Future.succeededFuture());
 
         tenantConnections.connect();
-        verify(amqpAdapterClientFactory).connect();
+        verify(amqpAdapterClient).connect();
 
     }
 

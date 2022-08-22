@@ -24,17 +24,17 @@ The template is provided in form of the abstract class `AbstractMqttProtocolGate
 The abstract methods must be implemented to handle the following events:
 
 1. when a device connects: authenticate the device
-1. when a device subscribes: validate the topic filters
-1. when a business application sends a command:
-  * determine the topic on which the device expects it
-  * select the corresponding subscription
-  * (optional) modify the payload
-1. when a device sends a message:
-  * select the message type (telemetry, event, command response)
-  * (if command response) correlate the message to the command
-  * (optional) modify the payload
-  * (optional) specify the content type
-  * (optional) add "application properties"
+2. when a device subscribes: validate the topic filters
+3. when a business application sends a command:
+   * determine the topic on which the device expects it
+   * select the corresponding subscription
+   * (optional) modify the payload
+4. when a device sends a message:
+   * select the message type (telemetry, event, command response)
+   * (if command response) correlate the message to the command
+   * (optional) modify the payload
+   * (optional) specify the content type
+   * (optional) add "application properties"
 
 The abstract class is configured by its constructor parameters.
 The `ClientConfigProperties` configure the connection to the AMQP protocol adapter and the `MqttProtocolGatewayConfig`

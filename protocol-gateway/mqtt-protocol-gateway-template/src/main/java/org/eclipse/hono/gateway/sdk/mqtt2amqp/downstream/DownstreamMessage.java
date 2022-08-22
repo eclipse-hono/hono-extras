@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2020, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -31,19 +31,18 @@ public abstract class DownstreamMessage {
      * Creates an instance.
      *
      * @param payload The payload to be used.
-     * @throws NullPointerException if payload is {@code null}.
      */
     public DownstreamMessage(final Buffer payload) {
         this.payload = payload;
     }
 
     /**
-     * Gets the payload of the message as a byte array.
+     * Gets the payload of the message.
      *
-     * @return The payload.
+     * @return The payload or {@code null}.
      */
-    public byte[] getPayload() {
-        return (payload == null) ? null : payload.getBytes();
+    public Buffer getPayload() {
+        return payload;
     }
 
     /**

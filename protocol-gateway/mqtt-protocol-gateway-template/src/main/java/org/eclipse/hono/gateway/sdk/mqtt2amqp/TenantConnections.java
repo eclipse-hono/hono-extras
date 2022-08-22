@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2020, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -16,11 +16,11 @@ package org.eclipse.hono.gateway.sdk.mqtt2amqp;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.hono.client.ConnectionLifecycle;
-import org.eclipse.hono.client.HonoConnection;
 import org.eclipse.hono.client.ServerErrorException;
-import org.eclipse.hono.client.device.amqp.AmqpAdapterClientFactory;
-import org.eclipse.hono.config.ClientConfigProperties;
+import org.eclipse.hono.client.amqp.config.ClientConfigProperties;
+import org.eclipse.hono.client.amqp.connection.ConnectionLifecycle;
+import org.eclipse.hono.client.amqp.connection.HonoConnection;
+import org.eclipse.hono.client.device.amqp.AmqpAdapterClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +31,7 @@ import io.vertx.mqtt.MqttEndpoint;
 /**
  * Manages all connections of one tenant, MQTT connections of devices as well as the AMQP connection to Hono's AMQP
  * adapter.
- *
+ * <p>
  * By invoking {@link #connect()} an AMQP client for the tenant is connected. Each MQTT endpoint needs to be added to
  * keep track of all MQTT connections belonging to the tenant. When the last MQTT endpoint for the tenant is closed, the
  * AMQP client - and thus this instance - is closed automatically.
@@ -43,33 +43,33 @@ class TenantConnections {
     // visible for testing
     final List<MqttEndpoint> mqttEndpoints = new ArrayList<>();
 
-    private final AmqpAdapterClientFactory amqpAdapterClientFactory;
+    private final AmqpAdapterClient amqpAdapterClient;
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final String tenantId;
 
     private boolean closed = false;
 
     /**
-     * Creates a new instance with a new {@link AmqpAdapterClientFactory} and a new {@link HonoConnection}.
+     * Creates a new instance with a new {@link AmqpAdapterClient} and a new {@link HonoConnection}.
      *
      * @param tenantId The ID of the tenant whose connections are to be managed
      * @param vertx The Vert.x instance to be used by the HonoConnection.
      * @param clientConfig The client configuration to be used by the HonoConnection.
      */
     TenantConnections(final String tenantId, final Vertx vertx, final ClientConfigProperties clientConfig) {
-        this(AmqpAdapterClientFactory.create(HonoConnection.newConnection(vertx, clientConfig), tenantId), tenantId);
+        this(AmqpAdapterClient.create(HonoConnection.newConnection(vertx, clientConfig)), tenantId);
     }
 
     /**
-     * Creates a new instance for the given {@link AmqpAdapterClientFactory}.
+     * Creates a new instance for the given {@link AmqpAdapterClient}.
      * <p>
      * <b>This constructor is for testing purposes only.</b>
      *
-     * @param amqpAdapterClientFactory The AmqpAdapterClientFactory to use for creating AMQP clients.
+     * @param amqpAdapterClient The AmqpAdapterClient to use.
      * @param tenantId The ID of the tenant whose connections are to be managed
      */
-    TenantConnections(final AmqpAdapterClientFactory amqpAdapterClientFactory, final String tenantId) {
-        this.amqpAdapterClientFactory = amqpAdapterClientFactory;
+    TenantConnections(final AmqpAdapterClient amqpAdapterClient, final String tenantId) {
+        this.amqpAdapterClient = amqpAdapterClient;
         this.tenantId = tenantId;
     }
 
@@ -79,7 +79,7 @@ class TenantConnections {
      * @return A future indicating the outcome of the operation.
      */
     public Future<HonoConnection> connect() {
-        return getAmqpAdapterClientFactory().compose(ConnectionLifecycle::connect)
+        return getAmqpAdapterClient().compose(ConnectionLifecycle::connect)
                 .onSuccess(con -> log.debug("Connected to AMQP adapter"));
     }
 
@@ -90,7 +90,9 @@ class TenantConnections {
      * @return A future indicating the outcome of the operation.
      */
     public Future<Void> addEndpoint(final MqttEndpoint mqttEndpoint) {
-        return failIfClosed().onSuccess(v -> mqttEndpoints.add(mqttEndpoint));
+        return failIfClosed()
+                .onFailure(thr -> log.warn("failed to add MQTT endpoint for tenant [{}]", tenantId, thr))
+                .onSuccess(v -> mqttEndpoints.add(mqttEndpoint));
     }
 
     /**
@@ -126,7 +128,8 @@ class TenantConnections {
 
     private void closeEndpointIfConnected(final MqttEndpoint mqttEndpoint) {
         if (mqttEndpoint.isConnected()) {
-            log.debug("closing connection with client [client ID: {}]", mqttEndpoint.clientIdentifier());
+            log.debug("closing connection with client [tenant ID: {}, client ID: {}]", tenantId,
+                    mqttEndpoint.clientIdentifier());
             mqttEndpoint.close();
         } else {
             log.trace("connection to client is already closed");
@@ -134,7 +137,7 @@ class TenantConnections {
     }
 
     private void closeThisInstance() {
-        amqpAdapterClientFactory.disconnect();
+        amqpAdapterClient.disconnect();
         closed = true;
     }
 
@@ -146,26 +149,24 @@ class TenantConnections {
      *         {@link ServerErrorException}, or an {@link IllegalStateException} if this instance is already closed.
      */
     public Future<Void> isConnected(final long connectTimeout) {
-        return getAmqpAdapterClientFactory().compose(f -> f.isConnected(connectTimeout));
+        return getAmqpAdapterClient().compose(f -> f.isConnected(connectTimeout));
     }
 
     /**
-     * Returns the AmqpAdapterClientFactory for the tenant.
+     * Returns the AmqpAdapterClient for the tenant.
      *
-     * @return A future containing the AmqpAdapterClientFactory, or, if this instance is already closed, a failed
-     *         future.
+     * @return A future containing the AmqpAdapterClient, or, if this instance is already closed, a failed future.
      */
-    public Future<AmqpAdapterClientFactory> getAmqpAdapterClientFactory() {
-        return failIfClosed().map(amqpAdapterClientFactory);
+    public Future<AmqpAdapterClient> getAmqpAdapterClient() {
+        return failIfClosed()
+                .onFailure(thr -> log.warn("failed to get client for tenant [{}]", tenantId, thr))
+                .map(amqpAdapterClient);
     }
 
     private Future<Void> failIfClosed() {
         if (closed) {
-            final Exception ex = new IllegalStateException("connections for this tenant are already closed");
-            log.warn("This should not happen", ex);
-            return Future.failedFuture(ex);
-        } else {
-            return Future.succeededFuture();
+            return Future.failedFuture(new IllegalStateException("connections for this tenant are already closed"));
         }
+        return Future.succeededFuture();
     }
 }

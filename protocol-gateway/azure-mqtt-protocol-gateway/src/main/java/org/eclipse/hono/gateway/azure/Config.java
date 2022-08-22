@@ -15,7 +15,7 @@ package org.eclipse.hono.gateway.azure;
 
 import java.util.List;
 
-import org.eclipse.hono.config.ClientConfigProperties;
+import org.eclipse.hono.client.amqp.config.ClientConfigProperties;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.MqttProtocolGatewayConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;

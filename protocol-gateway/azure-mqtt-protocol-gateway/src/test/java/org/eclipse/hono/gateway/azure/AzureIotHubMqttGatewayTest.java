@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2020, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -24,7 +24,7 @@ import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.hono.auth.Device;
-import org.eclipse.hono.config.ClientConfigProperties;
+import org.eclipse.hono.client.amqp.config.ClientConfigProperties;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.Command;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.MqttCommandContext;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.MqttDownstreamContext;
@@ -202,7 +202,7 @@ public class AzureIotHubMqttGatewayTest {
         final DownstreamMessage result = messageFuture.result();
 
         assertThat(result).isInstanceOfAny(TelemetryMessage.class);
-        assertThat(result.getPayload()).isEqualTo(payload.getBytes());
+        assertThat(result.getPayload()).isEqualTo(payload);
 
     }
 
@@ -229,7 +229,7 @@ public class AzureIotHubMqttGatewayTest {
         final DownstreamMessage result = messageFuture.result();
 
         assertThat(result).isInstanceOfAny(EventMessage.class);
-        assertThat(result.getPayload()).isEqualTo(payload.getBytes());
+        assertThat(result.getPayload()).isEqualTo(payload);
 
     }
 
@@ -258,7 +258,7 @@ public class AzureIotHubMqttGatewayTest {
         final DownstreamMessage result = messageFuture.result();
 
         assertThat(result).isInstanceOfAny(CommandResponseMessage.class);
-        assertThat(result.getPayload()).isEqualTo(payload.getBytes());
+        assertThat(result.getPayload()).isEqualTo(payload);
 
         // ...AND its parameters are set correctly
         final CommandResponseMessage responseMessage = (CommandResponseMessage) result;

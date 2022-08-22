@@ -51,7 +51,7 @@ Since there is only one device in this example implementation anyway, the creden
 ### Registering Devices
 
 The demo device and the gateway need to be registered in Hono's device registry. For the gateway, credentials must be created. 
-The [Getting started](https://www.eclipse.org/hono/getting-started/#registering-devices) guide shows how to do this.
+The [Getting started](https://www.eclipse.org/hono/docs/getting-started/#registering-devices) guide shows how to do this.
 
 Alternatively, the script `scripts/create_demo_devices.sh` can be used to register the devices and create credentials:
 ~~~sh
@@ -78,7 +78,7 @@ and can be customized using [Spring Boot Configuration](https://docs.spring.io/s
 
 If connecting to a local Hono instance deployed via the [IoT Packages](https://www.eclipse.org/packages/) Hono Helm chart,
 the `hono.client.amqp.host` configuration property has to be set to the IP of the AMQP adapter service (obtainable e.g.
-via `kubectl get service eclipse-hono-adapter-amqp-vertx --output=jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}" -n hono`).
+via `kubectl get service eclipse-hono-adapter-amqp --output=jsonpath="{.status.loadBalancer.ingress[0]['hostname','ip']}" -n hono`).
 If the example certificates provided with the chart are used, `hono.client.amqp.trustStorePath` has to set to the CA
 certificates file (i.e. [trusted-certs.pem](https://github.com/eclipse/packages/blob/master/charts/hono/example/certs/trusted-certs.pem))
 and `hono.client.amqp.hostnameVerificationRequired` has to be set to `false`.
@@ -87,7 +87,7 @@ and `hono.client.amqp.hostnameVerificationRequired` has to be set to `false`.
 ### Starting a Receiver
 
 Telemetry and event messages need an application that consumes the messages. 
-The [Getting started](https://www.eclipse.org/hono/getting-started/#starting-the-example-application) guide shows how to start the example application that receives the messages.
+The [Getting started](https://www.eclipse.org/hono/docs/getting-started/#starting-the-example-application) guide shows how to start the example application that receives the messages.
  
  
 ## Starting the Protocol Gateway
@@ -148,7 +148,7 @@ mosquitto_pub -d -h localhost -i '4712' -u 'demo1' -P 'demo-secret' -t 'devices/
 ### Commands 
 
 The example application can be used to send commands. 
-The [Getting started](https://www.eclipse.org/hono/getting-started/#advanced-sending-commands-to-a-device) shows a walk-through example.
+The [Getting started](https://www.eclipse.org/hono/docs/getting-started/#advanced-sending-commands-to-a-device) shows a walk-through example.
 
 **Subscribe for one-way commands**
  

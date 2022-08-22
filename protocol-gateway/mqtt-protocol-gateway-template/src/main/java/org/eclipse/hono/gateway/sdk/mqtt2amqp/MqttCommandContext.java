@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2020, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -18,7 +18,7 @@ import java.util.Objects;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.hono.auth.Device;
-import org.eclipse.hono.util.MessageHelper;
+import org.eclipse.hono.client.amqp.connection.AmqpUtils;
 
 import io.vertx.core.buffer.Buffer;
 
@@ -128,7 +128,7 @@ public class MqttCommandContext {
      * @return The payload - not {@code null}.
      */
     public Buffer getPayload() {
-        final Buffer payload = MessageHelper.getPayload(message);
+        final Buffer payload = AmqpUtils.getPayload(message);
         if (payload != null) {
             return payload;
         } else {

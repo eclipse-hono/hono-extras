@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2020, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -15,6 +15,8 @@ package org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream;
 
 import java.util.Objects;
 
+import org.eclipse.hono.util.QoS;
+
 import io.vertx.core.buffer.Buffer;
 
 /**
@@ -22,27 +24,26 @@ import io.vertx.core.buffer.Buffer;
  */
 public final class TelemetryMessage extends DownstreamMessage {
 
-    private final boolean waitForOutcome;
+    private final QoS qos;
 
     /**
      * Creates an instance.
      *
      * @param payload The payload to be used.
-     * @param waitForOutcome True if the sender should wait for the outcome of the send operation.
-     * @throws NullPointerException if payload is {@code null}.
+     * @param qos The quality of service level.
+     * @throws NullPointerException if payload or qos is {@code null}.
      */
-    public TelemetryMessage(final Buffer payload, final boolean waitForOutcome) {
+    public TelemetryMessage(final Buffer payload, final QoS qos) {
         super(Objects.requireNonNull(payload));
-
-        this.waitForOutcome = waitForOutcome;
+        this.qos = Objects.requireNonNull(qos);
     }
 
     /**
-     * Returns if the result of the sending should be waited for.
+     * Gets the quality of service level to use for sending the message.
      *
-     * @return {@code true} if the sender should wait for the outcome of the send operation.
+     * @return The quality of service level.
      */
-    public boolean shouldWaitForOutcome() {
-        return waitForOutcome;
+    public QoS getQos() {
+        return qos;
     }
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2020, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -16,12 +16,11 @@ package org.eclipse.hono.gateway.sdk.mqtt2amqp;
 import java.util.function.Consumer;
 
 import org.apache.qpid.proton.message.Message;
-import org.eclipse.hono.client.MessageConsumer;
-import org.eclipse.hono.client.device.amqp.AmqpAdapterClientFactory;
+import org.eclipse.hono.client.amqp.config.ClientConfigProperties;
+import org.eclipse.hono.client.command.CommandConsumer;
 import org.eclipse.hono.client.device.amqp.CommandResponder;
 import org.eclipse.hono.client.device.amqp.EventSender;
 import org.eclipse.hono.client.device.amqp.TelemetrySender;
-import org.eclipse.hono.config.ClientConfigProperties;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -78,7 +77,6 @@ public interface MultiTenantConnectionManager {
      *
      * @param tenantId The tenant to which the sender belongs.
      * @return a future with the open sender or a failed future.
-     * @see AmqpAdapterClientFactory#getOrCreateTelemetrySender()
      */
     Future<TelemetrySender> getOrCreateTelemetrySender(String tenantId);
 
@@ -87,7 +85,6 @@ public interface MultiTenantConnectionManager {
      *
      * @param tenantId The tenant to which the sender belongs.
      * @return a future with the open sender or a failed future.
-     * @see AmqpAdapterClientFactory#getOrCreateTelemetrySender()
      */
     Future<EventSender> getOrCreateEventSender(String tenantId);
 
@@ -96,7 +93,6 @@ public interface MultiTenantConnectionManager {
      *
      * @param tenantId The tenant to which the sender belongs.
      * @return a future with the open sender or a failed future.
-     * @see AmqpAdapterClientFactory#getOrCreateTelemetrySender()
      */
     Future<CommandResponder> getOrCreateCommandResponseSender(String tenantId);
 
@@ -107,9 +103,8 @@ public interface MultiTenantConnectionManager {
      * @param deviceId The device to consume commands for.
      * @param messageHandler The handler to invoke with every command received.
      * @return a future with the open sender or a failed future.
-     * @see AmqpAdapterClientFactory#getOrCreateTelemetrySender()
      */
-    Future<MessageConsumer> createDeviceSpecificCommandConsumer(String tenantId, String deviceId,
+    Future<CommandConsumer> createDeviceSpecificCommandConsumer(String tenantId, String deviceId,
             Consumer<Message> messageHandler);
 
     /**
@@ -118,8 +113,7 @@ public interface MultiTenantConnectionManager {
      * @param tenantId The tenant to which the sender belongs.
      * @param messageHandler The handler to invoke with every command received.
      * @return a future with the open sender or a failed future.
-     * @see AmqpAdapterClientFactory#getOrCreateTelemetrySender()
      */
-    Future<MessageConsumer> createCommandConsumer(String tenantId, Consumer<Message> messageHandler);
+    Future<CommandConsumer> createCommandConsumer(String tenantId, Consumer<Message> messageHandler);
 
 }
