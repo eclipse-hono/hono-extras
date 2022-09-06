@@ -231,7 +231,7 @@ public class AzureIotHubMqttGateway extends AbstractMqttProtocolGateway {
         final PropertyBag propertyBag = PropertyBag.decode(ctx.topic());
         final RequestId requestId = RequestId.decode(propertyBag.getProperty("$rid"));
 
-        final String status = ctx.topic().split("\\/")[3];
+        final String status = ctx.topic().split("/", -1)[3];
 
         final DownstreamMessage result = new CommandResponseMessage(requestId.getReplyId(),
                 requestId.getCorrelationId(), status, ctx.message().payload());
