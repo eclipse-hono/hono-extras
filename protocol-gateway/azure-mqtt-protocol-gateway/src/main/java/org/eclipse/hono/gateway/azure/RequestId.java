@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2020, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -95,20 +95,19 @@ public class RequestId {
         Objects.requireNonNull(replyTo);
         Objects.requireNonNull(correlationId);
 
-        if (!(correlationId instanceof String)) {
-            throw new IllegalArgumentException("correlation-id must be a string");
-        } else {
-            final String correlationIdString = ((String) correlationId);
+        if (correlationId instanceof String correlationIdString) {
             if (correlationIdString.length() > 255) {
                 throw new IllegalArgumentException("correlationId is too long");
             }
 
-            final String[] replyToElements = replyTo.split("\\/");
+            final String[] replyToElements = replyTo.split("/", -1);
             if (replyToElements.length <= 3) {
                 throw new IllegalArgumentException("reply-to address is malformed");
             } else {
                 return String.format("%02x%s%s", correlationIdString.length(), correlationIdString, replyToElements[3]);
             }
+        } else {
+            throw new IllegalArgumentException("correlation-id must be a string");
         }
     }
 

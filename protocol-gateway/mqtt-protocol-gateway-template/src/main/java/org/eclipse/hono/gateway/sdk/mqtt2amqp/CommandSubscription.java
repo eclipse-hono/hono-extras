@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018, 2020 Contributors to the Eclipse Foundation
+ * Copyright (c) 2018, 2022 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -21,7 +21,7 @@ import io.netty.handler.codec.mqtt.MqttQoS;
  * The MQTT subscription of devices, to get commands.
  *
  */
-public class CommandSubscription {
+public final class CommandSubscription {
 
     private final String topicFilter;
     private final MqttQoS qos;
@@ -79,7 +79,7 @@ public class CommandSubscription {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (!getClass().isInstance(o)) {
             return false;
         }
         final CommandSubscription that = (CommandSubscription) o;

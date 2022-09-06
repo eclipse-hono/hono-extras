@@ -408,7 +408,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
                 if (path != null && path.length > 0) {
                     final Future<Device> authAttempt = authenticateDeviceCertificate(path);
                     log.debug("authentication with client certificate: {}.",
-                            (authAttempt.succeeded()) ? "succeeded" : "failed");
+                            authAttempt.succeeded() ? "succeeded" : "failed");
                     return authAttempt;
                 }
             } catch (RuntimeException | SSLPeerUnverifiedException e) {
@@ -430,7 +430,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
                 return Future.failedFuture(new ClientErrorException(HttpURLConnection.HTTP_INTERNAL_ERROR));
             } else {
                 log.debug("authentication with username/password {}.",
-                        (authenticatedDevice.succeeded()) ? "succeeded" : "failed");
+                        authenticatedDevice.succeeded() ? "succeeded" : "failed");
                 return authenticatedDevice;
             }
         }
