@@ -1,0 +1,37 @@
+app:
+  name: "Device Communication"
+  version: "v1"
+vertx:
+  openapi:
+    file: "/api/hono-device-communication-v1.yaml"
+  server:
+    url: "localhost"
+    port: 8081
+
+quarkus:
+  flyway:
+    migrate-at-start: true
+  # Device registration table configs. Used for validating devices
+  device-registration:
+    table: "device_registration"
+    tenant-id-column: "tenant_id"
+    device-id-column: "device_id"
+  datasource:
+    pool-max-size: 5
+    name: "hono"
+    host: "localhost"
+    port: 5432
+    username: "postgres"
+    password: "mysecretpassword"
+    db-kind: "postgresql"
+    jdbc:
+      url: "jdbc:postgresql://localhost:5432/hono"
+
+
+"%dev":
+  app:
+    name: "Device Communication"
+  vertx:
+    server:
+      url: "localhost"
+      port: "8081"

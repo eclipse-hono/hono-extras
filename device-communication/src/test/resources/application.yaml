@@ -1,0 +1,16 @@
+app:
+  name: "Device Communication"
+vertx:
+  openapi:
+    file: "/api/hono-device-communication-v1.yaml"
+  server:
+    url: "localhost"
+    port: 8081
+
+"%test":
+  app:
+    name: "Device Communication"
+  vertx:
+    server:
+      url: "localhost"
+      port: "8081"
