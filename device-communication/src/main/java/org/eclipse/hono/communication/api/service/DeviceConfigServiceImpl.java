@@ -60,7 +60,7 @@ public class DeviceConfigServiceImpl implements DeviceConfigService {
     }
 
     public Future<ListDeviceConfigVersionsResponse> listAll(String deviceId, String tenantId, int limit) {
-        return db.getDbClient().withTransaction(
+        return db.getDbClient().withConnection(
                 sqlConnection -> repository.listAll(sqlConnection, deviceId, tenantId, limit)
                         .map(
                                 result -> {

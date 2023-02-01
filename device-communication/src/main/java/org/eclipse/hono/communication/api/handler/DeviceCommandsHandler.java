@@ -44,6 +44,5 @@ public class DeviceCommandsHandler implements HttpEndpointHandler {
 
     public void handlePostCommand(RoutingContext routingContext) {
         commandService.postCommand(routingContext);
-        // publish command and send response
     }
 }

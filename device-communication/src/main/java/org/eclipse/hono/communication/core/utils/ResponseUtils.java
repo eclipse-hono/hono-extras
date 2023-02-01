@@ -20,8 +20,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.validation.BadRequestException;
-
-import java.util.NoSuchElementException;
+import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
 
 /**
  * HTTP Response utilities class
@@ -80,18 +79,23 @@ public abstract class ResponseUtils {
                 || error instanceof IllegalStateException
                 || error instanceof NullPointerException
                 || error instanceof BadRequestException) {
-            
+
             // Bad Request
             status = 400;
             message = error.getMessage();
-        } else if (error instanceof NoSuchElementException) {
+        } else if (error instanceof DeviceNotFoundException) {
             // Not Found
             status = 404;
             message = error.getMessage();
         } else {
             // Internal Server Error
             status = 500;
-            message = "Internal Server Error";
+            if (error != null) {
+                message = String.format("Internal Server Error: %s", error.getMessage());
+            } else {
+                message = "Internal Server Error";
+            }
+
         }
 
         rc.response()

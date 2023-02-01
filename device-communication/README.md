@@ -11,7 +11,7 @@ The application is reactive and uses Quarkus Framework for the application and V
 
 ### Hono internal communication
 
-API uses [Googles PubSub](https://cloud.google.com/pubsub/docs/overview?hl=de) service to communicate with the command
+API uses [Google's PubSub](https://cloud.google.com/pubsub/docs/overview?hl=de) service to communicate with the command
 router.
 
 ## API endpoints
@@ -22,11 +22,11 @@ router.
 
 <p>
 
-#### configs/{tenantId}/{deviceId}
+#### configs/{tenantId}/{deviceId}?numVersion=(int 0 - 10)
 
 - GET : list of device config versions
 
-- POST: update or create a device config version
+- POST: create a device config version
 
 For more information please see resources/api/openApi file.
 
@@ -51,11 +51,11 @@ For running the PostgresSQL Database local with docker run:
 
 ``````
 
-docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+docker run -p 5432:5432 --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres
 
 ``````
 
-After the container is running, log in to the container and with psql create the database and the tables. Then we have
+After the container is running, log in to the container and with psql create the database. Then we have
 to set the application settings.
 
 Default postgresSQl values:

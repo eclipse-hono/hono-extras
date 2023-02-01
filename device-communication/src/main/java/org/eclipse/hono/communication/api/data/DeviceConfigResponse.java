@@ -19,7 +19,7 @@ package org.eclipse.hono.communication.api.data;
 import java.util.Objects;
 
 /**
- * The device configuration entity object.
+ * The device configuration response class.
  **/
 public class DeviceConfigResponse {
 
@@ -28,7 +28,7 @@ public class DeviceConfigResponse {
     private String cloudUpdateTime;
     private String binaryData;
 
-  
+
     public DeviceConfigResponse() {
     }
 
@@ -60,7 +60,7 @@ public class DeviceConfigResponse {
 
     @Override
     public String toString() {
-        return "DeviceConfigEntity{" +
+        return "DeviceConfigResponse{" +
                 "version=" + version +
                 ", cloudUpdateTime='" + cloudUpdateTime + '\'' +
                 ", binaryData='" + binaryData + '\'' +

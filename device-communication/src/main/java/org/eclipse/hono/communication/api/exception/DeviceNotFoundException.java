@@ -14,12 +14,26 @@
  *
  */
 
-package org.eclipse.hono.communication.api.config;
+package org.eclipse.hono.communication.api.exception;
+
+import java.util.NoSuchElementException;
 
 /**
- * Class for sharing api constant values
+ * Device Not found exception code: 404
  */
-public class EndpointConstants {
+public class DeviceNotFoundException extends NoSuchElementException {
+    public DeviceNotFoundException() {
+    }
 
-    // Device
+    public DeviceNotFoundException(String s, Throwable cause) {
+        super(s, cause);
+    }
+
+    public DeviceNotFoundException(Throwable cause) {
+        super(cause);
+    }
+
+    public DeviceNotFoundException(String s) {
+        super(s);
+    }
 }

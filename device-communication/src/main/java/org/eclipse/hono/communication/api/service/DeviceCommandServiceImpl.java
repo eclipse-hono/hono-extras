@@ -36,6 +36,8 @@ public class DeviceCommandServiceImpl implements DeviceCommandService {
      * @param routingContext The routing context
      */
     public void postCommand(RoutingContext routingContext) {
+        // TODO publish command and send response
         log.info("postCommand received");
+        routingContext.response().setStatusCode(501).end();
     }
 }

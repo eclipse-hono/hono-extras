@@ -93,6 +93,7 @@ public abstract class AbstractServiceApplication {
                                 element.getLineNumber()))
                         .collect(Collectors.joining(System.lineSeparator()));
                 log.warn("managed vert.x instance has been closed unexpectedly{}{}", System.lineSeparator(), s);
+                this.doStop();
                 completion.complete();
             };
             vertxInternal.addCloseHook(closeHook);

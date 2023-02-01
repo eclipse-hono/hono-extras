@@ -121,11 +121,12 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
                 ResponseUtils.errorResponse(routingContext, routingContext.failure()));
 
         var serverConfig = appConfigs.getServerConfig();
-        addHealthCheckHandles(apiRouter, serverConfig);
+        addHealthCheckHandlers(apiRouter, serverConfig);
+        var basePath = String.format("%s*", serverConfig.getBasePath()); // absolut path not allowed only /*
 
-        apiRouter.route(
-                String.format("%s*", serverConfig.getBasePath()) // absolut path not allowed only /*
-        ).subRouter(router);
+        log.info("API base path: {}", basePath);
+
+        apiRouter.route(basePath).subRouter(router);
         return apiRouter;
     }
 
@@ -134,12 +135,12 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
      *
      * @param router Created router object
      */
-    private void addHealthCheckHandles(Router router, ServerConfig serverConfig) {
-        addReadinessHandles(router, serverConfig.getReadinessPath());
-        addLivenessHandles(router, serverConfig.getLivenessPath());
+    private void addHealthCheckHandlers(Router router, ServerConfig serverConfig) {
+        addReadinessHandlers(router, serverConfig.getReadinessPath());
+        addLivenessHandlers(router, serverConfig.getLivenessPath());
     }
 
-    private void addReadinessHandles(Router router, String readinessPath) {
+    private void addReadinessHandlers(Router router, String readinessPath) {
         log.info("Adding readiness path: {}", readinessPath);
         final HealthCheckHandler healthCheckHandler = HealthCheckHandler.create(vertx);
 
@@ -160,7 +161,7 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
     }
 
 
-    private void addLivenessHandles(Router router, String livenessPath) {
+    private void addLivenessHandlers(Router router, String livenessPath) {
         log.info("Adding liveness path: {}", livenessPath);
         final HealthCheckHandler healthCheckHandler = HealthCheckHandler.create(vertx);
 

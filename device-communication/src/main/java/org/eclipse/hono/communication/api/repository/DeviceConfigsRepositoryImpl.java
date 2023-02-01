@@ -25,6 +25,7 @@ import io.vertx.sqlclient.templates.RowMapper;
 import io.vertx.sqlclient.templates.SqlTemplate;
 import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigEntity;
+import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
 import org.eclipse.hono.communication.core.app.DatabaseConfig;
 import org.graalvm.collections.Pair;
 
@@ -97,20 +98,28 @@ public class DeviceConfigsRepositoryImpl implements DeviceConfigsRepository {
      */
     public Future<List<DeviceConfig>> listAll(SqlConnection sqlConnection, String deviceId, String tenantId, int limit) {
         int queryLimit = limit == 0 ? MAX_LIMIT : limit;
-
-        return SqlTemplate
-                .forQuery(sqlConnection, SQL_LIST)
-                .mapTo(DeviceConfig.class)
-                .execute(Map.of("deviceId", deviceId, "tenantId", tenantId, "limit", queryLimit))
-                .map(rowSet -> {
-                    final List<DeviceConfig> configs = new ArrayList<>();
-                    rowSet.forEach(configs::add);
-                    return configs;
-                })
-                .onSuccess(success -> log.info(
-                        String.format("Listing all configs for device %s and tenant %s",
-                                deviceId, tenantId)))
-                .onFailure(throwable -> log.error("Error: {}", throwable));
+        return searchForDevice(sqlConnection, deviceId, tenantId)
+                .compose(
+                        counter -> {
+                            if (counter < 1) {
+                                throw new DeviceNotFoundException(String.format("Device with id %s and tenant id %s doesn't exist",
+                                        deviceId,
+                                        tenantId));
+                            }
+                            return SqlTemplate
+                                    .forQuery(sqlConnection, SQL_LIST)
+                                    .mapTo(DeviceConfig.class)
+                                    .execute(Map.of("deviceId", deviceId, "tenantId", tenantId, "limit", queryLimit))
+                                    .map(rowSet -> {
+                                        final List<DeviceConfig> configs = new ArrayList<>();
+                                        rowSet.forEach(configs::add);
+                                        return configs;
+                                    })
+                                    .onSuccess(success -> log.info(
+                                            String.format("Listing all configs for device %s and tenant %s",
+                                                    deviceId, tenantId)))
+                                    .onFailure(throwable -> log.error("Error: {}", throwable));
+                        });
     }
 
 
@@ -176,7 +185,7 @@ public class DeviceConfigsRepositoryImpl implements DeviceConfigsRepository {
                 .compose(
                         counter -> {
                             if (counter < 1) {
-                                throw new IllegalStateException(String.format("Device with id %s and tenant id %s doesn't exist",
+                                throw new DeviceNotFoundException(String.format("Device with id %s and tenant id %s doesn't exist",
                                         entity.getDeviceId(),
                                         entity.getTenantId()));
                             }

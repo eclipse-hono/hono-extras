@@ -97,12 +97,12 @@ class DeviceConfigServiceImplTest {
     void listAll_success() {
         var deviceConfigVersions = new ListDeviceConfigVersionsResponse();
         when(dbMock.getDbClient()).thenReturn(poolMock);
-        when(poolMock.withTransaction(any())).thenReturn(Future.succeededFuture(deviceConfigVersions));
+        when(poolMock.withConnection(any())).thenReturn(Future.succeededFuture(deviceConfigVersions));
 
         var results = deviceConfigService.listAll(deviceId, tenantId, 10);
 
         verify(dbMock, times(1)).getDbClient();
-        verify(poolMock, times(1)).withTransaction(any());
+        verify(poolMock, times(1)).withConnection(any());
         Assertions.assertTrue(results.succeeded());
 
 
@@ -112,12 +112,12 @@ class DeviceConfigServiceImplTest {
     @Test
     void listAll_failed() {
         when(dbMock.getDbClient()).thenReturn(poolMock);
-        when(poolMock.withTransaction(any())).thenReturn(Future.failedFuture(new Throwable("test_error")));
+        when(poolMock.withConnection(any())).thenReturn(Future.failedFuture(new Throwable("test_error")));
 
         var results = deviceConfigService.listAll(deviceId, tenantId, 10);
 
         verify(dbMock, times(1)).getDbClient();
-        verify(poolMock, times(1)).withTransaction(any());
+        verify(poolMock, times(1)).withConnection(any());
         Assertions.assertTrue(results.failed());
 
 

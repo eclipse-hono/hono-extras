@@ -138,9 +138,12 @@ class DeviceCommunicationHttpServerTest {
                 when(routerMock.route(any())).thenReturn(routeMock);
 
                 try (MockedStatic<Quarkus> quarkusMockedStatic = mockStatic(Quarkus.class)) {
+                    DeviceCommunicationHttpServer deviceCommunicationHttpServerSpy = spy(this.deviceCommunicationHttpServer);
+                    deviceCommunicationHttpServerSpy.start();
 
-                    this.deviceCommunicationHttpServer.start();
 
+                    verify(deviceCommunicationHttpServerSpy, times(1)).createRouterWithEndpoints(eq(routerBuilderMock), any());
+                    verify(deviceCommunicationHttpServerSpy, times(1)).startVertxServer(any());
                     mockedRouterBuilderStatic.verify(() -> RouterBuilder.create(vertxMock, "/myPath"), times(1));
                     routerMockedStatic.verify(() -> Router.router(vertxMock), times(1));
 
@@ -238,8 +241,13 @@ class DeviceCommunicationHttpServerTest {
                     when(serverConfigMock.getOpenApiFilePath()).thenReturn("/myPath");
                     when(serverConfigMock.getBasePath()).thenReturn("/basePath");
                     when(routerMock.route(any())).thenReturn(routeMock);
+                    DeviceCommunicationHttpServer deviceCommunicationHttpServerSpy = spy(this.deviceCommunicationHttpServer);
+                    deviceCommunicationHttpServerSpy.start();
 
-                    this.deviceCommunicationHttpServer.start();
+
+                    verify(deviceCommunicationHttpServerSpy, times(1)).createRouterWithEndpoints(eq(routerBuilderMock), any());
+                    verify(deviceCommunicationHttpServerSpy, times(1)).startVertxServer(any());
+                   
 
                     mockedRouterBuilderStatic.verify(() -> RouterBuilder.create(vertxMock, "/myPath"), times(1));
 
