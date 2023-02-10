@@ -34,6 +34,28 @@ public class ServerConfig {
     @ConfigProperty(name = "vertx.server.port", defaultValue = "8080")
     int serverPort;
 
+    @ConfigProperty(name = "vertx.server.paths.readiness", defaultValue = "/readiness")
+    String readinessPath;
+
+
+    @ConfigProperty(name = "vertx.server.paths.liveness", defaultValue = "/liveness")
+    String livenessPath;
+
+    @ConfigProperty(name = "vertx.server.paths.base")
+    String basePath;
+
+    public String getBasePath() {
+        return basePath;
+    }
+
+    public String getReadinessPath() {
+        return readinessPath;
+    }
+
+    public String getLivenessPath() {
+        return livenessPath;
+    }
+
     public String getOpenApiFilePath() {
         return openApiFilePath;
     }

@@ -4,6 +4,9 @@ info:
   title: Hono Device Communication
   version: 1.0.0
   description: Device commands and configs API.
+servers:
+  - url: http://localhost:8080/api/v1
+
 paths:
   /commands/{tenantid}/{deviceid}:
     summary: Device commands
@@ -40,19 +43,21 @@ paths:
         required: true
   /configs/{tenantid}/{deviceid}:
     summary: Device configs
-    description: Configs for a specific device
+    description: Create or list Configs for a specific device
     get:
       tags:
         - CONFIGS
       parameters:
         - name: numVersions
           description: "The number of versions to list. Versions are listed in decreasing
-          order of the version number. The maximum number of versions retained is
+          order of the version number. The maximum number of versions saved in Database is
           10. If this value is zero, it will return all the versions available."
           schema:
             type: integer
+            minimum: 0
+            maximum: 10
           in: query
-          required: true
+          required: false
       responses:
         "200":
           content:
@@ -84,16 +89,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceConfig'
+                $ref: '#/components/schemas/DeviceConfigResponse'
           description: Device config updated successfully
         "400":
-          description: Validation error
+          description: Validation error or Bad request
+        "404":
+          description: Not Found
         "500":
-          description: Internal error
+          description: Internal Server error
       operationId: modifyCloudToDeviceConfig
       summary: Modify cloud to device config
-      description: Modifies the configuration for a specific device and Returns the
-        modified configuration version and its metadata.
+      description: Creates an device config version and Returns the
+        the new configuration version and its metadata.
     parameters:
       - name: tenantid
         description: Unique registry id
@@ -134,17 +141,11 @@ components:
     DeviceConfigRequest:
       description: Request body for modifying device configs
       required:
-        - versionToUpdate
         - binaryData
       type: object
       properties:
         versionToUpdate:
-          description: "string (int64 format)\r\n\r\nThe version number to update.
-            If this value is zero, it will not check the version number of the server
-            and will always update the current version; otherwise, this update will
-            fail if the version number found on the server does not match this version
-            number. This is used to support multiple simultaneous updates without
-            losing data."
+          description: "string (int64 format)\r\n\r\nThe Config version number."
           type: string
         binaryData:
           description: "string (bytes format)\r\n\r\nThe configuration data for the
@@ -203,4 +204,31 @@ components:
         version: string
         cloudUpdateTime: string
         deviceAckTime: string
+        binaryData: string
+    DeviceConfigResponse:
+      title: New Config version response
+      description: The device configuration.
+      type: object
+      properties:
+        version:
+          description: "String (int64 format) [Output only] The version
+            of this update. The version number is assigned by the server, and is
+            always greater than 0 after device creation. The version must be 0 on
+            the devices.create request if a config is specified; the response of
+            devices.create will always have a value of 1."
+          type: string
+        cloudUpdateTime:
+          description: "String (Timestamp format) [Output only] The time at
+            which this configuration version was updated in Cloud IoT Core. This
+            timestamp is set by the server. Timestamp in 
+            RFC3339 UTC \"Zulu\" format, accurate to nanoseconds. 
+            Example: \"2014-10-02T15:01:23.045123456Z\"."
+          type: string
+        binaryData:
+          description: "string (bytes format) The device configuration data
+            in string base64-encoded format."
+          type: string
+      example:
+        version: string
+        cloudUpdateTime: string
         binaryData: string

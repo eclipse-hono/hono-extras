@@ -26,10 +26,10 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.Operation;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import org.eclipse.hono.communication.api.config.DeviceConfigsConstants;
-import org.eclipse.hono.communication.api.entity.DeviceConfig;
-import org.eclipse.hono.communication.api.entity.DeviceConfigEntity;
-import org.eclipse.hono.communication.api.entity.DeviceConfigRequest;
-import org.eclipse.hono.communication.api.entity.ListDeviceConfigVersionsResponse;
+import org.eclipse.hono.communication.api.data.DeviceConfig;
+import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
+import org.eclipse.hono.communication.api.data.DeviceConfigResponse;
+import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 import org.eclipse.hono.communication.api.service.DeviceConfigService;
 import org.eclipse.hono.communication.api.service.DeviceConfigServiceImpl;
 import org.junit.jupiter.api.AfterEach;
@@ -59,7 +59,7 @@ class DeviceConfigsHandlerTest {
     private final String deviceID = "device_ID";
     private final String errorMsg = "test_error";
     DeviceConfigRequest deviceConfigRequest = new DeviceConfigRequest("1", "binary_data");
-    DeviceConfigEntity deviceConfigEntity = new DeviceConfigEntity();
+    DeviceConfigResponse deviceConfigEntity = new DeviceConfigResponse();
     DeviceConfig deviceConfig = new DeviceConfig();
 
     public DeviceConfigsHandlerTest() {
@@ -74,8 +74,7 @@ class DeviceConfigsHandlerTest {
         deviceConfigsHandler = new DeviceConfigsHandler(configServiceMock);
 
         deviceConfigEntity.setVersion(1);
-        deviceConfigEntity.setTenantId(tenantID);
-        deviceConfigEntity.setDeviceId(deviceID);
+
 
         deviceConfig.setVersion("");
 

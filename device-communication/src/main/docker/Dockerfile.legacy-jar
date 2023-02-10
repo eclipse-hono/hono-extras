@@ -75,11 +75,15 @@
 #   accessed directly. (example: "foo.example.com,bar.example.com")
 #
 ###
-FROM registry.access.redhat.com/ubi8/openjdk-17:1.14
+FROM registry.access.redhat.com/ubi8/openjdk-17:1.14-10
 
 ENV LANGUAGE='en_US:en'
 
+RUN mkdir api/
+RUN mkdir db/
 
+COPY target/classes/api/* /api/
+COPY target/classes/db/* /db/
 COPY target/lib/* /deployments/lib/
 COPY target/*-runner.jar /deployments/quarkus-run.jar
 

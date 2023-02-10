@@ -18,9 +18,10 @@ package org.eclipse.hono.communication.api.service;
 
 import io.vertx.core.Future;
 import io.vertx.pgclient.PgPool;
-import org.eclipse.hono.communication.api.entity.DeviceConfigEntity;
-import org.eclipse.hono.communication.api.entity.DeviceConfigRequest;
-import org.eclipse.hono.communication.api.entity.ListDeviceConfigVersionsResponse;
+import org.eclipse.hono.communication.api.data.DeviceConfigEntity;
+import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
+import org.eclipse.hono.communication.api.data.DeviceConfigResponse;
+import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 import org.eclipse.hono.communication.api.mapper.DeviceConfigMapper;
 import org.eclipse.hono.communication.api.repository.DeviceConfigsRepository;
 import org.eclipse.hono.communication.api.repository.DeviceConfigsRepositoryImpl;
@@ -45,8 +46,8 @@ class DeviceConfigServiceImplTest {
         this.repositoryMock = mock(DeviceConfigsRepositoryImpl.class);
         this.dbMock = mock(DatabaseServiceImpl.class);
         this.mapperMock = mock(DeviceConfigMapper.class);
-        poolMock = mock(PgPool.class);
-        deviceConfigService = new DeviceConfigServiceImpl(repositoryMock, dbMock, mapperMock);
+        this.poolMock = mock(PgPool.class);
+        this.deviceConfigService = new DeviceConfigServiceImpl(repositoryMock, dbMock, mapperMock);
     }
 
 
@@ -59,7 +60,9 @@ class DeviceConfigServiceImplTest {
     void modifyCloudToDeviceConfig_success() {
         var deviceConfigRequest = new DeviceConfigRequest();
         var deviceConfigEntity = new DeviceConfigEntity();
+        var deviceConfigEntityResponse = new DeviceConfigResponse();
         when(mapperMock.configRequestToDeviceConfigEntity(deviceConfigRequest)).thenReturn(deviceConfigEntity);
+        when(mapperMock.deviceConfigEntityToResponse(deviceConfigEntity)).thenReturn(deviceConfigEntityResponse);
         when(dbMock.getDbClient()).thenReturn(poolMock);
         when(poolMock.withTransaction(any())).thenReturn(Future.succeededFuture(deviceConfigEntity));
 
@@ -67,6 +70,7 @@ class DeviceConfigServiceImplTest {
         var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
 
         verify(mapperMock, times(1)).configRequestToDeviceConfigEntity(deviceConfigRequest);
+        verify(mapperMock, times(1)).deviceConfigEntityToResponse(deviceConfigEntity);
         verify(dbMock, times(1)).getDbClient();
         verify(poolMock, times(1)).withTransaction(any());
         Assertions.assertTrue(results.succeeded());

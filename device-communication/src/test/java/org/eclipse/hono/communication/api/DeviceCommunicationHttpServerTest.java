@@ -23,14 +23,13 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.*;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.ext.web.validation.BadRequestException;
 import org.eclipse.hono.communication.api.handler.DeviceCommandsHandler;
-import org.eclipse.hono.communication.api.service.DatabaseService;
-import org.eclipse.hono.communication.api.service.DatabaseServiceImpl;
-import org.eclipse.hono.communication.api.service.VertxHttpHandlerManagerService;
+import org.eclipse.hono.communication.api.service.*;
 import org.eclipse.hono.communication.core.app.ApplicationConfig;
 import org.eclipse.hono.communication.core.app.ServerConfig;
 import org.junit.jupiter.api.AfterEach;
@@ -46,7 +45,6 @@ import static org.mockito.Mockito.*;
 
 class DeviceCommunicationHttpServerTest {
 
-
     private ApplicationConfig appConfigsMock;
     private VertxHttpHandlerManagerService handlerServiceMock;
     private Vertx vertxMock;
@@ -58,6 +56,8 @@ class DeviceCommunicationHttpServerTest {
     private HttpServerResponse httpServerResponseMock;
     private HttpServerRequest httpServerRequestMock;
     private BadRequestException badRequestExceptionMock;
+    private DatabaseSchemaCreator databaseSchemaCreatorMock;
+    private Route routeMock;
     private JsonObject jsonObjMock;
 
     private DatabaseService dbMock;
@@ -78,7 +78,13 @@ class DeviceCommunicationHttpServerTest {
         badRequestExceptionMock = mock(BadRequestException.class);
         jsonObjMock = mock(JsonObject.class);
         dbMock = mock(DatabaseServiceImpl.class);
-        deviceCommunicationHttpServer = new DeviceCommunicationHttpServer(appConfigsMock, vertxMock, handlerServiceMock, dbMock);
+        databaseSchemaCreatorMock = mock(DatabaseSchemaCreatorImpl.class);
+        routeMock = mock(Route.class);
+        deviceCommunicationHttpServer = new DeviceCommunicationHttpServer(appConfigsMock,
+                vertxMock,
+                handlerServiceMock,
+                dbMock,
+                databaseSchemaCreatorMock);
 
     }
 
@@ -97,7 +103,9 @@ class DeviceCommunicationHttpServerTest {
                 badRequestExceptionMock,
                 jsonObjMock,
                 dbMock,
-                serverConfigMock);
+                serverConfigMock,
+                databaseSchemaCreatorMock,
+                routeMock);
     }
 
 
@@ -107,39 +115,66 @@ class DeviceCommunicationHttpServerTest {
         Mockito.verifyNoMoreInteractions(mockedCommandService);
         doNothing().when(mockedCommandService).addRoutes(this.routerBuilderMock);
         try (MockedStatic<RouterBuilder> mockedRouterBuilderStatic = mockStatic(RouterBuilder.class)) {
-            mockedRouterBuilderStatic.when(() -> RouterBuilder.create(any(), any()))
-                    .thenReturn(Future.succeededFuture(routerBuilderMock));
-            mockedRouterBuilderStatic.verifyNoMoreInteractions();
-            when(appConfigsMock.getServerConfig()).thenReturn(serverConfigMock);
-            when(handlerServiceMock.getAvailableHandlerServices()).thenReturn(List.of(mockedCommandService));
-            when(routerBuilderMock.createRouter()).thenReturn(routerMock);
-            when(routerMock.errorHandler(anyInt(), any())).thenReturn(routerMock);
-            when(vertxMock.createHttpServer(any(HttpServerOptions.class))).thenReturn(httpServerMock);
-            when(httpServerMock.requestHandler(routerMock)).thenReturn(httpServerMock);
-            when(httpServerMock.listen()).thenReturn(Future.succeededFuture(httpServerMock));
-            when(serverConfigMock.getOpenApiFilePath()).thenReturn("/myPath");
 
-            try (MockedStatic<Quarkus> quarkusMockedStatic = mockStatic(Quarkus.class)) {
+            try (MockedStatic<Router> routerMockedStatic = mockStatic(Router.class)) {
 
-                this.deviceCommunicationHttpServer.start();
+                routerMockedStatic.when(() -> Router.router(any())).thenReturn(routerMock);
+                mockedRouterBuilderStatic.when(() -> RouterBuilder.create(any(), any()))
+                        .thenReturn(Future.succeededFuture(routerBuilderMock));
+                mockedRouterBuilderStatic.verifyNoMoreInteractions();
+                when(appConfigsMock.getServerConfig()).thenReturn(serverConfigMock);
+                when(handlerServiceMock.getAvailableHandlerServices()).thenReturn(List.of(mockedCommandService));
+                when(routerBuilderMock.createRouter()).thenReturn(routerMock);
+                when(serverConfigMock.getLivenessPath()).thenReturn("/live");
+                when(serverConfigMock.getReadinessPath()).thenReturn("/ready");
+                when(routerMock.get(anyString())).thenReturn(routeMock);
+                when(routeMock.handler(any())).thenReturn(routeMock);
+                when(routerMock.errorHandler(anyInt(), any())).thenReturn(routerMock);
+                when(vertxMock.createHttpServer(any(HttpServerOptions.class))).thenReturn(httpServerMock);
+                when(httpServerMock.requestHandler(any())).thenReturn(httpServerMock);
+                when(httpServerMock.listen()).thenReturn(Future.succeededFuture(httpServerMock));
+                when(serverConfigMock.getOpenApiFilePath()).thenReturn("/myPath");
+                when(serverConfigMock.getBasePath()).thenReturn("/basePath");
+                when(routerMock.route(any())).thenReturn(routeMock);
 
-                mockedRouterBuilderStatic.verify(() -> RouterBuilder.create(vertxMock, "/myPath"), times(1));
+                try (MockedStatic<Quarkus> quarkusMockedStatic = mockStatic(Quarkus.class)) {
 
-                verify(handlerServiceMock, times(1)).getAvailableHandlerServices();
-                verify(routerBuilderMock, times(1)).createRouter();
+                    this.deviceCommunicationHttpServer.start();
 
-                verify(vertxMock, times(1)).createHttpServer(any(HttpServerOptions.class));
-                verify(httpServerMock, times(1)).requestHandler(routerMock);
-                verify(httpServerMock, times(1)).listen();
-                verify(appConfigsMock, times(2)).getServerConfig();
-                verify(serverConfigMock, times(2)).getServerUrl();
-                verify(serverConfigMock, times(2)).getServerPort();
-                verify(mockedCommandService, times(1)).addRoutes(routerBuilderMock);
-                verify(serverConfigMock, times(1)).getOpenApiFilePath();
-                quarkusMockedStatic.verify(Quarkus::waitForExit, times(1));
-                quarkusMockedStatic.verifyNoMoreInteractions();
+                    mockedRouterBuilderStatic.verify(() -> RouterBuilder.create(vertxMock, "/myPath"), times(1));
+                    routerMockedStatic.verify(() -> Router.router(vertxMock), times(1));
 
+
+                    verify(databaseSchemaCreatorMock, times(1)).createDBTables();
+                    verify(handlerServiceMock, times(1)).getAvailableHandlerServices();
+                    verify(routerBuilderMock, times(1)).createRouter();
+
+
+                    verify(vertxMock, times(1)).createHttpServer(any(HttpServerOptions.class));
+                    verify(httpServerMock, times(1)).requestHandler(any());
+                    verify(httpServerMock, times(1)).listen();
+                    verify(appConfigsMock, times(3)).getServerConfig();
+                    verify(serverConfigMock, times(2)).getServerUrl();
+                    verify(serverConfigMock, times(2)).getServerPort();
+                    verify(serverConfigMock, times(1)).getLivenessPath();
+                    verify(serverConfigMock, times(1)).getReadinessPath();
+                    verify(serverConfigMock, times(1)).getBasePath();
+                    verify(mockedCommandService, times(1)).addRoutes(routerBuilderMock);
+                    verify(serverConfigMock, times(1)).getOpenApiFilePath();
+                    verify(routerMock, times(1)).errorHandler(eq(400), any());
+                    verify(routerMock, times(1)).errorHandler(eq(404), any());
+                    verify(routerMock, times(2)).get(anyString());
+                    verify(routeMock, times(2)).handler(any());
+                    verify(routerMock, times(1)).route(anyString());
+                    verify(routeMock, times(1)).subRouter(any());
+                    quarkusMockedStatic.verify(Quarkus::waitForExit, times(1));
+                    routerMockedStatic.verifyNoMoreInteractions();
+                    mockedRouterBuilderStatic.verifyNoMoreInteractions();
+                    quarkusMockedStatic.verifyNoMoreInteractions();
+
+                }
             }
+
 
         }
 
@@ -161,9 +196,13 @@ class DeviceCommunicationHttpServerTest {
             try (MockedStatic<Quarkus> quarkusMockedStatic = mockStatic(Quarkus.class)) {
                 this.deviceCommunicationHttpServer.start();
 
+
+                verify(dbMock, times(1)).close();
+                verify(databaseSchemaCreatorMock, times(1)).createDBTables();
                 verify(handlerServiceMock, times(1)).getAvailableHandlerServices();
                 verify(appConfigsMock, times(1)).getServerConfig();
                 verify(serverConfigMock, times(1)).getOpenApiFilePath();
+                quarkusMockedStatic.verify(() -> Quarkus.asyncExit(-1), times(1));
                 quarkusMockedStatic.verify(Quarkus::waitForExit, times(1));
                 quarkusMockedStatic.verifyNoMoreInteractions();
             }
@@ -178,35 +217,57 @@ class DeviceCommunicationHttpServerTest {
         Mockito.verifyNoMoreInteractions(mockedCommandService);
         doNothing().when(mockedCommandService).addRoutes(this.routerBuilderMock);
         try (MockedStatic<RouterBuilder> mockedRouterBuilderStatic = mockStatic(RouterBuilder.class)) {
-            mockedRouterBuilderStatic.when(() -> RouterBuilder.create(any(), any()))
-                    .thenReturn(Future.succeededFuture(routerBuilderMock));
-            mockedRouterBuilderStatic.verifyNoMoreInteractions();
-            when(appConfigsMock.getServerConfig()).thenReturn(serverConfigMock);
-            when(handlerServiceMock.getAvailableHandlerServices()).thenReturn(List.of());
-            when(routerBuilderMock.createRouter()).thenReturn(routerMock);
-            when(routerMock.errorHandler(anyInt(), any())).thenReturn(routerMock);
-            when(vertxMock.createHttpServer(any(HttpServerOptions.class))).thenReturn(httpServerMock);
-            when(httpServerMock.requestHandler(routerMock)).thenReturn(httpServerMock);
-            when(httpServerMock.listen()).thenReturn(Future.failedFuture(new Throwable()));
-            when(serverConfigMock.getOpenApiFilePath()).thenReturn("/myPath");
-
             try (MockedStatic<Quarkus> quarkusMockedStatic = mockStatic(Quarkus.class)) {
+                try (MockedStatic<Router> routerMockedStatic = mockStatic(Router.class)) {
+                    mockedRouterBuilderStatic.when(() -> RouterBuilder.create(any(), any()))
+                            .thenReturn(Future.succeededFuture(routerBuilderMock));
 
-                this.deviceCommunicationHttpServer.start();
+                    routerMockedStatic.when(() -> Router.router(any())).thenReturn(routerMock);
 
-                mockedRouterBuilderStatic.verify(() -> RouterBuilder.create(vertxMock, "/myPath"), times(1));
+                    when(appConfigsMock.getServerConfig()).thenReturn(serverConfigMock);
+                    when(handlerServiceMock.getAvailableHandlerServices()).thenReturn(List.of());
+                    when(routerBuilderMock.createRouter()).thenReturn(routerMock);
+                    when(routerMock.errorHandler(anyInt(), any())).thenReturn(routerMock);
+                    when(serverConfigMock.getLivenessPath()).thenReturn("/live");
+                    when(serverConfigMock.getReadinessPath()).thenReturn("/ready");
+                    when(routerMock.get(anyString())).thenReturn(routeMock);
+                    when(routeMock.handler(any())).thenReturn(routeMock);
+                    when(vertxMock.createHttpServer(any(HttpServerOptions.class))).thenReturn(httpServerMock);
+                    when(httpServerMock.requestHandler(routerMock)).thenReturn(httpServerMock);
+                    when(httpServerMock.listen()).thenReturn(Future.failedFuture(new Throwable()));
+                    when(serverConfigMock.getOpenApiFilePath()).thenReturn("/myPath");
+                    when(serverConfigMock.getBasePath()).thenReturn("/basePath");
+                    when(routerMock.route(any())).thenReturn(routeMock);
 
-                verify(handlerServiceMock, times(1)).getAvailableHandlerServices();
-                verify(routerBuilderMock, times(1)).createRouter();
-                verify(vertxMock, times(1)).createHttpServer(any(HttpServerOptions.class));
-                verify(httpServerMock, times(1)).requestHandler(routerMock);
-                verify(httpServerMock, times(1)).listen();
-                verify(appConfigsMock, times(2)).getServerConfig();
-                verify(serverConfigMock, times(1)).getOpenApiFilePath();
-                verify(serverConfigMock, times(1)).getServerPort();
-                verify(serverConfigMock, times(1)).getServerUrl();
-                quarkusMockedStatic.verify(Quarkus::waitForExit, times(1));
-                quarkusMockedStatic.verifyNoMoreInteractions();
+                    this.deviceCommunicationHttpServer.start();
+
+                    mockedRouterBuilderStatic.verify(() -> RouterBuilder.create(vertxMock, "/myPath"), times(1));
+
+                    verify(databaseSchemaCreatorMock, times(1)).createDBTables();
+                    verify(handlerServiceMock, times(1)).getAvailableHandlerServices();
+                    verify(routerBuilderMock, times(1)).createRouter();
+                    verify(vertxMock, times(1)).createHttpServer(any(HttpServerOptions.class));
+                    verify(httpServerMock, times(1)).requestHandler(routerMock);
+                    verify(httpServerMock, times(1)).listen();
+                    verify(appConfigsMock, times(3)).getServerConfig();
+                    verify(serverConfigMock, times(1)).getOpenApiFilePath();
+                    verify(serverConfigMock, times(1)).getServerPort();
+                    verify(serverConfigMock, times(1)).getServerUrl();
+                    verify(serverConfigMock, times(1)).getLivenessPath();
+                    verify(serverConfigMock, times(1)).getReadinessPath();
+                    verify(serverConfigMock, times(1)).getBasePath();
+                    verify(routerMock, times(1)).errorHandler(eq(400), any());
+                    verify(routerMock, times(1)).errorHandler(eq(404), any());
+                    verify(routerMock, times(2)).get(anyString());
+                    verify(routeMock, times(2)).handler(any());
+                    verify(routeMock, times(1)).subRouter(any());
+                    verify(routerMock, times(1)).route(anyString());
+                    routerMockedStatic.verify(() -> Router.router(vertxMock), times(1));
+                    quarkusMockedStatic.verify(Quarkus::waitForExit, times(1));
+                    mockedRouterBuilderStatic.verifyNoMoreInteractions();
+                    routerMockedStatic.verifyNoMoreInteractions();
+                    quarkusMockedStatic.verifyNoMoreInteractions();
+                }
             }
 
         }

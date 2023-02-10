@@ -20,7 +20,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.pgclient.PgPool;
-import org.eclipse.hono.communication.core.app.ApplicationConfig;
+import org.eclipse.hono.communication.core.app.DatabaseConfig;
 import org.eclipse.hono.communication.core.utils.DbUtils;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -32,16 +32,14 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class DatabaseServiceImpl implements DatabaseService {
 
+    private final static String databaseConnectionOpenMsg = "Database connection is open.";
+    private final static String databaseConnectionCloseMsg = "Database connection is closed.";
     private final Logger log = LoggerFactory.getLogger(DatabaseServiceImpl.class);
-    private final ApplicationConfig appConfigs;
-    private final Vertx vertx;
     private final PgPool dbClient;
 
-    public DatabaseServiceImpl(ApplicationConfig appConfigs, Vertx vertx) {
-        this.appConfigs = appConfigs;
-        this.vertx = vertx;
-        this.dbClient = DbUtils.createDbClient(vertx, appConfigs);
-        log.debug("Database connection is open.");
+    public DatabaseServiceImpl(DatabaseConfig databaseConfigs, Vertx vertx) {
+        this.dbClient = DbUtils.createDbClient(vertx, databaseConfigs);
+        log.debug(databaseConnectionOpenMsg);
     }
 
     /**
@@ -59,7 +57,7 @@ public class DatabaseServiceImpl implements DatabaseService {
     public void close() {
         if (this.dbClient != null) {
             this.dbClient.close();
-            log.debug("Database connection is closed.");
+            log.info(databaseConnectionCloseMsg);
         }
     }
 

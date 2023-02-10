@@ -1,54 +1,104 @@
-# device-communication Project
+# Device Communication API
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Device communication API enables users and applications to send configurations and commands to devices via HTTP
+endpoints.
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+![img.png](img.png)
 
-## Running the application in dev mode
+### Application
 
-You can run your application in dev mode that enables live coding using:
+The application is reactive and uses Quarkus Framework for the application and Vertx tools for the HTTP server.
 
-```shell script
-./mvnw compile quarkus:dev
-```
+### Hono internal communication
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8080/q/dev/.
+API uses [Googles PubSub](https://cloud.google.com/pubsub/docs/overview?hl=de) service to communicate with the command
+router.
 
-## Packaging and running the application
+## API endpoints
 
-The application can be packaged using:
+#### commands/{tenantId}/{deviceId}
 
-```shell script
-./mvnw package
-```
+- POST : post a command for a specific device
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+<p>
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+#### configs/{tenantId}/{deviceId}
 
-If you want to build an _über-jar_, execute the following command:
+- GET : list of device config versions
 
-```shell script
-./mvnw package -Dquarkus.package.type=uber-jar
-```
+- POST: update or create a device config version
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+For more information please see resources/api/openApi file.
 
-## Creating a native executable
+## Database
 
-You can create a native executable using:
+Application uses PostgresSQL database. All the database configurations can be found in application.yaml file.
 
-```shell script
-./mvnw package -Pnative
-```
+### Tables
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+- DeviceConfig <br>
+  Is used for saving device config versions
+- DeviceRegistration <br>
+  Is used for validating if a device exist
 
-```shell script
-./mvnw package -Pnative -Dquarkus.native.container-build=true
-```
+### Migrations
 
-You can then execute your native executable with: `./target/device-communication-1.0-SNAPSHOT-runner`
+When Applications starts tables will be created by the DatabaseSchemaCreator service.
 
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.
+### Running postgresSQL container local
+
+For running the PostgresSQL Database local with docker run:
+
+``````
+
+docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+
+``````
+
+After the container is running, log in to the container and with psql create the database and the tables. Then we have
+to set the application settings.
+
+Default postgresSQl values:
+
+- userName = postgres
+- password = mysecretpassword
+
+## Build and Push API Docker Image
+
+Mavens auto build and push functionality ca be enabled from application.yaml settings:
+
+````
+
+quarkus:
+  container-image:
+  builder: docker
+  build: true
+  push: true
+  image: "gcr.io/sotec-iot-core-dev/hono-device-communication"
+
+````
+
+By running maven package, install or deploy will automatically build the docker image and if push is enabled it will
+push the image
+to the given registry.
+
+## OpenApi Contract-first
+
+For creating the endpoints, Vertx takes the openApi definition file and maps every endpoint operation-ID with a specific
+Handler
+function.
+
+## Handlers
+
+Handlers are providing callBack functions for every endpoint. Functions are going to be called automatically from vertx
+server every time a request is received.
+
+## Adding a new Endpoint
+
+Adding new Endpoint steps:
+
+1. Add Endpoint in openApi file and set an operationId
+2. Use an existing const Class or create a new one under /config and set the operation id name
+3. Implement an HttpEndpointHandler and set the Routes
+
+

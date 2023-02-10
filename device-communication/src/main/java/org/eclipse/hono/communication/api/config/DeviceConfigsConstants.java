@@ -24,7 +24,10 @@ public class DeviceConfigsConstants {
     // Open api operationIds
     public final static String POST_MODIFY_DEVICE_CONFIG_OP_ID = "modifyCloudToDeviceConfig";
     public final static String LIST_CONFIG_VERSIONS_OP_ID = "listConfigVersions";
+    
+    //Device Config Repository
     public final static String TENANT_PATH_PARAMETER = "tenantid";
     public final static String DEVICE_PATH_PARAMETER = "deviceid";
     public final static String NUM_VERSION_QUERY_PARAMS = "numVersions";
+    public final static String CREATE_SQL_SCRIPT_PATH = "db/create_device_config_table.sql";
 }

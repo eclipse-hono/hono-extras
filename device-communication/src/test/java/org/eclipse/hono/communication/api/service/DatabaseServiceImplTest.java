@@ -18,7 +18,7 @@ package org.eclipse.hono.communication.api.service;
 
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgPool;
-import org.eclipse.hono.communication.core.app.ApplicationConfig;
+import org.eclipse.hono.communication.core.app.DatabaseConfig;
 import org.eclipse.hono.communication.core.utils.DbUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -30,14 +30,14 @@ import static org.mockito.Mockito.*;
 class DatabaseServiceImplTest {
 
     private final Vertx vertxMock;
-    private final ApplicationConfig applicationConfigMock;
+    private final DatabaseConfig databaseConfigMock;
 
     private final PgPool pgPoolMock;
     private DatabaseService databaseService;
 
     public DatabaseServiceImplTest() {
         vertxMock = mock(Vertx.class);
-        applicationConfigMock = mock(ApplicationConfig.class);
+        databaseConfigMock = mock(DatabaseConfig.class);
         pgPoolMock = mock(PgPool.class);
 
 
@@ -45,7 +45,7 @@ class DatabaseServiceImplTest {
 
     @AfterEach
     void tearDown() {
-        verifyNoMoreInteractions(vertxMock, applicationConfigMock, pgPoolMock);
+        verifyNoMoreInteractions(vertxMock, databaseConfigMock, pgPoolMock);
 
     }
 
@@ -53,14 +53,14 @@ class DatabaseServiceImplTest {
     @Test
     void getDbClient() {
         try (MockedStatic<DbUtils> dbUtilsMockedStatic = mockStatic(DbUtils.class)) {
-            dbUtilsMockedStatic.when(() -> DbUtils.createDbClient(vertxMock, applicationConfigMock)).thenReturn(pgPoolMock);
-            databaseService = new DatabaseServiceImpl(applicationConfigMock, vertxMock);
+            dbUtilsMockedStatic.when(() -> DbUtils.createDbClient(vertxMock, databaseConfigMock)).thenReturn(pgPoolMock);
+            databaseService = new DatabaseServiceImpl(databaseConfigMock, vertxMock);
 
             var client = databaseService.getDbClient();
 
             Assertions.assertSame(client, pgPoolMock);
 
-            dbUtilsMockedStatic.verify(() -> DbUtils.createDbClient(vertxMock, applicationConfigMock), times(1));
+            dbUtilsMockedStatic.verify(() -> DbUtils.createDbClient(vertxMock, databaseConfigMock), times(1));
             dbUtilsMockedStatic.verifyNoMoreInteractions();
         }
     }
@@ -69,12 +69,12 @@ class DatabaseServiceImplTest {
     void close() {
 
         try (MockedStatic<DbUtils> dbUtilsMockedStatic = mockStatic(DbUtils.class)) {
-            dbUtilsMockedStatic.when(() -> DbUtils.createDbClient(vertxMock, applicationConfigMock)).thenReturn(pgPoolMock);
-            databaseService = new DatabaseServiceImpl(applicationConfigMock, vertxMock);
+            dbUtilsMockedStatic.when(() -> DbUtils.createDbClient(vertxMock, databaseConfigMock)).thenReturn(pgPoolMock);
+            databaseService = new DatabaseServiceImpl(databaseConfigMock, vertxMock);
 
             databaseService.close();
             verify(pgPoolMock, times(1)).close();
-            dbUtilsMockedStatic.verify(() -> DbUtils.createDbClient(vertxMock, applicationConfigMock), times(1));
+            dbUtilsMockedStatic.verify(() -> DbUtils.createDbClient(vertxMock, databaseConfigMock), times(1));
             dbUtilsMockedStatic.verifyNoMoreInteractions();
         }
     }

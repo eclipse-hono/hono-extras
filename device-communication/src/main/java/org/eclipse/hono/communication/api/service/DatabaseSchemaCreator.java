@@ -16,17 +16,9 @@
 
 package org.eclipse.hono.communication.api.service;
 
-import io.vertx.core.Future;
-import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
-import org.eclipse.hono.communication.api.data.DeviceConfigResponse;
-import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
-
 /**
- * Device config interface
+ * Interface for creating Database Tables at application startup
  */
-public interface DeviceConfigService {
-
-    Future<DeviceConfigResponse> modifyCloudToDeviceConfig(DeviceConfigRequest deviceConfig, String deviceId, String tenantId);
-
-    Future<ListDeviceConfigVersionsResponse> listAll(String deviceId, String tenantId, int limit);
+public interface DatabaseSchemaCreator {
+    void createDBTables();
 }

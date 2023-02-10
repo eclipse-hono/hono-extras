@@ -21,16 +21,21 @@ import io.quarkus.runtime.Quarkus;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.healthchecks.HealthCheckHandler;
+import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.ext.web.validation.BadRequestException;
+import org.eclipse.hono.communication.api.service.DatabaseSchemaCreator;
 import org.eclipse.hono.communication.api.service.DatabaseService;
 import org.eclipse.hono.communication.api.service.VertxHttpHandlerManagerService;
 import org.eclipse.hono.communication.core.app.ApplicationConfig;
+import org.eclipse.hono.communication.core.app.ServerConfig;
 import org.eclipse.hono.communication.core.http.AbstractVertxHttpServer;
 import org.eclipse.hono.communication.core.http.HttpEndpointHandler;
 import org.eclipse.hono.communication.core.http.HttpServer;
+import org.eclipse.hono.communication.core.utils.ResponseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,15 +55,18 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
     private final VertxHttpHandlerManagerService httpHandlerManager;
 
     private final DatabaseService db;
+    private final DatabaseSchemaCreator databaseSchemaCreator;
     private List<HttpEndpointHandler> httpEndpointHandlers;
 
 
     public DeviceCommunicationHttpServer(ApplicationConfig appConfigs,
                                          Vertx vertx,
                                          VertxHttpHandlerManagerService httpHandlerManager,
-                                         DatabaseService databaseService) {
+                                         DatabaseService databaseService,
+                                         DatabaseSchemaCreator databaseSchemaCreator) {
         super(appConfigs, vertx);
         this.httpHandlerManager = httpHandlerManager;
+        this.databaseSchemaCreator = databaseSchemaCreator;
         this.httpEndpointHandlers = new ArrayList<>();
         this.db = databaseService;
     }
@@ -66,6 +74,10 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
 
     @Override
     public void start() {
+        //Create Database Tables
+        databaseSchemaCreator.createDBTables();
+
+        // Create Endpoints Router
         this.httpEndpointHandlers = httpHandlerManager.getAvailableHandlerServices();
         RouterBuilder.create(this.vertx, appConfigs.getServerConfig().getOpenApiFilePath())
                 .onSuccess(routerBuilder ->
@@ -80,6 +92,8 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
                     } else {
                         log.error("Can not create Router");
                     }
+                    stop();
+                    Quarkus.asyncExit(-1);
 
                 });
 
@@ -99,8 +113,62 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
         for (HttpEndpointHandler handlerService : httpEndpointHandlers) {
             handlerService.addRoutes(routerBuilder);
         }
+        var apiRouter = Router.router(vertx);
+        var router = routerBuilder.createRouter();
+        apiRouter.errorHandler(400, routingContext ->
+                ResponseUtils.errorResponse(routingContext, routingContext.failure()));
+        apiRouter.errorHandler(404, routingContext ->
+                ResponseUtils.errorResponse(routingContext, routingContext.failure()));
 
-        return routerBuilder.createRouter();
+        var serverConfig = appConfigs.getServerConfig();
+        addHealthCheckHandles(apiRouter, serverConfig);
+
+        apiRouter.route(
+                String.format("%s*", serverConfig.getBasePath()) // absolut path not allowed only /*
+        ).subRouter(router);
+        return apiRouter;
+    }
+
+    /**
+     * Adds readiness and liveness handlers
+     *
+     * @param router Created router object
+     */
+    private void addHealthCheckHandles(Router router, ServerConfig serverConfig) {
+        addReadinessHandles(router, serverConfig.getReadinessPath());
+        addLivenessHandles(router, serverConfig.getLivenessPath());
+    }
+
+    private void addReadinessHandles(Router router, String readinessPath) {
+        log.info("Adding readiness path: {}", readinessPath);
+        final HealthCheckHandler healthCheckHandler = HealthCheckHandler.create(vertx);
+
+        healthCheckHandler.register("database-communication-is-ready",
+                promise ->
+                        db.getDbClient().getConnection(connection -> {
+                            if (connection.failed()) {
+                                log.error(connection.cause().getMessage());
+                                promise.tryComplete(Status.KO());
+                            } else {
+                                connection.result().close();
+                                promise.tryComplete(Status.OK());
+                            }
+                        })
+        );
+
+        router.get(readinessPath).handler(healthCheckHandler);
+    }
+
+
+    private void addLivenessHandles(Router router, String livenessPath) {
+        log.info("Adding liveness path: {}", livenessPath);
+        final HealthCheckHandler healthCheckHandler = HealthCheckHandler.create(vertx);
+
+        healthCheckHandler.register("liveness",
+                promise -> promise.tryComplete(Status.OK())
+        );
+
+        router.get(livenessPath).handler(healthCheckHandler);
     }
 
     /**

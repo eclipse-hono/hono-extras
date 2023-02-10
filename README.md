@@ -8,8 +8,14 @@ Eclipse Hono Extras provides additional resources for [Eclipse Hono&trade;](http
 
 ## Hono Protocol Gateways
 
-See the [protocol-gateway](protocol-gateway) directory for a template and an example implementation for a [Hono protocol gateway](https://www.eclipse.org/hono/docs/concepts/connecting-devices/#connecting-via-a-protocol-gateway).
+See the [protocol-gateway](protocol-gateway) directory for a template and an example implementation for
+a [Hono protocol gateway](https://www.eclipse.org/hono/docs/concepts/connecting-devices/#connecting-via-a-protocol-gateway).
 
 ## Device registry migration
 
-See the [device-registry-migration](device-registry-migration) directory for example migration scripts from one device registry type to another.
+See the [device-registry-migration](device-registry-migration) directory for example migration scripts from one device
+registry type to another.
+
+## Device communication API
+
+See the [device-communication](device-communication) directory for api specifications and implementation.

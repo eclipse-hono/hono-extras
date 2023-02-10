@@ -27,23 +27,23 @@ import javax.inject.Singleton;
 public class DatabaseConfig {
 
     // Datasource properties
-    @ConfigProperty(name = "quarkus.datasource.port")
+    @ConfigProperty(name = "vertx.database.port")
     int port;
-    @ConfigProperty(name = "quarkus.datasource.host")
+    @ConfigProperty(name = "vertx.database.host")
     String host;
-    @ConfigProperty(name = "quarkus.datasource.username")
+    @ConfigProperty(name = "vertx.database.username")
     String userName;
-    @ConfigProperty(name = "quarkus.datasource.password")
+    @ConfigProperty(name = "vertx.database.password")
     String password;
-    @ConfigProperty(name = "quarkus.datasource.name")
+    @ConfigProperty(name = "vertx.database.name")
     String name;
-    @ConfigProperty(name = "quarkus.datasource.pool-max-size")
+    @ConfigProperty(name = "vertx.database.pool-max-size")
     int poolMaxSize;
-    @ConfigProperty(name = "quarkus.device-registration.table")
+    @ConfigProperty(name = "vertx.device-registration.table")
     String deviceRegistrationTableName;
-    @ConfigProperty(name = "quarkus.device-registration.tenant-id-column")
+    @ConfigProperty(name = "vertx.device-registration.tenant-id-column")
     String deviceRegistrationTenantIdColumn;
-    @ConfigProperty(name = "quarkus.device-registration.device-id-column")
+    @ConfigProperty(name = "vertx.device-registration.device-id-column")
     String deviceRegistrationDeviceIdColumn;
 
     public String getDeviceRegistrationTableName() {

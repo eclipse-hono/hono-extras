@@ -16,14 +16,13 @@
 
 package org.eclipse.hono.communication.api.handler;
 
-import io.vertx.codegen.annotations.Nullable;
 import io.vertx.core.Future;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import org.eclipse.hono.communication.api.config.DeviceConfigsConstants;
-import org.eclipse.hono.communication.api.entity.DeviceConfigEntity;
-import org.eclipse.hono.communication.api.entity.DeviceConfigRequest;
-import org.eclipse.hono.communication.api.entity.ListDeviceConfigVersionsResponse;
+import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
+import org.eclipse.hono.communication.api.data.DeviceConfigResponse;
+import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 import org.eclipse.hono.communication.api.service.DeviceConfigService;
 import org.eclipse.hono.communication.core.http.HttpEndpointHandler;
 import org.eclipse.hono.communication.core.utils.ResponseUtils;
@@ -35,8 +34,6 @@ import javax.enterprise.context.ApplicationScoped;
  */
 @ApplicationScoped
 public class DeviceConfigsHandler implements HttpEndpointHandler {
-
-    private final String QUERY_PARAMS_NUM_VERSION = "numVersions";
 
     private final DeviceConfigService configService;
 
@@ -53,7 +50,7 @@ public class DeviceConfigsHandler implements HttpEndpointHandler {
                 .handler(this::handleModifyCloudToDeviceConfig);
     }
 
-    public Future<@Nullable DeviceConfigEntity> handleModifyCloudToDeviceConfig(RoutingContext routingContext) {
+    public Future<DeviceConfigResponse> handleModifyCloudToDeviceConfig(RoutingContext routingContext) {
         var tenantId = routingContext.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMETER);
         var deviceId = routingContext.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMETER);
 
@@ -67,7 +64,9 @@ public class DeviceConfigsHandler implements HttpEndpointHandler {
     }
 
     public Future<ListDeviceConfigVersionsResponse> handleListConfigVersions(RoutingContext routingContext) {
-        var limit = Integer.parseInt(routingContext.queryParams().get(DeviceConfigsConstants.NUM_VERSION_QUERY_PARAMS));
+        var numVersions = routingContext.queryParams().get(DeviceConfigsConstants.NUM_VERSION_QUERY_PARAMS);
+
+        var limit = numVersions == null ? 0 : Integer.parseInt(numVersions);
         var tenantId = routingContext.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMETER);
         var deviceId = routingContext.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMETER);
 
