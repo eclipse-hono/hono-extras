@@ -20,8 +20,8 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.Operation;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import org.eclipse.hono.communication.api.config.DeviceCommandConstants;
-import org.eclipse.hono.communication.api.service.DeviceCommandService;
-import org.eclipse.hono.communication.api.service.DeviceCommandServiceImpl;
+import org.eclipse.hono.communication.api.service.command.DeviceCommandService;
+import org.eclipse.hono.communication.api.service.command.DeviceCommandServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,11 +78,11 @@ class DeviceCommandsHandlerTest {
 
     @Test
     void handlePostCommand() {
-        doNothing().when(commandServiceMock).postCommand(routingContextMock);
+        doNothing().when(commandServiceMock).postCommand(any(), anyString(), anyString());
 
         deviceCommandsHandler.handlePostCommand(routingContextMock);
 
-        verify(commandServiceMock, times(1)).postCommand(routingContextMock);
+        verify(commandServiceMock, times(1)).postCommand(any(), anyString(), anyString());
     }
 
 

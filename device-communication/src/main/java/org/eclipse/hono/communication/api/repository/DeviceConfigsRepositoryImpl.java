@@ -17,62 +17,50 @@
 package org.eclipse.hono.communication.api.repository;
 
 import io.vertx.core.Future;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.sqlclient.RowIterator;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.templates.RowMapper;
 import io.vertx.sqlclient.templates.SqlTemplate;
 import org.eclipse.hono.communication.api.data.DeviceConfig;
+import org.eclipse.hono.communication.api.data.DeviceConfigAckResponse;
 import org.eclipse.hono.communication.api.data.DeviceConfigEntity;
 import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
 import org.eclipse.hono.communication.core.app.DatabaseConfig;
 import org.graalvm.collections.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Repository class for making CRUD operations for device config entities
  */
 @ApplicationScoped
-public class DeviceConfigsRepositoryImpl implements DeviceConfigsRepository {
+public class DeviceConfigsRepositoryImpl implements DeviceConfigsRepository, DeviceRepository {
     private final static String SQL_INSERT = "INSERT INTO \"deviceConfig\" (version, \"tenantId\", \"deviceId\", \"cloudUpdateTime\", \"deviceAckTime\", \"binaryData\") " +
             "VALUES (#{version}, #{tenantId}, #{deviceId}, #{cloudUpdateTime}, #{deviceAckTime}, #{binaryData}) RETURNING version";
     private final static String SQL_LIST = "SELECT version, \"cloudUpdateTime\", COALESCE(\"deviceAckTime\",'') AS  \"deviceAckTime\", \"binaryData\" " +
-            "FROM \"deviceConfig\" WHERE \"deviceId\" = #{deviceId} and \"tenantId\" =  #{tenantId} ORDER BY version DESC LIMIT #{limit}";
+            "FROM \"deviceConfig\" WHERE \"deviceId\" = #{deviceId} AND \"tenantId\" =  #{tenantId} ORDER BY version DESC LIMIT #{limit}";
     private final static String SQL_DELETE_MIN_VERSION = "DELETE FROM \"deviceConfig\" WHERE\"deviceId\" = #{deviceId} and \"tenantId\" =  #{tenantId} " +
-            "and version = (SELECT MIN(version) from  \"deviceConfig\" WHERE \"deviceId\" = #{deviceId} and \"tenantId\" =  #{tenantId})  RETURNING version";
+            "AND version = (SELECT MIN(version) FROM  \"deviceConfig\" WHERE \"deviceId\" = #{deviceId} and \"tenantId\" =  #{tenantId})  RETURNING version";
     private final static String SQL_FIND_TOTAL_AND_MAX_VERSION = "SELECT COALESCE(COUNT(*), 0) as total, COALESCE(MAX(version), 0) as max_version from \"deviceConfig\" " +
-            "WHERE \"deviceId\" = #{deviceId} and \"tenantId\" =  #{tenantId}";
+            "WHERE \"deviceId\" = #{deviceId} AND \"tenantId\" =  #{tenantId}";
+
+    private final static String SQL_UPDATE_DEVICE_ACK_TIME = "UPDATE \"deviceConfig\" SET \"deviceAckTime\" = #{deviceAckTime} " +
+            "WHERE \"tenantId\" = #{tenantId} AND \"deviceId\" = #{deviceId} AND \"version\" = #{version}";
 
     private final static int MAX_LIMIT = 10;
     private final static Logger log = LoggerFactory.getLogger(DeviceConfigsRepositoryImpl.class);
-    private String SQL_COUNT_DEVICES_WITH_PK_FILTER = "SELECT COUNT(*) as total FROM public.%s where %s = #{tenantId} and %s = #{deviceId}";
+
+    private final DatabaseConfig databaseConfig;
 
 
-    public DeviceConfigsRepositoryImpl(DatabaseConfig databaseConfig) {
+    public DeviceConfigsRepositoryImpl(DatabaseConfig databaseConfig, DatabaseConfig databaseConfig1) {
 
-        SQL_COUNT_DEVICES_WITH_PK_FILTER = String.format(SQL_COUNT_DEVICES_WITH_PK_FILTER,
-                databaseConfig.getDeviceRegistrationTableName(),
-                databaseConfig.getDeviceRegistrationTenantIdColumn(),
-                databaseConfig.getDeviceRegistrationDeviceIdColumn());
+        this.databaseConfig = databaseConfig1;
     }
 
-
-    private Future<Integer> searchForDevice(SqlConnection sqlConnection, String deviceId, String tenantId) {
-        final RowMapper<Integer> ROW_MAPPER = row -> row.getInteger("total");
-        return SqlTemplate
-                .forQuery(sqlConnection, SQL_COUNT_DEVICES_WITH_PK_FILTER)
-                .mapTo(ROW_MAPPER)
-                .execute(Map.of("deviceId", deviceId, "tenantId", tenantId)).map(rowSet -> {
-                    final RowIterator<Integer> iterator = rowSet.iterator();
-                    return iterator.next();
-                });
-
-    }
 
     private Future<Pair<Integer, Integer>> findMaxVersionAndTotalEntries(SqlConnection sqlConnection, String deviceId, String tenantId) {
         final RowMapper<Pair<Integer, Integer>> ROW_MAPPER = row ->
@@ -98,7 +86,7 @@ public class DeviceConfigsRepositoryImpl implements DeviceConfigsRepository {
      */
     public Future<List<DeviceConfig>> listAll(SqlConnection sqlConnection, String deviceId, String tenantId, int limit) {
         int queryLimit = limit == 0 ? MAX_LIMIT : limit;
-        return searchForDevice(sqlConnection, deviceId, tenantId)
+        return searchForDevice(sqlConnection, deviceId, tenantId, databaseConfig)
                 .compose(
                         counter -> {
                             if (counter < 1) {
@@ -118,7 +106,7 @@ public class DeviceConfigsRepositoryImpl implements DeviceConfigsRepository {
                                     .onSuccess(success -> log.info(
                                             String.format("Listing all configs for device %s and tenant %s",
                                                     deviceId, tenantId)))
-                                    .onFailure(throwable -> log.error("Error: {}", throwable));
+                                    .onFailure(throwable -> log.error("Error: {}", throwable.getMessage()));
                         });
     }
 
@@ -145,7 +133,7 @@ public class DeviceConfigsRepositoryImpl implements DeviceConfigsRepository {
                         throw new IllegalStateException(String.format("Can't create device config: %s", entity));
                     }
                 })
-                .onSuccess(success -> log.info(String.format("Device config created successfully: %s", success.toString())))
+                .onSuccess(success -> log.info("Device config created successfully: {}", success.toString()))
                 .onFailure(throwable -> log.error(throwable.getMessage()));
 
     }
@@ -169,7 +157,7 @@ public class DeviceConfigsRepositoryImpl implements DeviceConfigsRepository {
                     final RowIterator<Integer> iterator = rowSet.iterator();
                     return iterator.next();
                 })
-                .onSuccess(deletedVersion -> log.info(String.format("Device config version %s was deleted", deletedVersion)));
+                .onSuccess(deletedVersion -> log.info("Device config version {} was deleted", deletedVersion));
     }
 
 
@@ -181,7 +169,7 @@ public class DeviceConfigsRepositoryImpl implements DeviceConfigsRepository {
      * @return A Future of the created DeviceConfigEntity
      */
     public Future<DeviceConfigEntity> createNew(SqlConnection sqlConnection, DeviceConfigEntity entity) {
-        return searchForDevice(sqlConnection, entity.getDeviceId(), entity.getTenantId())
+        return searchForDevice(sqlConnection, entity.getDeviceId(), entity.getTenantId(), databaseConfig)
                 .compose(
                         counter -> {
                             if (counter < 1) {
@@ -207,5 +195,36 @@ public class DeviceConfigsRepositoryImpl implements DeviceConfigsRepository {
                                             }
                                     );
                         }).onFailure(error -> log.error(error.getMessage()));
+    }
+
+    /**
+     * Update the deviceAckTime field
+     *
+     * @param sqlConnection The sql connection instance
+     * @param ack           The acknowledgment object
+     * @param deviceAckTime The ack Time
+     * @return Future of Void
+     */
+    @Override
+    public Future<Void> updateDeviceAckTime(SqlConnection sqlConnection, DeviceConfigAckResponse ack, String deviceAckTime) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("deviceId", ack.getDeviceId());
+        parameters.put("tenantId", ack.getTenantId());
+        parameters.put("version", Integer.parseInt(ack.getVersion()));
+        parameters.put("deviceAckTime", deviceAckTime);
+
+
+        return SqlTemplate
+                .forQuery(sqlConnection, SQL_UPDATE_DEVICE_ACK_TIME)
+                .execute(parameters)
+                .flatMap(rowSet -> {
+                    if (rowSet.rowCount() > 0) {
+                        return Future.succeededFuture();
+                    } else {
+                        var msg = "Device doesn't exist: %s".formatted(ack.toString());
+                        log.error(msg);
+                        throw new NoSuchElementException(msg);
+                    }
+                });
     }
 }

@@ -19,8 +19,11 @@ package org.eclipse.hono.communication.api.handler;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import org.eclipse.hono.communication.api.config.DeviceCommandConstants;
-import org.eclipse.hono.communication.api.service.DeviceCommandService;
+import org.eclipse.hono.communication.api.config.DeviceConfigsConstants;
+import org.eclipse.hono.communication.api.data.DeviceCommandRequest;
+import org.eclipse.hono.communication.api.service.command.DeviceCommandService;
 import org.eclipse.hono.communication.core.http.HttpEndpointHandler;
+import org.eclipse.hono.communication.core.utils.ResponseUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -43,6 +46,13 @@ public class DeviceCommandsHandler implements HttpEndpointHandler {
     }
 
     public void handlePostCommand(RoutingContext routingContext) {
-        commandService.postCommand(routingContext);
+        var deviceConfig = routingContext.body()
+                .asJsonObject()
+                .mapTo(DeviceCommandRequest.class);
+        var tenantId = routingContext.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
+        var deviceId = routingContext.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
+        commandService.postCommand(deviceConfig, tenantId, deviceId)
+                .onSuccess(res -> routingContext.response().setStatusCode(200).end())
+                .onFailure(err -> ResponseUtils.errorResponse(routingContext, err));
     }
 }

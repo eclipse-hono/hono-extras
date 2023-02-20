@@ -14,13 +14,14 @@
  *
  */
 
-package org.eclipse.hono.communication.api.service;
+package org.eclipse.hono.communication.api.service.command;
 
-import io.vertx.ext.web.RoutingContext;
+import io.vertx.core.Future;
+import org.eclipse.hono.communication.api.data.DeviceCommandRequest;
 
 /**
  * Device commands interface
  */
 public interface DeviceCommandService {
-    void postCommand(RoutingContext routingContext);
+    Future<Void> postCommand(DeviceCommandRequest commandRequest, String tenantId, String deviceId);
 }

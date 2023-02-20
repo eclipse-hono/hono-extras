@@ -14,7 +14,7 @@
  *
  */
 
-package org.eclipse.hono.communication.api.service;
+package org.eclipse.hono.communication.api.service.database;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.logging.Logger;

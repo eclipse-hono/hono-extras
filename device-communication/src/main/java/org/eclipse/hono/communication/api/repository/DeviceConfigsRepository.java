@@ -19,6 +19,7 @@ package org.eclipse.hono.communication.api.repository;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.SqlConnection;
 import org.eclipse.hono.communication.api.data.DeviceConfig;
+import org.eclipse.hono.communication.api.data.DeviceConfigAckResponse;
 import org.eclipse.hono.communication.api.data.DeviceConfigEntity;
 
 import java.util.List;
@@ -31,4 +32,6 @@ public interface DeviceConfigsRepository {
     Future<List<DeviceConfig>> listAll(SqlConnection sqlConnection, String deviceId, String tenantId, int limit);
 
     Future<DeviceConfigEntity> createNew(SqlConnection sqlConnection, DeviceConfigEntity entity);
+
+    Future<Void> updateDeviceAckTime(SqlConnection sqlConnection, DeviceConfigAckResponse configAckResponse, String deviceAckTime);
 }

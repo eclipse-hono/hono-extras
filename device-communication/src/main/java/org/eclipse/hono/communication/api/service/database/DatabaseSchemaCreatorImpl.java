@@ -14,7 +14,7 @@
  *
  */
 
-package org.eclipse.hono.communication.api.service;
+package org.eclipse.hono.communication.api.service.database;
 
 import io.quarkus.runtime.Quarkus;
 import io.vertx.core.Promise;

@@ -25,6 +25,11 @@ import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 import org.eclipse.hono.communication.api.mapper.DeviceConfigMapper;
 import org.eclipse.hono.communication.api.repository.DeviceConfigsRepository;
 import org.eclipse.hono.communication.api.repository.DeviceConfigsRepositoryImpl;
+import org.eclipse.hono.communication.api.service.config.DeviceConfigService;
+import org.eclipse.hono.communication.api.service.config.DeviceConfigServiceImpl;
+import org.eclipse.hono.communication.api.service.database.DatabaseService;
+import org.eclipse.hono.communication.api.service.database.DatabaseServiceImpl;
+import org.eclipse.hono.communication.core.app.InternalCommunicationConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -38,6 +43,7 @@ class DeviceConfigServiceImplTest {
     private final PgPool poolMock;
     private final DeviceConfigMapper mapperMock;
     private final DeviceConfigService deviceConfigService;
+    private final InternalCommunicationConfig communicationConfig;
 
     private final String tenantId = "tenant_ID";
     private final String deviceId = "device_ID";
@@ -47,7 +53,8 @@ class DeviceConfigServiceImplTest {
         this.dbMock = mock(DatabaseServiceImpl.class);
         this.mapperMock = mock(DeviceConfigMapper.class);
         this.poolMock = mock(PgPool.class);
-        this.deviceConfigService = new DeviceConfigServiceImpl(repositoryMock, dbMock, mapperMock);
+        this.communicationConfig = mock(InternalCommunicationConfig.class);
+        this.deviceConfigService = new DeviceConfigServiceImpl(repositoryMock, dbMock, mapperMock, communicationConfig, null);
     }
 
 

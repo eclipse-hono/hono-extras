@@ -20,6 +20,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
 import io.vertx.pgclient.PgPool;
+import org.eclipse.hono.communication.api.service.database.DatabaseSchemaCreatorImpl;
+import org.eclipse.hono.communication.api.service.database.DatabaseService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

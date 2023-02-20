@@ -14,15 +14,11 @@
  *
  */
 
-package org.eclipse.hono.communication.api.service;
-
-import io.vertx.pgclient.PgPool;
+package org.eclipse.hono.communication.api.service.communication;
 
 /**
- * Database service interface
+ * Interface for internal communication topic publisher
  */
-public interface DatabaseService {
-    PgPool getDbClient();
-
-    void close();
+public interface InternalMessagePublisher {
+    void publish(String topic, String message) throws Exception;
 }

@@ -14,7 +14,7 @@
  *
  */
 
-package org.eclipse.hono.communication.api.service;
+package org.eclipse.hono.communication.api.service.database;
 
 /**
  * Interface for creating Database Tables at application startup

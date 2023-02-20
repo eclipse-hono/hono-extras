@@ -1,6 +1,15 @@
 app:
   name: "Device Communication"
   version: ${COM_APP_VERSION:"v1"}
+  projectId: ${COM_PROJECT_ID:sotec-iot-core-dev}
+
+  internalCommunication:
+    config:
+      ackTopic: ${COM_CONFIG_ACK_TOPIC:%s.config_response} # TENANT_NAME.config_response
+      topicFormat: ${COM_CONFIG_TOPIC_FORMAT:%s.config}  # TENANT_NAME.config
+    command:
+      topicFormat: ${COM_COMMAND_TOPIC_FORMAT:%s.command} # TENANT_NAME.command
+
 vertx:
   openapi:
     file: ${COM_OPENAPI_FILE_PATH:/api/hono-device-communication-v1.yaml}
@@ -27,6 +36,7 @@ vertx:
     table: ${COM_DB_DEVICE_REG_TABLE:device_registrations}
     tenant-id-column: ${COM_DB_DEVICE_REG_TENANT_COL_NAME:tenant_id}
     device-id-column: ${COM_DB_DEVICE_REG_DEVICE_COL_NAME:device_id}
+
 
 quarkus:
   container-image:

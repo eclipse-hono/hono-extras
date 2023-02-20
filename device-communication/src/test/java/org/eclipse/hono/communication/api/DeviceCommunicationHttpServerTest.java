@@ -29,7 +29,11 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.ext.web.validation.BadRequestException;
 import org.eclipse.hono.communication.api.handler.DeviceCommandsHandler;
-import org.eclipse.hono.communication.api.service.*;
+import org.eclipse.hono.communication.api.service.VertxHttpHandlerManagerService;
+import org.eclipse.hono.communication.api.service.database.DatabaseSchemaCreator;
+import org.eclipse.hono.communication.api.service.database.DatabaseSchemaCreatorImpl;
+import org.eclipse.hono.communication.api.service.database.DatabaseService;
+import org.eclipse.hono.communication.api.service.database.DatabaseServiceImpl;
 import org.eclipse.hono.communication.core.app.ApplicationConfig;
 import org.eclipse.hono.communication.core.app.ServerConfig;
 import org.junit.jupiter.api.AfterEach;
@@ -247,7 +251,7 @@ class DeviceCommunicationHttpServerTest {
 
                     verify(deviceCommunicationHttpServerSpy, times(1)).createRouterWithEndpoints(eq(routerBuilderMock), any());
                     verify(deviceCommunicationHttpServerSpy, times(1)).startVertxServer(any());
-                   
+
 
                     mockedRouterBuilderStatic.verify(() -> RouterBuilder.create(vertxMock, "/myPath"), times(1));
 
