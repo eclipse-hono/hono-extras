@@ -17,6 +17,13 @@
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.0.0-M9</surefire-plugin.version>
         <org.mapstruct.version>1.5.3.Final</org.mapstruct.version>
+        <vertx-pg-client.version>4.3.7</vertx-pg-client.version>
+        <jakarta.persistence-api.version>2.2.3</jakarta.persistence-api.version>
+        <com.ongres.scram.client.version>2.1</com.ongres.scram.client.version>
+        <quarkus-container-image-docker.version>2.16.0.Final</quarkus-container-image-docker.version>
+        <quarkus-google-cloud-pubsub.version>0.2.0</quarkus-google-cloud-pubsub.version>
+        <maven-surefire-plugin.version>3.0.0-M9</maven-surefire-plugin.version>
+        <com.google.guava.version>31.1-jre</com.google.guava.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -80,17 +87,17 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-pg-client</artifactId>
-            <version>4.3.7</version>
+            <version>${vertx-pg-client.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
-            <version>2.2.3</version>
+            <version>${jakarta.persistence-api.version}</version>
         </dependency>
         <dependency>
             <groupId>com.ongres.scram</groupId>
             <artifactId>client</artifactId>
-            <version>2.1</version>
+            <version>${com.ongres.scram.client.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/io.vertx/vertx-sql-client-templates -->
         <dependency>
@@ -108,7 +115,7 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-container-image-docker</artifactId>
-            <version>2.16.0.Final</version>
+            <version>${quarkus-container-image-docker.version}</version>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
@@ -118,14 +125,20 @@
         <dependency>
             <groupId>io.quarkiverse.googlecloudservices</groupId>
             <artifactId>quarkus-google-cloud-pubsub</artifactId>
-            <version>0.2.0</version>
+            <version>${quarkus-google-cloud-pubsub.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>3.0.0-M9</version>
+            <version>${maven-surefire-plugin.version}</version>
             <type>maven-plugin</type>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${com.google.guava.version}</version>
         </dependency>
 
     </dependencies>

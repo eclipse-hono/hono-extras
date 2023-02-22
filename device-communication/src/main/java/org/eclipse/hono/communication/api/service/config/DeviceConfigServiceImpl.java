@@ -17,29 +17,30 @@
 package org.eclipse.hono.communication.api.service.config;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
+import com.google.common.base.Strings;
 import com.google.pubsub.v1.PubsubMessage;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
+import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigAckResponse;
 import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
-import org.eclipse.hono.communication.api.data.DeviceConfigResponse;
 import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 import org.eclipse.hono.communication.api.mapper.DeviceConfigMapper;
-import org.eclipse.hono.communication.api.repository.DeviceConfigsRepository;
+import org.eclipse.hono.communication.api.repository.DeviceConfigRepository;
+import org.eclipse.hono.communication.api.service.DeviceServiceAbstract;
 import org.eclipse.hono.communication.api.service.command.DeviceCommandServiceImpl;
-import org.eclipse.hono.communication.api.service.communication.InternalCommunication;
-import org.eclipse.hono.communication.api.service.database.DatabaseService;
-import org.eclipse.hono.communication.core.app.InternalCommunicationConfig;
+import org.eclipse.hono.communication.api.service.communication.InternalMessaging;
+import org.eclipse.hono.communication.core.app.InternalMessagingConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -47,51 +48,79 @@ import java.time.Instant;
  */
 
 @Singleton
-public class DeviceConfigServiceImpl implements DeviceConfigService, MessageReceiver {
-    private final static ObjectWriter ow = new ObjectMapper().writer();
-    private final static ObjectReader or = new ObjectMapper().reader();
+public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements DeviceConfigService {
+
     private final Logger log = LoggerFactory.getLogger(DeviceCommandServiceImpl.class);
-    private final DeviceConfigsRepository repository;
-    private final DatabaseService db;
+    private final DeviceConfigRepository repository;
+    private final String deviceIdKey = "deviceId";
+    private final String tenantIdKey = "tenantId";
+    private final String configVersionIdKey = "configVersion";
+
     private final DeviceConfigMapper mapper;
-    private final InternalCommunicationConfig communicationConfig;
 
 
-    private final InternalCommunication internalCommunication;
+    private final InternalMessaging internalMessaging;
 
-    public DeviceConfigServiceImpl(DeviceConfigsRepository repository,
-                                   DatabaseService db,
+    public DeviceConfigServiceImpl(DeviceConfigRepository repository,
                                    DeviceConfigMapper mapper,
-                                   InternalCommunicationConfig communicationConfig,
-                                   InternalCommunication internalCommunication) {
+                                   InternalMessagingConfig communicationConfig,
+                                   InternalMessaging internalMessaging
+    ) {
+
+        super(communicationConfig, internalMessaging);
 
         this.repository = repository;
-        this.db = db;
         this.mapper = mapper;
-        this.communicationConfig = communicationConfig;
-        this.internalCommunication = internalCommunication;
+        this.internalMessaging = internalMessaging;
+        subscribeToAllEventTenants();
     }
 
 
-    public Future<DeviceConfigResponse> modifyCloudToDeviceConfig(DeviceConfigRequest deviceConfig, String deviceId, String tenantId) {
+    /**
+     * Subscribe to all tenant event topics
+     */
+    void subscribeToAllEventTenants() {
+        MessageReceiver callBack = this::onDeviceConnectEvent;
+        repository.listTenants()
+                .onSuccess(tenants -> tenants
+                        .forEach(tenant -> {
+                            var topic = messagingConfig.getOnConnectEventTopicFormat().formatted(tenant);
+                            internalMessaging.subscribe(topic, callBack);
+
+                        })).onFailure(err -> log.error("Error subscribing to all tenant events: {}", err.getMessage()));
+        final JsonObject payload = new JsonObject();
+        payload.put("cause", "test");
+        log.info("{}", payload.toBuffer());
+    }
+
+    /**
+     * Create and publish new device configs
+     *
+     * @param deviceConfig The device configs
+     * @param deviceId     The device id
+     * @param tenantId     The tenant id
+     * @return Future of device config
+     */
+    public Future<DeviceConfig> modifyCloudToDeviceConfig(DeviceConfigRequest deviceConfig, String deviceId, String tenantId) {
 
         var entity = mapper.configRequestToDeviceConfigEntity(deviceConfig);
         entity.setDeviceId(deviceId);
         entity.setTenantId(tenantId);
 
-        return db.getDbClient().withTransaction(
-                        sqlConnection ->
-                                repository.createNew(sqlConnection, entity))
-                .map(mapper::deviceConfigEntityToResponse)
+        return repository.createNew(entity)
+                .map(mapper::deviceConfigEntityToDeviceConfig)
                 .onSuccess(result -> {
-                    var topicToPublish = String.format(communicationConfig.getConfigTopicFormat(), entity.getTenantId());
-                    var ackTopicToSubscribe = String.format(communicationConfig.getConfigAckTopicFormat(), entity.getTenantId());
-
+                    var topicToPublish = String.format(messagingConfig.getConfigTopicFormat(), entity.getTenantId());
+                    var ackTopicToSubscribe = String.format(messagingConfig.getConfigAckTopicFormat(), entity.getTenantId());
+                    var messageAttributes = Map.of(
+                            deviceIdKey, entity.getDeviceId(),
+                            tenantId, entity.getTenantId(),
+                            configVersionIdKey, result.getVersion());
 
                     try {
                         String configJson = ow.writeValueAsString(result);
-                        internalCommunication.publish(topicToPublish, configJson);
-                        internalCommunication.subscribe(ackTopicToSubscribe, this);
+                        internalMessaging.publish(topicToPublish, configJson, messageAttributes);
+                        internalMessaging.subscribe(ackTopicToSubscribe, this::onDeviceConfigAck);
 
                         log.info("Config {} is published on topic {}", configJson, topicToPublish);
                     } catch (Exception ex) {
@@ -100,17 +129,23 @@ public class DeviceConfigServiceImpl implements DeviceConfigService, MessageRece
                 });
     }
 
+    /**
+     * List all device configs
+     *
+     * @param deviceId The device id
+     * @param tenantId The tenant id
+     * @param limit    The limit max=10
+     * @return Future of ListDeviceConfigVersionsResponse
+     */
     public Future<ListDeviceConfigVersionsResponse> listAll(String deviceId, String tenantId, int limit) {
-        return db.getDbClient().withConnection(
-                sqlConnection -> repository.listAll(sqlConnection, deviceId, tenantId, limit)
-                        .map(
-                                result -> {
-                                    var listConfig = new ListDeviceConfigVersionsResponse();
-                                    listConfig.setDeviceConfigs(result);
-                                    return listConfig;
-                                }
-                        )
-        );
+        return repository.listAll(deviceId, tenantId, limit)
+                .map(
+                        result -> {
+                            var listConfig = new ListDeviceConfigVersionsResponse();
+                            listConfig.setDeviceConfigs(result);
+                            return listConfig;
+                        }
+                );
 
     }
 
@@ -119,36 +154,98 @@ public class DeviceConfigServiceImpl implements DeviceConfigService, MessageRece
      *
      * @param configAckResponse Device config to ack
      * @param deviceAckTime     Time of ack
-     * @return Future of Void
      */
     @Override
     public void updateDeviceAckTime(DeviceConfigAckResponse configAckResponse, String deviceAckTime) {
-        db.getDbClient().withTransaction(
-                sqlConnection -> {
-                    return repository.updateDeviceAckTime(sqlConnection, configAckResponse, deviceAckTime);
-                }
-        ).onSuccess(ok -> {
-            log.info("Device acknowledged config {}", configAckResponse);
-        });
+        repository.updateDeviceAckTime(configAckResponse, deviceAckTime)
+                .onSuccess(ok -> {
+                    log.info("Device acknowledged config {}", configAckResponse);
+                });
     }
 
     /**
-     * Handle incoming topic message
+     * Handle incoming ack config message
      *
-     * @param msg      The message to handle
-     * @param consumer The message consumer
+     * @param pubsubMessage The message to handle
+     * @param consumer      The message consumer
      */
-    @Override
-    public void receiveMessage(PubsubMessage msg, AckReplyConsumer consumer) {
-        try {
-            var ackResponse = or.readValue(msg.getData().toStringUtf8(), DeviceConfigAckResponse.class);
-            log.info("New Config ack was received: {}", ackResponse.toString());
-            updateDeviceAckTime(ackResponse, Instant.now().toString());
-            consumer.ack();
-        } catch (IOException ex) {
-            log.error("Device config ack response can't deserialization error: {}", ex.getMessage());
+
+    public void onDeviceConfigAck(PubsubMessage pubsubMessage, AckReplyConsumer consumer) {
+        var messageAttributes = pubsubMessage.getAttributesMap();
+        var deviceId = messageAttributes.get(messagingConfig.getDeviceIdKey());
+        var tenantId = messageAttributes.get(messagingConfig.getTenantIdKey());
+        var version = messageAttributes.get(messagingConfig.getConfigVersionIdKey());
+
+        var ackResponse = new DeviceConfigAckResponse(version, tenantId, deviceId);
+
+        log.info("New Config ack was received {}", ackResponse);
+        updateDeviceAckTime(ackResponse, Instant.now().toString());
+        consumer.ack();
+
+    }
+
+    /**
+     * Handle incoming device onConnect events
+     *
+     * @param pubsubMessage The message to handle
+     * @param consumer      The message consumer
+     */
+    public void onDeviceConnectEvent(PubsubMessage pubsubMessage, AckReplyConsumer consumer) {
+
+        consumer.ack(); // message was received and processed only once
+
+        HashMap payload;
+        String msg = pubsubMessage.getData().toStringUtf8();
+
+        if (Strings.isNullOrEmpty(msg)) {
+            log.debug("Skip Event: payload is empty");
+            return;
         }
 
+        try {
+            payload = or.readValue(msg, HashMap.class);
+        } catch (IOException e) {
+            log.error("Error deserialize event payload: {}", e.getMessage());
+            return;
+        }
+
+        var messageAttributes = pubsubMessage.getAttributesMap();
+        var deviceId = messageAttributes.get(messagingConfig.getDeviceIdKey());
+        var tenantId = messageAttributes.get(messagingConfig.getTenantIdKey());
+
+        if (skipIncomingDeviceEvent(payload, deviceId, tenantId)) {
+            return;
+        }
+
+        repository.getDeviceLatestConfig(deviceId, tenantId)
+                .onSuccess(res -> {
+                    var config = mapper.deviceConfigEntityToDeviceConfig(res);
+                    var topicToPublish = String.format(messagingConfig.getConfigTopicFormat(), tenantId);
+                    var ackTopicToSubscribe = String.format(messagingConfig.getConfigAckTopicFormat(), tenantId);
+                    try {
+                        internalMessaging.publish(topicToPublish, ow.writeValueAsString(config), messageAttributes);
+                        internalMessaging.subscribe(ackTopicToSubscribe, this::onDeviceConfigAck);
+                        log.info("Handle onConnect event, publish device config {}", res);
+                    } catch (Exception ex) {
+                        log.error("Error serialize config {}", config);
+                    }
+                })
+                .onFailure(err -> log.error("Can't publish configs: {}", err.getMessage()));
+    }
+
+    private boolean skipIncomingDeviceEvent(HashMap payload, String deviceId, String tenantId) {
+        if (Strings.isNullOrEmpty(deviceId) || Strings.isNullOrEmpty(tenantId)) {
+            log.warn("Skip device onConnect event: deviceId or tenantId is empty");
+            return true;
+        }
+
+        var eventType = payload.getOrDefault(messagingConfig.getDeviceConnectPayloadKey(), "");
+        if (!eventType.equals(messagingConfig.getDeviceConnectPayloadValue())) {
+            log.debug("Skip device event: cause is not equal connected");
+            return true;
+        }
+
+        return false;
     }
 
 

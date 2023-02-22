@@ -16,44 +16,33 @@
 
 package org.eclipse.hono.communication.api.service.command;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import io.vertx.core.Future;
 import org.eclipse.hono.communication.api.data.DeviceCommandRequest;
 import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
 import org.eclipse.hono.communication.api.repository.DeviceRepository;
-import org.eclipse.hono.communication.api.service.communication.InternalCommunication;
-import org.eclipse.hono.communication.api.service.database.DatabaseService;
-import org.eclipse.hono.communication.core.app.DatabaseConfig;
-import org.eclipse.hono.communication.core.app.InternalCommunicationConfig;
+import org.eclipse.hono.communication.api.service.DeviceServiceAbstract;
+import org.eclipse.hono.communication.api.service.communication.InternalMessaging;
+import org.eclipse.hono.communication.core.app.InternalMessagingConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
+import java.util.Map;
 
 /**
  * Service for device commands
  */
 @Singleton
-public class DeviceCommandServiceImpl implements DeviceCommandService {
-    private final static ObjectWriter ow = new ObjectMapper().writer();
+public class DeviceCommandServiceImpl extends DeviceServiceAbstract implements DeviceCommandService {
     private final Logger log = LoggerFactory.getLogger(DeviceCommandServiceImpl.class);
-    private final DatabaseService db;
-    private final DatabaseConfig databaseConfig;
     private final DeviceRepository deviceRepository;
-    private final InternalCommunication internalCommunication;
-    private final InternalCommunicationConfig communicationConfig;
 
-    public DeviceCommandServiceImpl(DatabaseService db,
-                                    DatabaseConfig databaseConfig,
-                                    DeviceRepository deviceRepository,
-                                    InternalCommunication internalCommunication,
-                                    InternalCommunicationConfig communicationConfig) {
-        this.db = db;
-        this.databaseConfig = databaseConfig;
+    public DeviceCommandServiceImpl(DeviceRepository deviceRepository,
+                                    InternalMessaging internalMessaging,
+                                    InternalMessagingConfig messagingConfig) {
+
+        super(messagingConfig, internalMessaging);
         this.deviceRepository = deviceRepository;
-        this.internalCommunication = internalCommunication;
-        this.communicationConfig = communicationConfig;
     }
 
     /**
@@ -65,31 +54,31 @@ public class DeviceCommandServiceImpl implements DeviceCommandService {
      * @return Future of Void
      */
     public Future<Void> postCommand(DeviceCommandRequest commandRequest, String tenantId, String deviceId) {
+        return deviceRepository.searchForDevice(deviceId, tenantId)
+                .compose(
+                        counter -> {
 
-        return db.getDbClient().withConnection(
-                sqlConnection -> deviceRepository.searchForDevice(sqlConnection, deviceId, tenantId, databaseConfig)
-                        .compose(
-                                counter -> {
+                            if (counter < 1) {
+                                throw new DeviceNotFoundException(String.format("Device with id %s and tenant id %s doesn't exist",
+                                        deviceId,
+                                        tenantId));
+                            }
+                            var topic = String.format(messagingConfig.getCommandTopicFormat(), tenantId);
+                            Map<String, String> attributes = Map.of("deviceId", deviceId, "tenantId", tenantId, "subject", "command");
+                            try {
+                                String commandJson = ow.writeValueAsString(commandRequest.getBinaryData());
+                                internalMessaging.publish(topic, commandJson, attributes);
+                                log.info("Command was published successfully");
+                            } catch (Exception ex) {
+                                log.error("Command can't be published: {}", ex.getMessage());
+                                return Future.failedFuture(ex);
 
-                                    if (counter < 1) {
-                                        throw new DeviceNotFoundException(String.format("Device with id %s and tenant id %s doesn't exist",
-                                                deviceId,
-                                                tenantId));
-                                    }
-                                    var topic = String.format(communicationConfig.getCommandTopicFormat(), tenantId);
-                                    try {
-                                        String commandJson = ow.writeValueAsString(commandRequest);
-                                        internalCommunication.publish(topic, commandJson);
+                            }
+                            return Future.succeededFuture();
 
-                                    } catch (Exception ex) {
-                                        log.error("Command can't be published: {}", ex.getMessage());
+                        }
 
-                                    }
-                                    return Future.succeededFuture();
-
-                                }
-                        )
-        );
+                );
 
     }
 }

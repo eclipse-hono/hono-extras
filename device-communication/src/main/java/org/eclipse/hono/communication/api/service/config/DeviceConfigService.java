@@ -17,9 +17,9 @@
 package org.eclipse.hono.communication.api.service.config;
 
 import io.vertx.core.Future;
+import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigAckResponse;
 import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
-import org.eclipse.hono.communication.api.data.DeviceConfigResponse;
 import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 
 /**
@@ -27,7 +27,7 @@ import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
  */
 public interface DeviceConfigService {
 
-    Future<DeviceConfigResponse> modifyCloudToDeviceConfig(DeviceConfigRequest deviceConfig, String deviceId, String tenantId);
+    Future<DeviceConfig> modifyCloudToDeviceConfig(DeviceConfigRequest deviceConfig, String deviceId, String tenantId);
 
     Future<ListDeviceConfigVersionsResponse> listAll(String deviceId, String tenantId, int limit);
 

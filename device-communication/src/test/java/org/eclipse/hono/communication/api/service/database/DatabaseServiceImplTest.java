@@ -14,12 +14,10 @@
  *
  */
 
-package org.eclipse.hono.communication.api.service;
+package org.eclipse.hono.communication.api.service.database;
 
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgPool;
-import org.eclipse.hono.communication.api.service.database.DatabaseService;
-import org.eclipse.hono.communication.api.service.database.DatabaseServiceImpl;
 import org.eclipse.hono.communication.core.app.DatabaseConfig;
 import org.eclipse.hono.communication.core.utils.DbUtils;
 import org.junit.jupiter.api.AfterEach;

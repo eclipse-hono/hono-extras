@@ -41,7 +41,6 @@ public class DbUtils {
      */
     public static PgPool createDbClient(Vertx vertx, DatabaseConfig dbConfigs) {
 
-
         final PgConnectOptions connectOptions = new PgConnectOptions()
                 .setHost(dbConfigs.getHost())
                 .setPort(dbConfigs.getPort())

@@ -28,7 +28,6 @@ import io.vertx.ext.web.openapi.RouterBuilder;
 import org.eclipse.hono.communication.api.config.DeviceConfigsConstants;
 import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
-import org.eclipse.hono.communication.api.data.DeviceConfigResponse;
 import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 import org.eclipse.hono.communication.api.service.config.DeviceConfigService;
 import org.eclipse.hono.communication.api.service.config.DeviceConfigServiceImpl;
@@ -59,7 +58,7 @@ class DeviceConfigsHandlerTest {
     private final String deviceID = "device_ID";
     private final String errorMsg = "test_error";
     DeviceConfigRequest deviceConfigRequest = new DeviceConfigRequest("1", "binary_data");
-    DeviceConfigResponse deviceConfigEntity = new DeviceConfigResponse();
+    DeviceConfig deviceConfigEntity = new DeviceConfig();
     DeviceConfig deviceConfig = new DeviceConfig();
 
     public DeviceConfigsHandlerTest() {
@@ -73,7 +72,7 @@ class DeviceConfigsHandlerTest {
         illegalArgumentExceptionMock = mock(IllegalArgumentException.class);
         deviceConfigsHandler = new DeviceConfigsHandler(configServiceMock);
 
-        deviceConfigEntity.setVersion(1);
+        deviceConfigEntity.setVersion("1");
 
 
         deviceConfig.setVersion("");

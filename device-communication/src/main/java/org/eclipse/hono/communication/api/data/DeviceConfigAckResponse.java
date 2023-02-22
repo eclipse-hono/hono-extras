@@ -26,10 +26,16 @@ import java.util.Objects;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceConfigAckResponse {
-
     private String version;
     private String tenantId;
     private String deviceId;
+    public DeviceConfigAckResponse() {
+    }
+    public DeviceConfigAckResponse(String version, String tenantId, String deviceId) {
+        this.version = version;
+        this.tenantId = tenantId;
+        this.deviceId = deviceId;
+    }
 
     @JsonProperty("version")
     public String getVersion() {

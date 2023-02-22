@@ -23,7 +23,7 @@ import com.google.cloud.pubsub.v1.*;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.*;
-import org.eclipse.hono.communication.core.app.InternalCommunicationConfig;
+import org.eclipse.hono.communication.core.app.InternalMessagingConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,19 +38,19 @@ import java.util.stream.StreamSupport;
 
 
 /**
- * InternalCommunication implementation
+ * InternalMessaging implementation
  */
 @ApplicationScoped
-public class PubSubService implements InternalCommunication {
+public class PubSubService implements InternalMessaging {
 
     private final Logger log = LoggerFactory.getLogger(PubSubService.class);
-    private final Map<String, Subscriber> activeSubscriptions = new HashMap<String, Subscriber>();
+    private final Map<String, Subscriber> activeSubscriptions = new HashMap<>();
 
     private final String projectId;
     private TopicName topicName;
 
 
-    public PubSubService(InternalCommunicationConfig configs) {
+    public PubSubService(InternalMessagingConfig configs) {
         this.projectId = configs.getProjectId();
     }
 
@@ -78,15 +78,18 @@ public class PubSubService implements InternalCommunication {
      * @throws Exception Throws Exception if subscription can't be created
      */
     @Override
-    public void publish(String topic, String message) throws Exception {
+    public void publish(String topic, String message, Map<String, String> attributes) throws Exception {
         Publisher publisher = Publisher.newBuilder(TopicName.of(projectId, topic))
                 .build();
         try {
-
-            var data = ByteString.copyFromUtf8(message);// Create a new message
-            var pubsubMessage = PubsubMessage.newBuilder().setData(data).build();
+            var data = ByteString.copyFromUtf8(message);
+            var pubsubMessage = PubsubMessage
+                    .newBuilder()
+                    .setData(data)
+                    .putAllAttributes(attributes)
+                    .build();
             ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
-            ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {
+            ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<>() {
                 public void onSuccess(String messageId) {
                     log.debug("Message was published with id {}", messageId);
                 }

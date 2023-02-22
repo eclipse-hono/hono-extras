@@ -16,9 +16,11 @@
 
 package org.eclipse.hono.communication.api.service.communication;
 
+import java.util.Map;
+
 /**
  * Interface for internal communication topic publisher
  */
 public interface InternalMessagePublisher {
-    void publish(String topic, String message) throws Exception;
+    void publish(String topic, String message, Map<String, String> attributes) throws Exception;
 }

@@ -20,8 +20,8 @@ import io.vertx.core.Future;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import org.eclipse.hono.communication.api.config.DeviceConfigsConstants;
+import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
-import org.eclipse.hono.communication.api.data.DeviceConfigResponse;
 import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 import org.eclipse.hono.communication.api.service.config.DeviceConfigService;
 import org.eclipse.hono.communication.core.http.HttpEndpointHandler;
@@ -50,7 +50,7 @@ public class DeviceConfigsHandler implements HttpEndpointHandler {
                 .handler(this::handleModifyCloudToDeviceConfig);
     }
 
-    public Future<DeviceConfigResponse> handleModifyCloudToDeviceConfig(RoutingContext routingContext) {
+    public Future<DeviceConfig> handleModifyCloudToDeviceConfig(RoutingContext routingContext) {
         var tenantId = routingContext.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
         var deviceId = routingContext.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
 
