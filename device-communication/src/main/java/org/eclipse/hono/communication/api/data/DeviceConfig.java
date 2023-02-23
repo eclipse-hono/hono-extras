@@ -49,6 +49,7 @@ public class DeviceConfig {
         return version;
     }
 
+    @JsonProperty("version")
     public void setVersion(String version) {
         this.version = version;
     }
@@ -59,6 +60,7 @@ public class DeviceConfig {
         return cloudUpdateTime;
     }
 
+    @JsonProperty("cloud_update_time")
     public void setCloudUpdateTime(String cloudUpdateTime) {
         this.cloudUpdateTime = cloudUpdateTime;
     }
@@ -69,6 +71,7 @@ public class DeviceConfig {
         return deviceAckTime;
     }
 
+    @JsonProperty("device_ack_time")
     public void setDeviceAckTime(String deviceAckTime) {
         this.deviceAckTime = deviceAckTime;
     }
@@ -79,6 +82,7 @@ public class DeviceConfig {
         return binaryData;
     }
 
+    @JsonProperty("binary_data")
     public void setBinaryData(String binaryData) {
         this.binaryData = binaryData;
     }
