@@ -40,23 +40,23 @@ import java.util.*;
  */
 @ApplicationScoped
 public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
-    private final static String SQL_INSERT = "INSERT INTO \"deviceConfig\" (version, \"tenantId\", \"deviceId\", \"cloudUpdateTime\", \"deviceAckTime\", \"binaryData\") " +
+    private final static String SQL_INSERT = "INSERT INTO device_configs (version, tenant_id, device_id, cloud_update_time, device_ack_time, binary_data) " +
             "VALUES (#{version}, #{tenantId}, #{deviceId}, #{cloudUpdateTime}, #{deviceAckTime}, #{binaryData}) RETURNING version";
-    private final static String SQL_LIST = "SELECT version, \"cloudUpdateTime\", COALESCE(\"deviceAckTime\",'') AS  \"deviceAckTime\", \"binaryData\" " +
-            "FROM \"deviceConfig\" WHERE \"deviceId\" = #{deviceId} AND \"tenantId\" =  #{tenantId} ORDER BY version DESC LIMIT #{limit}";
-    private final static String SQL_DELETE_MIN_VERSION = "DELETE FROM \"deviceConfig\" WHERE\"deviceId\" = #{deviceId} and \"tenantId\" =  #{tenantId} " +
-            "AND version = (SELECT MIN(version) FROM  \"deviceConfig\" WHERE \"deviceId\" = #{deviceId} and \"tenantId\" =  #{tenantId})  RETURNING version";
-    private final static String SQL_FIND_TOTAL_AND_MAX_VERSION = "SELECT COALESCE(COUNT(*), 0) as total, COALESCE(MAX(version), 0) as max_version from \"deviceConfig\" " +
-            "WHERE \"deviceId\" = #{deviceId} AND \"tenantId\" =  #{tenantId}";
+    private final static String SQL_LIST = "SELECT version, cloud_update_time, device_ack_time, binary_data " +
+            "FROM device_configs WHERE device_id = #{deviceId} and tenant_id =  #{tenantId} ORDER BY version DESC LIMIT #{limit}";
+    private final static String SQL_DELETE_MIN_VERSION = "DELETE FROM device_configs WHERE device_id = #{deviceId} and tenant_id =  #{tenantId} " +
+            "and version = (SELECT MIN(version) from  device_configs WHERE device_id = #{deviceId} and tenant_id =  #{tenantId})  RETURNING version";
+    private final static String SQL_FIND_TOTAL_AND_MAX_VERSION = "SELECT COALESCE(COUNT(*), 0) as total, COALESCE(MAX(version), 0) as max_version from device_configs " +
+            "WHERE device_id = #{deviceId} and tenant_id =  #{tenantId}";
 
-    private final static String SQL_UPDATE_DEVICE_ACK_TIME = "UPDATE \"deviceConfig\" SET \"deviceAckTime\" = #{deviceAckTime} " +
-            "WHERE \"tenantId\" = #{tenantId} AND \"deviceId\" = #{deviceId} AND \"version\" = #{version}";
+    private final static String SQL_UPDATE_DEVICE_ACK_TIME = "UPDATE device_configs SET device_ack_time = #{deviceAckTime} " +
+            "WHERE tenant_id = #{tenantId} AND device_id = #{deviceId} AND version = #{version}";
 
-    private final static String SQL_UPDATE_DEVICE_ACK_TIME_FOR_MAX_VERSION = "UPDATE \"deviceConfig\" SET \"deviceAckTime\" = #{deviceAckTime} " +
-            "WHERE \"tenantId\" = #{tenantId} AND \"deviceId\" = #{deviceId} AND \"version\" = " +
-            "(SELECT MAX(version) FROM \"deviceConfig\" WHERE \"tenantId\" = #{tenantId} AND \"deviceId\" = #{deviceId})";
-    private final static String SQL_FIND_DEVICE_LATEST_CONFIG = "SELECT * FROM \"deviceConfig\"" +
-            "WHERE \"tenantId\" = #{tenantId} AND \"deviceId\" = #{deviceId} AND \"version\" = #{version}";
+    private final static String SQL_UPDATE_DEVICE_ACK_TIME_FOR_MAX_VERSION = "UPDATE device_config SET device_ack_time = #{deviceAckTime} " +
+            "WHERE tenant_id = #{tenantId} AND device_id = #{deviceId} AND version = " +
+            "(SELECT MAX(version) FROM device_config WHERE tenant_id = #{tenantId} AND device_id = #{deviceId})";
+    private final static String SQL_FIND_DEVICE_LATEST_CONFIG = "SELECT * FROM device_config" +
+            "WHERE tenant_id = #{tenantId} AND device_id = #{deviceId} AND version = #{version}";
 
     private final static int MAX_LIMIT = 10;
     private final static Logger log = LoggerFactory.getLogger(DeviceConfigRepositoryImpl.class);

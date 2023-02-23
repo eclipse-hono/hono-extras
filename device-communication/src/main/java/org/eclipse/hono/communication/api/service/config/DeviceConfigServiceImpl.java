@@ -18,7 +18,6 @@ package org.eclipse.hono.communication.api.service.config;
 
 
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
-import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.common.base.Strings;
 import com.google.pubsub.v1.PubsubMessage;
 import io.vertx.core.Future;
@@ -80,12 +79,11 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
      * Subscribe to all tenant event topics
      */
     void subscribeToAllEventTenants() {
-        MessageReceiver callBack = this::onDeviceConnectEvent;
         repository.listTenants()
                 .onSuccess(tenants -> tenants
                         .forEach(tenant -> {
                             var topic = messagingConfig.getOnConnectEventTopicFormat().formatted(tenant);
-                            internalMessaging.subscribe(topic, callBack);
+                            internalMessaging.subscribe(topic, this::onDeviceConnectEvent);
 
                         })).onFailure(err -> log.error("Error subscribing to all tenant events: {}", err.getMessage()));
         final JsonObject payload = new JsonObject();

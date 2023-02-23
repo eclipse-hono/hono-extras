@@ -1,6 +1,6 @@
 # Device Communication API
 
-Device communication API enables users and applications to send configurations and commands to devices via HTTP
+Device communication API enables users and applications to send configurations and commands to devices via HTTP(S)
 endpoints.
 
 ![img.png](img.png)
@@ -30,15 +30,88 @@ router.
 
 For more information please see resources/api/openApi file.
 
+## Pub/Sub - Internal Messaging
+
+API communicates with hono components via the internal messaging interface (implemented from Google's PubSub).
+All the settings for the InternalMessaging component are in the application.yaml file. By publish/subscribe to a topic
+application sends or expects some message attributes.
+
+### Events
+
+API will subscribe to all tenants (tenant_id from device_registrations table) event topic at startup.
+
+Expected message Attributes:
+
+- deviceId
+- tenantId
+
+And the Body should be a JSON object:
+
+``````
+
+  {
+    "cause": "connected",
+    "remote-id": "mqtt-client-id-1",
+    "source": "hono-mqtt",
+    "data": {
+            "foo": "bar"
+            }
+  }
+  
+``````
+
+Application will <b>proceed only connect events (cause is equal to "connected")</b>.
+
+### Configs
+
+Application will publish the latest device configuration when:
+
+- a device "connected" event was received
+- a new device config was created
+
+Message will be published with the following attributes:
+
+- deviceId
+- tenantId
+
+The Body will be a JSON object with the device config object.
+
+After publishing device configs, application subscribes to config_response topic and waits for the device to ack the
+configs.
+
+### Config ACK
+
+Expected message attributes:
+
+- deviceId
+- tenantId
+- configVersion (the config version received from device)
+
+If configVersion is not set, application will ack always the latest config.
+
+### Commands
+
+A command will be published from API to the command topic.
+
+Attributes:
+
+- deviceId
+- tenantId
+- subject (always set to "command")
+
+Body:
+
+The command as string.
+
 ## Database
 
 Application uses PostgresSQL database. All the database configurations can be found in application.yaml file.
 
 ### Tables
 
-- DeviceConfig <br>
+- device_configs <br>
   Is used for saving device config versions
-- DeviceRegistration <br>
+- device_registrations <br>
   Is used for validating if a device exist
 
 ### Migrations

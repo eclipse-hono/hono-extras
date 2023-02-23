@@ -15,14 +15,14 @@
  */
 
 
-CREATE TABLE IF NOT EXISTS "deviceConfig"
+CREATE TABLE IF NOT EXISTS device_configs
 (
     version           INT          not null,
-    "tenantId"        VARCHAR(100) not null,
-    "deviceId"        VARCHAR(100) not null,
-    "cloudUpdateTime" VARCHAR(100) not null,
-    "deviceAckTime"   VARCHAR(100),
-    "binaryData"      VARCHAR      not null,
+    tenant_id         VARCHAR(100) not null,
+    device_id         VARCHAR(100) not null,
+    cloud_update_time VARCHAR(100) not null,
+    device_ack_time   VARCHAR(100),
+    binary_data       VARCHAR      not null,
 
-    PRIMARY KEY (version, "tenantId", "deviceId")
+    PRIMARY KEY (version, tenant_id, device_id)
 )
