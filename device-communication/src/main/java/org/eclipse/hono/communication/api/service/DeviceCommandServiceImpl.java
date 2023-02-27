@@ -14,22 +14,27 @@
  *
  */
 
-package org.eclipse.hono.communication.core.http;
+package org.eclipse.hono.communication.api.service;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.enterprise.context.ApplicationScoped;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.vertx.ext.web.RoutingContext;
 
 /**
- * Base HTTP service class.
+ * Service for device commands.
  */
-public class HttpServiceBase {
+@ApplicationScoped
+public class DeviceCommandServiceImpl implements DeviceCommandService {
+    private final Logger log = LoggerFactory.getLogger(DeviceCommandServiceImpl.class);
 
-    protected final Logger log = LoggerFactory.getLogger(getClass());
-    private final Map<String, HttpEndpointHandler> endpoints = new HashMap<>();
 
-
+    @Override
+    public void postCommand(final RoutingContext routingContext) {
+        // TODO publish command and send response
+        log.info("postCommand received");
+        routingContext.response().setStatusCode(501).end();
+    }
 }

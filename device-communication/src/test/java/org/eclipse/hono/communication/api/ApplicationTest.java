@@ -16,14 +16,21 @@
 
 package org.eclipse.hono.communication.api;
 
-import io.vertx.core.Vertx;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+
 import org.eclipse.hono.communication.core.app.ApplicationConfig;
 import org.eclipse.hono.communication.core.http.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.*;
+
+import io.vertx.core.Vertx;
+
 
 class ApplicationTest {
 
@@ -33,8 +40,8 @@ class ApplicationTest {
     @BeforeEach
     void setUp() {
         httpServerMock = mock(HttpServer.class);
-        Vertx vertxMock = mock(Vertx.class);
-        ApplicationConfig appConfigs = mock(ApplicationConfig.class);
+        final Vertx vertxMock = mock(Vertx.class);
+        final ApplicationConfig appConfigs = mock(ApplicationConfig.class);
         application = new Application(vertxMock, appConfigs, httpServerMock);
 
         verifyNoMoreInteractions(httpServerMock, appConfigs, vertxMock);

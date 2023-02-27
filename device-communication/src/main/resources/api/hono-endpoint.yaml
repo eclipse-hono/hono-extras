@@ -73,7 +73,7 @@ definitions:
           request if a config is specified; the response of devices.create will
           always have a value of 1.
         type: string
-    title: Root Type for DeviceConfigResponse
+    title: Root Type for DeviceConfig
     type: object
   DeviceConfigRequest:
     description: Request body for modifying device configs
@@ -87,40 +87,12 @@ definitions:
     required:
       - binaryData
     type: object
-  DeviceConfigResponse:
-    description: The device configuration.
-    example:
-      binaryData: string
-      cloudUpdateTime: string
-      version: string
-    properties:
-      binaryData:
-        description: >-
-          string (bytes format) The device configuration data in string
-          base64-encoded format.
-        type: string
-      cloudUpdateTime:
-        description: >-
-          String (Timestamp format) [Output only] The time at which this
-          configuration version was updated in Cloud IoT Core. This timestamp is
-          set by the server. Timestamp in  RFC3339 UTC "Zulu" format, accurate
-          to nanoseconds.  Example: "2014-10-02T15:01:23.045123456Z".
-        type: string
-      version:
-        description: >-
-          String (int64 format) [Output only] The version of this update. The
-          version number is assigned by the server, and is always greater than 0
-          after device creation. The version must be 0 on the devices.create
-          request if a config is specified; the response of devices.create will
-          always have a value of 1.
-        type: string
-    title: New Config version response
-    type: object
+
   ListDeviceConfigVersionsResponse:
     description: A list of a device config versions
     example:
       deviceConfigs:
-        - object: DeviceConfigResponse
+        - object: DeviceConfig
     properties:
       deviceConfigs:
         description: List of DeviceConfig objects
@@ -221,7 +193,7 @@ paths:
         "200":
           description: Device config updated successfully
           schema:
-            $ref: "#/definitions/DeviceConfigResponse"
+            $ref: "#/definitions/DeviceConfig"
         "400":
           description: Validation error or Bad request
         "404":

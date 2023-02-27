@@ -16,12 +16,13 @@
 
 package org.eclipse.hono.communication.core.app;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import javax.inject.Singleton;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+
 /**
- * Database configurations
+ * Database configurations.
  */
 @Singleton
 public class DatabaseConfig {

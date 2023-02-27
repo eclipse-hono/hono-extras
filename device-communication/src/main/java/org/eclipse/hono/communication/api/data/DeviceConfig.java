@@ -16,10 +16,12 @@
 
 package org.eclipse.hono.communication.api.data;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Objects;
+
 
 /**
  * The device configuration.
@@ -32,11 +34,22 @@ public class DeviceConfig {
     private String deviceAckTime;
     private String binaryData;
 
+    /**
+     * Creates a new device config.
+     */
     public DeviceConfig() {
 
     }
 
-    public DeviceConfig(String version, String cloudUpdateTime, String deviceAckTime, String binaryData) {
+    /**
+     * Creates a new device config.
+     *
+     * @param version         Config version
+     * @param cloudUpdateTime Cloud update time
+     * @param deviceAckTime   Device ack time
+     * @param binaryData      Binary data
+     */
+    public DeviceConfig(final String version, final String cloudUpdateTime, final String deviceAckTime, final String binaryData) {
         this.version = version;
         this.cloudUpdateTime = cloudUpdateTime;
         this.deviceAckTime = deviceAckTime;
@@ -50,7 +63,7 @@ public class DeviceConfig {
     }
 
     @JsonProperty("version")
-    public void setVersion(String version) {
+    public void setVersion(final String version) {
         this.version = version;
     }
 
@@ -61,7 +74,7 @@ public class DeviceConfig {
     }
 
     @JsonProperty("cloud_update_time")
-    public void setCloudUpdateTime(String cloudUpdateTime) {
+    public void setCloudUpdateTime(final String cloudUpdateTime) {
         this.cloudUpdateTime = cloudUpdateTime;
     }
 
@@ -72,7 +85,7 @@ public class DeviceConfig {
     }
 
     @JsonProperty("device_ack_time")
-    public void setDeviceAckTime(String deviceAckTime) {
+    public void setDeviceAckTime(final String deviceAckTime) {
         this.deviceAckTime = deviceAckTime;
     }
 
@@ -83,19 +96,20 @@ public class DeviceConfig {
     }
 
     @JsonProperty("binary_data")
-    public void setBinaryData(String binaryData) {
+    public void setBinaryData(final String binaryData) {
         this.binaryData = binaryData;
     }
 
+
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        DeviceConfig deviceConfig = (DeviceConfig) o;
+        final DeviceConfig deviceConfig = (DeviceConfig) o;
         return Objects.equals(version, deviceConfig.version) &&
                 Objects.equals(cloudUpdateTime, deviceConfig.cloudUpdateTime) &&
                 Objects.equals(deviceAckTime, deviceConfig.deviceAckTime) &&
@@ -122,7 +136,7 @@ public class DeviceConfig {
      * Convert the given object to string with each line indented by 4 spaces
      * (except the first line).
      */
-    private String toIndentedString(Object o) {
+    private String toIndentedString(final Object o) {
         if (o == null) {
             return "null";
         }

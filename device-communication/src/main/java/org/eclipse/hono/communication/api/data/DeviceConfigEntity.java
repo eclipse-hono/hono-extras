@@ -32,7 +32,10 @@ public class DeviceConfigEntity {
     private String deviceAckTime;
     private String binaryData;
 
- 
+
+    /**
+     * Creates new DeviceConfigEntity.
+     */
     public DeviceConfigEntity() {
     }
 
@@ -41,7 +44,7 @@ public class DeviceConfigEntity {
         return version;
     }
 
-    public void setVersion(int version) {
+    public void setVersion(final int version) {
         this.version = version;
     }
 
@@ -49,7 +52,7 @@ public class DeviceConfigEntity {
         return tenantId;
     }
 
-    public void setTenantId(String tenantId) {
+    public void setTenantId(final String tenantId) {
         this.tenantId = tenantId;
     }
 
@@ -57,7 +60,7 @@ public class DeviceConfigEntity {
         return deviceId;
     }
 
-    public void setDeviceId(String deviceId) {
+    public void setDeviceId(final String deviceId) {
         this.deviceId = deviceId;
     }
 
@@ -66,7 +69,7 @@ public class DeviceConfigEntity {
         return cloudUpdateTime;
     }
 
-    public void setCloudUpdateTime(String cloudUpdateTime) {
+    public void setCloudUpdateTime(final String cloudUpdateTime) {
         this.cloudUpdateTime = cloudUpdateTime;
     }
 
@@ -74,7 +77,7 @@ public class DeviceConfigEntity {
         return deviceAckTime;
     }
 
-    public void setDeviceAckTime(String deviceAckTime) {
+    public void setDeviceAckTime(final String deviceAckTime) {
         this.deviceAckTime = deviceAckTime;
     }
 
@@ -82,7 +85,7 @@ public class DeviceConfigEntity {
         return binaryData;
     }
 
-    public void setBinaryData(String binaryData) {
+    public void setBinaryData(final String binaryData) {
         this.binaryData = binaryData;
     }
 
@@ -100,10 +103,14 @@ public class DeviceConfigEntity {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DeviceConfigEntity that = (DeviceConfigEntity) o;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final var that = (DeviceConfigEntity) o;
         return version == that.version && tenantId.equals(that.tenantId) && deviceId.equals(that.deviceId) && cloudUpdateTime.equals(that.cloudUpdateTime) && Objects.equals(deviceAckTime, that.deviceAckTime) && binaryData.equals(that.binaryData);
     }
 

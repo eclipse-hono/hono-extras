@@ -16,48 +16,46 @@
 
 package org.eclipse.hono.communication.api.service.database;
 
+import javax.enterprise.context.ApplicationScoped;
+
+import org.eclipse.hono.communication.core.app.DatabaseConfig;
+import org.eclipse.hono.communication.core.utils.DbUtils;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.pgclient.PgPool;
-import org.eclipse.hono.communication.core.app.DatabaseConfig;
-import org.eclipse.hono.communication.core.utils.DbUtils;
-
-import javax.enterprise.context.ApplicationScoped;
-
 
 /**
- * Service for database
+ * Service for database.
  */
 @ApplicationScoped
 public class DatabaseServiceImpl implements DatabaseService {
 
-    private final static String databaseConnectionOpenMsg = "Database connection is open.";
-    private final static String databaseConnectionCloseMsg = "Database connection is closed.";
     private final Logger log = LoggerFactory.getLogger(DatabaseServiceImpl.class);
     private final PgPool dbClient;
 
-    public DatabaseServiceImpl(DatabaseConfig databaseConfigs, Vertx vertx) {
+    /**
+     * Creates a new DatabaseServiceImpl.
+     *
+     * @param databaseConfigs The database configs
+     * @param vertx           The quarkus Vertx instance
+     */
+    public DatabaseServiceImpl(final DatabaseConfig databaseConfigs, final Vertx vertx) {
         this.dbClient = DbUtils.createDbClient(vertx, databaseConfigs);
-        log.debug(databaseConnectionOpenMsg);
+        log.debug("Database connection is open.");
     }
 
-    /**
-     * Gets the database client instance.
-     *
-     * @return The database client
-     */
+    @Override
     public PgPool getDbClient() {
         return dbClient;
     }
 
-    /**
-     * Close database connection
-     */
+    @Override
     public void close() {
         if (this.dbClient != null) {
             this.dbClient.close();
-            log.info(databaseConnectionCloseMsg);
+            log.info("Database connection is closed.");
         }
     }
 

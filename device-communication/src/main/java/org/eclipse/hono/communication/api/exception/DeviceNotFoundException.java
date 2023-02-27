@@ -19,21 +19,43 @@ package org.eclipse.hono.communication.api.exception;
 import java.util.NoSuchElementException;
 
 /**
- * Device Not found exception code: 404
+ * Device Not found exception code: 404.
  */
-public class DeviceNotFoundException extends NoSuchElementException {
+public class
+DeviceNotFoundException extends NoSuchElementException {
+
+    /**
+     * Creates a new  DeviceNotFoundException.
+     */
     public DeviceNotFoundException() {
     }
 
-    public DeviceNotFoundException(String s, Throwable cause) {
-        super(s, cause);
+    /**
+     * Creates a new  DeviceNotFoundException.
+     *
+     * @param msg   String message
+     * @param cause Throwable
+     */
+    public DeviceNotFoundException(final String msg, final Throwable cause) {
+        super(msg, cause);
     }
 
-    public DeviceNotFoundException(Throwable cause) {
+    /**
+     * Creates a new  DeviceNotFoundException.
+     *
+     * @param cause Throwable
+     */
+    public DeviceNotFoundException(final Throwable cause) {
         super(cause);
     }
 
-    public DeviceNotFoundException(String s) {
-        super(s);
+
+    /**
+     * Creates a new  DeviceNotFoundException.
+     *
+     * @param msg String message
+     */
+    public DeviceNotFoundException(final String msg) {
+        super(msg);
     }
 }

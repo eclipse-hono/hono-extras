@@ -16,8 +16,8 @@
 
 package org.eclipse.hono.communication.api.service.database;
 
-import io.vertx.core.Vertx;
-import io.vertx.pgclient.PgPool;
+import static org.mockito.Mockito.*;
+
 import org.eclipse.hono.communication.core.app.DatabaseConfig;
 import org.eclipse.hono.communication.core.utils.DbUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -25,7 +25,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
-import static org.mockito.Mockito.*;
+import io.vertx.core.Vertx;
+import io.vertx.pgclient.PgPool;
+
 
 class DatabaseServiceImplTest {
 
@@ -35,7 +37,7 @@ class DatabaseServiceImplTest {
     private final PgPool pgPoolMock;
     private DatabaseService databaseService;
 
-    public DatabaseServiceImplTest() {
+    DatabaseServiceImplTest() {
         vertxMock = mock(Vertx.class);
         databaseConfigMock = mock(DatabaseConfig.class);
         pgPoolMock = mock(PgPool.class);
@@ -56,7 +58,7 @@ class DatabaseServiceImplTest {
             dbUtilsMockedStatic.when(() -> DbUtils.createDbClient(vertxMock, databaseConfigMock)).thenReturn(pgPoolMock);
             databaseService = new DatabaseServiceImpl(databaseConfigMock, vertxMock);
 
-            var client = databaseService.getDbClient();
+            final var client = databaseService.getDbClient();
 
             Assertions.assertSame(client, pgPoolMock);
 

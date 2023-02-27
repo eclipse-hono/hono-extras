@@ -16,22 +16,33 @@
 
 package org.eclipse.hono.communication.core.utils;
 
+import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
+
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.validation.BadRequestException;
-import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
+
 
 /**
- * HTTP Response utilities class
+ * HTTP Response utilities class.
  */
 public abstract class ResponseUtils {
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
     private static final String APPLICATION_JSON_TYPE = "application/json";
 
+    private ResponseUtils() {
+        // avoid instantiation
+    }
 
-    public static void successResponse(RoutingContext rc,
-                                       Object response) {
+    /**
+     * Build success response using 200 as its status code and response object as body.
+     *
+     * @param rc       The routing context
+     * @param response The response object
+     */
+    public static void successResponse(final RoutingContext rc,
+                                       final Object response) {
         rc.response()
                 .setStatusCode(200)
                 .putHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON_TYPE)
@@ -39,13 +50,13 @@ public abstract class ResponseUtils {
     }
 
     /**
-     * Build success response using 201 Created as its status code and response as its body
+     * Build success response using 201 Created as its status code and response  object as body.
      *
      * @param rc       Routing context
      * @param response Response body
      */
-    public static void createdResponse(RoutingContext rc,
-                                       Object response) {
+    public static void createdResponse(final RoutingContext rc,
+                                       final Object response) {
         rc.response()
                 .setStatusCode(201)
                 .putHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON_TYPE)
@@ -53,11 +64,11 @@ public abstract class ResponseUtils {
     }
 
     /**
-     * Build success response using 204 No Content as its status code and no body
+     * Build success response using 204 No Content as its status code and no response body.
      *
      * @param rc Routing context
      */
-    public static void noContentResponse(RoutingContext rc) {
+    public static void noContentResponse(final RoutingContext rc) {
         rc.response()
                 .setStatusCode(204)
                 .end();
@@ -65,12 +76,12 @@ public abstract class ResponseUtils {
 
     /**
      * Build error response using 400 Bad Request, 404 Not Found or 500 Internal Server Error
-     * as its status code and throwable as its body
+     * as its status code and throwable as its body.
      *
      * @param rc    Routing context
      * @param error Throwable exception
      */
-    public static void errorResponse(RoutingContext rc, Throwable error) {
+    public static void errorResponse(final RoutingContext rc, final Throwable error) {
         final int status;
         final String message;
 

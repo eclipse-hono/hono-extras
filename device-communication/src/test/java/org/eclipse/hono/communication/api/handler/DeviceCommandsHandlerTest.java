@@ -16,9 +16,9 @@
 
 package org.eclipse.hono.communication.api.handler;
 
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.openapi.Operation;
-import io.vertx.ext.web.openapi.RouterBuilder;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
 import org.eclipse.hono.communication.api.config.DeviceCommandConstants;
 import org.eclipse.hono.communication.api.service.command.DeviceCommandService;
 import org.eclipse.hono.communication.api.service.command.DeviceCommandServiceImpl;
@@ -26,8 +26,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.openapi.Operation;
+import io.vertx.ext.web.openapi.RouterBuilder;
+
 
 class DeviceCommandsHandlerTest {
 
@@ -35,14 +37,14 @@ class DeviceCommandsHandlerTest {
     private final RouterBuilder routerBuilderMock;
     private final RoutingContext routingContextMock;
     private final Operation operationMock;
-    private final DeviceCommandsHandler deviceCommandsHandler;
+    private final DeviceCommandHandler deviceCommandsHandler;
 
-    public DeviceCommandsHandlerTest() {
+    DeviceCommandsHandlerTest() {
         operationMock = mock(Operation.class);
         commandServiceMock = mock(DeviceCommandServiceImpl.class);
         routerBuilderMock = mock(RouterBuilder.class);
         routingContextMock = mock(RoutingContext.class);
-        deviceCommandsHandler = new DeviceCommandsHandler(commandServiceMock);
+        deviceCommandsHandler = new DeviceCommandHandler(commandServiceMock);
     }
 
     @AfterEach
@@ -84,6 +86,5 @@ class DeviceCommandsHandlerTest {
 
         verify(commandServiceMock, times(1)).postCommand(any(), anyString(), anyString());
     }
-
 
 }

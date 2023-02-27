@@ -16,8 +16,8 @@
 
 package org.eclipse.hono.communication.api.handler;
 
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.openapi.RouterBuilder;
+import javax.enterprise.context.ApplicationScoped;
+
 import org.eclipse.hono.communication.api.config.DeviceCommandConstants;
 import org.eclipse.hono.communication.api.config.DeviceConfigsConstants;
 import org.eclipse.hono.communication.api.data.DeviceCommandRequest;
@@ -28,23 +28,35 @@ import org.eclipse.hono.communication.core.utils.ResponseUtils;
 import javax.enterprise.context.ApplicationScoped;
 
 /**
- * Handler for device command endpoints
+ * Handler for device command endpoints.
  */
 @ApplicationScoped
-public class DeviceCommandsHandler implements HttpEndpointHandler {
+public class DeviceCommandHandler implements HttpEndpointHandler {
 
     private final DeviceCommandService commandService;
 
-    public DeviceCommandsHandler(DeviceCommandService commandService) {
+    /**
+     * Creates a new DeviceCommandHandler.
+     *
+     * @param commandService The device command service
+     */
+    public DeviceCommandHandler(final DeviceCommandService commandService) {
         this.commandService = commandService;
     }
 
     @Override
-    public void addRoutes(RouterBuilder routerBuilder) {
+    public void addRoutes(final RouterBuilder routerBuilder) {
         routerBuilder.operation(DeviceCommandConstants.POST_DEVICE_COMMAND_OP_ID)
                 .handler(this::handlePostCommand);
     }
 
+    /**
+     * Handle post device commands.
+     *
+     * @param routingContext The RoutingContext
+     */
+    public void handlePostCommand(final RoutingContext routingContext) {
+        commandService.postCommand(routingContext);
     public void handlePostCommand(RoutingContext routingContext) {
         var deviceConfig = routingContext.body()
                 .asJsonObject()

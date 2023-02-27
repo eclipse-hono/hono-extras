@@ -17,17 +17,17 @@
 package org.eclipse.hono.communication.core.http;
 
 /**
- * HTTP server service
+ * HTTP server service.
  */
 public interface HttpServer {
 
     /**
-     * Starts the http server
+     * Starts the http server.
      */
     void start();
 
     /**
-     * Stops the http server
+     * Stops the http server.
      */
     void stop();
 

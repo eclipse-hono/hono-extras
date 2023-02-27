@@ -16,24 +16,32 @@
 
 package org.eclipse.hono.communication.api;
 
-import io.vertx.core.Vertx;
 import org.eclipse.hono.communication.core.app.AbstractServiceApplication;
 import org.eclipse.hono.communication.core.app.ApplicationConfig;
 import org.eclipse.hono.communication.core.http.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.vertx.core.Vertx;
+
 /**
- * Device Communication application
+ * Device Communication application.
  */
 public class Application extends AbstractServiceApplication {
 
     private final Logger log = LoggerFactory.getLogger(AbstractServiceApplication.class);
     private final HttpServer server;
 
-    public Application(Vertx vertx,
-                       ApplicationConfig appConfigs,
-                       HttpServer server) {
+    /**
+     * Creates new Application with all dependencies.
+     *
+     * @param vertx      The quarkus Vertx instance
+     * @param appConfigs The application configs
+     * @param server     The http server
+     */
+    public Application(final Vertx vertx,
+                       final ApplicationConfig appConfigs,
+                       final HttpServer server) {
         super(vertx, appConfigs);
         this.server = server;
     }

@@ -16,12 +16,35 @@
 
 package org.eclipse.hono.communication.api;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+
+import java.util.List;
+
+import org.eclipse.hono.communication.api.handler.DeviceCommandHandler;
+import org.eclipse.hono.communication.api.service.DatabaseSchemaCreator;
+import org.eclipse.hono.communication.api.service.DatabaseSchemaCreatorImpl;
+import org.eclipse.hono.communication.api.service.DatabaseService;
+import org.eclipse.hono.communication.api.service.DatabaseServiceImpl;
+import org.eclipse.hono.communication.api.service.VertxHttpHandlerManagerService;
+import org.eclipse.hono.communication.core.app.ApplicationConfig;
+import org.eclipse.hono.communication.core.app.ServerConfig;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.quarkus.runtime.Quarkus;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.*;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
@@ -42,10 +65,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 class DeviceCommunicationHttpServerTest {
 
@@ -115,7 +134,7 @@ class DeviceCommunicationHttpServerTest {
 
     @Test
     void startSucceeded() {
-        var mockedCommandService = mock(DeviceCommandsHandler.class);
+        final var mockedCommandService = mock(DeviceCommandHandler.class);
         Mockito.verifyNoMoreInteractions(mockedCommandService);
         doNothing().when(mockedCommandService).addRoutes(this.routerBuilderMock);
         try (MockedStatic<RouterBuilder> mockedRouterBuilderStatic = mockStatic(RouterBuilder.class)) {
@@ -142,7 +161,7 @@ class DeviceCommunicationHttpServerTest {
                 when(routerMock.route(any())).thenReturn(routeMock);
 
                 try (MockedStatic<Quarkus> quarkusMockedStatic = mockStatic(Quarkus.class)) {
-                    DeviceCommunicationHttpServer deviceCommunicationHttpServerSpy = spy(this.deviceCommunicationHttpServer);
+                    final DeviceCommunicationHttpServer deviceCommunicationHttpServerSpy = spy(this.deviceCommunicationHttpServer);
                     deviceCommunicationHttpServerSpy.start();
 
 
@@ -190,7 +209,7 @@ class DeviceCommunicationHttpServerTest {
 
     @Test
     void createRouterFailed() {
-        var mockedCommandService = mock(DeviceCommandsHandler.class);
+        final var mockedCommandService = mock(DeviceCommandHandler.class);
         Mockito.verifyNoMoreInteractions(mockedCommandService);
         doNothing().when(mockedCommandService).addRoutes(this.routerBuilderMock);
         try (MockedStatic<RouterBuilder> mockedRouterBuilderStatic = mockStatic(RouterBuilder.class)) {
@@ -220,7 +239,7 @@ class DeviceCommunicationHttpServerTest {
 
     @Test
     void createServerFailed() {
-        var mockedCommandService = mock(DeviceCommandsHandler.class);
+        final var mockedCommandService = mock(DeviceCommandHandler.class);
         Mockito.verifyNoMoreInteractions(mockedCommandService);
         doNothing().when(mockedCommandService).addRoutes(this.routerBuilderMock);
         try (MockedStatic<RouterBuilder> mockedRouterBuilderStatic = mockStatic(RouterBuilder.class)) {
@@ -245,7 +264,7 @@ class DeviceCommunicationHttpServerTest {
                     when(serverConfigMock.getOpenApiFilePath()).thenReturn("/myPath");
                     when(serverConfigMock.getBasePath()).thenReturn("/basePath");
                     when(routerMock.route(any())).thenReturn(routeMock);
-                    DeviceCommunicationHttpServer deviceCommunicationHttpServerSpy = spy(this.deviceCommunicationHttpServer);
+                    final DeviceCommunicationHttpServer deviceCommunicationHttpServerSpy = spy(this.deviceCommunicationHttpServer);
                     deviceCommunicationHttpServerSpy.start();
 
 
@@ -288,8 +307,8 @@ class DeviceCommunicationHttpServerTest {
 
     @Test
     void addDefault400ExceptionHandler() {
-        var errorMsg = "This is an error message";
-        int code = 400;
+        final var errorMsg = "This is an error message";
+        final int code = 400;
 
         when(routingContextMock.failure()).thenReturn(badRequestExceptionMock);
         when(badRequestExceptionMock.toJson()).thenReturn(jsonObjMock);
@@ -311,8 +330,8 @@ class DeviceCommunicationHttpServerTest {
     @Test
     void addDefault404ExceptionHandlerPutsHeader() {
 
-        var errorMsg = "This is an error message";
-        int code = 404;
+        final var errorMsg = "This is an error message";
+        final int code = 404;
 
         when(routingContextMock.response()).thenReturn(httpServerResponseMock);
         when(httpServerResponseMock.putHeader(eq(HttpHeaderNames.CONTENT_TYPE),
@@ -356,8 +375,8 @@ class DeviceCommunicationHttpServerTest {
     @Test
     void addDefault404ExceptionHandlerMethodEqualsHead() {
 
-        var errorMsg = "This is an error message";
-        int code = 404;
+        final var errorMsg = "This is an error message";
+        final int code = 404;
 
         when(routingContextMock.response()).thenReturn(httpServerResponseMock);
         when(httpServerResponseMock.ended()).thenReturn(Boolean.FALSE);

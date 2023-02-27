@@ -1,25 +1,50 @@
+/*
+ * ***********************************************************
+ *  Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  <p>
+ *  See the NOTICE file(s) distributed with this work for additional
+ *  information regarding copyright ownership.
+ *  <p>
+ *  This program and the accompanying materials are made available under the
+ *  terms of the Eclipse Public License 2.0 which is available at
+ *  http://www.eclipse.org/legal/epl-2.0
+ *  <p>
+ *  SPDX-License-Identifier: EPL-2.0
+ * **********************************************************
+ *
+ */
 package org.eclipse.hono.communication.api.data;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+
+
 /**
- * A list of a device config versions
+ * A list of a device config versions.
  **/
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ListDeviceConfigVersionsResponse {
 
     private List<DeviceConfig> deviceConfigs = new ArrayList<>();
 
+    /**
+     * Creates a new ListDeviceConfigVersionsResponse.
+     */
     public ListDeviceConfigVersionsResponse() {
 
     }
 
-    public ListDeviceConfigVersionsResponse(List<DeviceConfig> deviceConfigs) {
+    /**
+     * Creates a new ListDeviceConfigVersionsResponse.
+     *
+     * @param deviceConfigs The device configs
+     */
+    public ListDeviceConfigVersionsResponse(final List<DeviceConfig> deviceConfigs) {
         this.deviceConfigs = deviceConfigs;
     }
 
@@ -29,20 +54,20 @@ public class ListDeviceConfigVersionsResponse {
         return deviceConfigs;
     }
 
-    public void setDeviceConfigs(List<DeviceConfig> deviceConfigs) {
+    public void setDeviceConfigs(final List<DeviceConfig> deviceConfigs) {
         this.deviceConfigs = deviceConfigs;
     }
 
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ListDeviceConfigVersionsResponse listDeviceConfigVersionsResponse = (ListDeviceConfigVersionsResponse) o;
+        final var listDeviceConfigVersionsResponse = (ListDeviceConfigVersionsResponse) o;
         return Objects.equals(deviceConfigs, listDeviceConfigVersionsResponse.deviceConfigs);
     }
 
@@ -63,7 +88,7 @@ public class ListDeviceConfigVersionsResponse {
      * Convert the given object to string with each line indented by 4 spaces
      * (except the first line).
      */
-    private String toIndentedString(Object o) {
+    private String toIndentedString(final Object o) {
         if (o == null) {
             return "null";
         }

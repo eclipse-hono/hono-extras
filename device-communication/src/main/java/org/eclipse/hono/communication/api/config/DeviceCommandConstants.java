@@ -17,10 +17,16 @@
 package org.eclipse.hono.communication.api.config;
 
 /**
- * Device commands constant values
+ * Device commands constant values.
  */
-public class DeviceCommandConstants {
+public final class DeviceCommandConstants {
 
-    // Open api operationIds
-    public final static String POST_DEVICE_COMMAND_OP_ID = "postCommand";
+    /**
+     * OpenApi POST device command operation id.
+     */
+    public static final String POST_DEVICE_COMMAND_OP_ID = "postCommand";
+
+    private DeviceCommandConstants() {
+        // avoid instantiation
+    }
 }
