@@ -18,6 +18,7 @@ package org.eclipse.hono.communication.core.utils;
 
 import org.eclipse.hono.communication.core.app.DatabaseConfig;
 
+import io.quarkus.runtime.Quarkus;
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -61,8 +62,7 @@ public final class DbUtils {
         pool.getConnection(connection -> {
             if (connection.failed()) {
                 log.error(String.format(connectionFailedMsg, connection.cause().getMessage()));
-                System.exit(-1);
-
+                Quarkus.asyncExit(-1);
             } else {
                 log.info(connectionSuccessMsg);
             }
