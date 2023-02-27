@@ -19,10 +19,18 @@ package org.eclipse.hono.communication.api.service;
 import io.vertx.pgclient.PgPool;
 
 /**
- * Database service interface
+ * Database service interface.
  */
 public interface DatabaseService {
+    /**
+     * Gets the database client instance.
+     *
+     * @return The database client
+     */
     PgPool getDbClient();
 
+    /**
+     * Closes the database connection.
+     */
     void close();
 }

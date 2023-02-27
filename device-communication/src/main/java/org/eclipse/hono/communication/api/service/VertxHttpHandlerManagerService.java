@@ -16,25 +16,33 @@
 
 package org.eclipse.hono.communication.api.service;
 
-import org.eclipse.hono.communication.api.handler.DeviceCommandsHandler;
+import java.util.List;
+
+import javax.enterprise.context.ApplicationScoped;
+
+import org.eclipse.hono.communication.api.handler.DeviceCommandHandler;
 import org.eclipse.hono.communication.api.handler.DeviceConfigsHandler;
 import org.eclipse.hono.communication.core.http.HttpEndpointHandler;
 
-import javax.enterprise.context.ApplicationScoped;
-import java.util.List;
 
 /**
- * Provides and Manages available HTTP vertx handlers
+ * Provides and Manages available HTTP vertx handlers.
  */
 @ApplicationScoped
 public class VertxHttpHandlerManagerService {
     /**
-     * Available vertx endpoints handler services
+     * Available vertx endpoints handler services.
      */
     private final List<HttpEndpointHandler> availableHandlerServices;
 
 
-    public VertxHttpHandlerManagerService(DeviceConfigsHandler configHandler, DeviceCommandsHandler commandHandler) {
+    /**
+     * Creates a new  VertxHttpHandlerManagerService with all dependencies.
+     *
+     * @param configHandler  The configuration handler
+     * @param commandHandler The command handler
+     */
+    public VertxHttpHandlerManagerService(final DeviceConfigsHandler configHandler, final DeviceCommandHandler commandHandler) {
         this.availableHandlerServices = List.of(configHandler, commandHandler);
     }
 

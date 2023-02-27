@@ -16,11 +16,11 @@
 
 package org.eclipse.hono.communication.api.service;
 
-import io.vertx.core.Future;
-import io.vertx.pgclient.PgPool;
+import static org.mockito.Mockito.*;
+
+import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigEntity;
 import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
-import org.eclipse.hono.communication.api.data.DeviceConfigResponse;
 import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 import org.eclipse.hono.communication.api.mapper.DeviceConfigMapper;
 import org.eclipse.hono.communication.api.repository.DeviceConfigsRepository;
@@ -29,7 +29,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.*;
+import io.vertx.core.Future;
+import io.vertx.pgclient.PgPool;
+
 
 class DeviceConfigServiceImplTest {
 
@@ -42,7 +44,7 @@ class DeviceConfigServiceImplTest {
     private final String tenantId = "tenant_ID";
     private final String deviceId = "device_ID";
 
-    public DeviceConfigServiceImplTest() {
+    DeviceConfigServiceImplTest() {
         this.repositoryMock = mock(DeviceConfigsRepositoryImpl.class);
         this.dbMock = mock(DatabaseServiceImpl.class);
         this.mapperMock = mock(DeviceConfigMapper.class);
@@ -58,19 +60,19 @@ class DeviceConfigServiceImplTest {
 
     @Test
     void modifyCloudToDeviceConfig_success() {
-        var deviceConfigRequest = new DeviceConfigRequest();
-        var deviceConfigEntity = new DeviceConfigEntity();
-        var deviceConfigEntityResponse = new DeviceConfigResponse();
+        final var deviceConfigRequest = new DeviceConfigRequest();
+        final var deviceConfigEntity = new DeviceConfigEntity();
+        final var deviceConfigEntityResponse = new DeviceConfig();
         when(mapperMock.configRequestToDeviceConfigEntity(deviceConfigRequest)).thenReturn(deviceConfigEntity);
-        when(mapperMock.deviceConfigEntityToResponse(deviceConfigEntity)).thenReturn(deviceConfigEntityResponse);
+        when(mapperMock.deviceConfigEntityToConfig(deviceConfigEntity)).thenReturn(deviceConfigEntityResponse);
         when(dbMock.getDbClient()).thenReturn(poolMock);
         when(poolMock.withTransaction(any())).thenReturn(Future.succeededFuture(deviceConfigEntity));
 
 
-        var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
+        final var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
 
         verify(mapperMock, times(1)).configRequestToDeviceConfigEntity(deviceConfigRequest);
-        verify(mapperMock, times(1)).deviceConfigEntityToResponse(deviceConfigEntity);
+        verify(mapperMock, times(1)).deviceConfigEntityToConfig(deviceConfigEntity);
         verify(dbMock, times(1)).getDbClient();
         verify(poolMock, times(1)).withTransaction(any());
         Assertions.assertTrue(results.succeeded());
@@ -78,14 +80,14 @@ class DeviceConfigServiceImplTest {
 
     @Test
     void modifyCloudToDeviceConfig_failure() {
-        var deviceConfigRequest = new DeviceConfigRequest();
-        var deviceConfigEntity = new DeviceConfigEntity();
+        final var deviceConfigRequest = new DeviceConfigRequest();
+        final var deviceConfigEntity = new DeviceConfigEntity();
         when(mapperMock.configRequestToDeviceConfigEntity(deviceConfigRequest)).thenReturn(deviceConfigEntity);
         when(dbMock.getDbClient()).thenReturn(poolMock);
         when(poolMock.withTransaction(any())).thenReturn(Future.failedFuture(new Throwable("test_error")));
 
 
-        var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
+        final var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
 
         verify(mapperMock, times(1)).configRequestToDeviceConfigEntity(deviceConfigRequest);
         verify(dbMock, times(1)).getDbClient();
@@ -95,11 +97,11 @@ class DeviceConfigServiceImplTest {
 
     @Test
     void listAll_success() {
-        var deviceConfigVersions = new ListDeviceConfigVersionsResponse();
+        final var deviceConfigVersions = new ListDeviceConfigVersionsResponse();
         when(dbMock.getDbClient()).thenReturn(poolMock);
         when(poolMock.withConnection(any())).thenReturn(Future.succeededFuture(deviceConfigVersions));
 
-        var results = deviceConfigService.listAll(deviceId, tenantId, 10);
+        final var results = deviceConfigService.listAll(deviceId, tenantId, 10);
 
         verify(dbMock, times(1)).getDbClient();
         verify(poolMock, times(1)).withConnection(any());
@@ -114,7 +116,7 @@ class DeviceConfigServiceImplTest {
         when(dbMock.getDbClient()).thenReturn(poolMock);
         when(poolMock.withConnection(any())).thenReturn(Future.failedFuture(new Throwable("test_error")));
 
-        var results = deviceConfigService.listAll(deviceId, tenantId, 10);
+        final var results = deviceConfigService.listAll(deviceId, tenantId, 10);
 
         verify(dbMock, times(1)).getDbClient();
         verify(poolMock, times(1)).withConnection(any());

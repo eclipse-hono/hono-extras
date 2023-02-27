@@ -16,29 +16,32 @@
 
 package org.eclipse.hono.communication.core.app;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import javax.inject.Singleton;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 
 /**
- * Application configurations
+ * Application configurations.
  */
 @Singleton
 public class ApplicationConfig {
 
+    @ConfigProperty(name = "app.version")
+    String version;
+    @ConfigProperty(name = "app.name")
+    String componentName;
     private final ServerConfig serverConfig;
     private final DatabaseConfig databaseConfig;
 
-    // Application
-    @ConfigProperty(name = "app.name")
-    String componentName;
 
-
-    @ConfigProperty(name = "app.version")
-    String version;
-
-    public ApplicationConfig(ServerConfig serverConfig, DatabaseConfig databaseConfig) {
+    /**
+     * Creates a new ApplicationConfig.
+     *
+     * @param serverConfig   The server configs
+     * @param databaseConfig The database configs
+     */
+    public ApplicationConfig(final ServerConfig serverConfig, final DatabaseConfig databaseConfig) {
         this.serverConfig = serverConfig;
         this.databaseConfig = databaseConfig;
     }

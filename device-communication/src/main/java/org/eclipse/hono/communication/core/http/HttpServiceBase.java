@@ -16,14 +16,15 @@
 
 package org.eclipse.hono.communication.core.http;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 /**
- * Base HTTP service class
+ * Base HTTP service class.
  */
 public class HttpServiceBase {
 

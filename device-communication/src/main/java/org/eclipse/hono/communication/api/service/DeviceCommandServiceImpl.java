@@ -16,26 +16,23 @@
 
 package org.eclipse.hono.communication.api.service;
 
-import io.vertx.ext.web.RoutingContext;
+import javax.enterprise.context.ApplicationScoped;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.enterprise.context.ApplicationScoped;
+import io.vertx.ext.web.RoutingContext;
 
 /**
- * Service for device commands
+ * Service for device commands.
  */
 @ApplicationScoped
 public class DeviceCommandServiceImpl implements DeviceCommandService {
     private final Logger log = LoggerFactory.getLogger(DeviceCommandServiceImpl.class);
 
 
-    /**
-     * Handles device post commands
-     *
-     * @param routingContext The routing context
-     */
-    public void postCommand(RoutingContext routingContext) {
+    @Override
+    public void postCommand(final RoutingContext routingContext) {
         // TODO publish command and send response
         log.info("postCommand received");
         routingContext.response().setStatusCode(501).end();

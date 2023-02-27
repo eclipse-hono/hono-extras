@@ -16,11 +16,13 @@
 
 package org.eclipse.hono.communication.core.http;
 
-import io.vertx.core.Vertx;
 import org.eclipse.hono.communication.core.app.ApplicationConfig;
 
+import io.vertx.core.Vertx;
+
+
 /**
- * Abstract class for creating HTTP server in quarkus
+ * Abstract class for creating HTTP server in quarkus.
  * using the managed vertx api
  */
 public abstract class AbstractVertxHttpServer {
@@ -28,7 +30,13 @@ public abstract class AbstractVertxHttpServer {
     protected final Vertx vertx;
 
 
-    public AbstractVertxHttpServer(ApplicationConfig appConfigs, Vertx vertx) {
+    /**
+     * Creates a new AbstractVertxHttpServer.
+     *
+     * @param appConfigs The application configs
+     * @param vertx      The quarkus Vertx instance
+     */
+    public AbstractVertxHttpServer(final ApplicationConfig appConfigs, final Vertx vertx) {
         this.appConfigs = appConfigs;
         this.vertx = vertx;
     }

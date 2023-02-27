@@ -16,17 +16,34 @@
 
 package org.eclipse.hono.communication.api.service;
 
-import io.vertx.core.Future;
+
+import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
-import org.eclipse.hono.communication.api.data.DeviceConfigResponse;
 import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 
+import io.vertx.core.Future;
 /**
- * Device config interface
+ * Device config interface.
  */
 public interface DeviceConfigService {
 
-    Future<DeviceConfigResponse> modifyCloudToDeviceConfig(DeviceConfigRequest deviceConfig, String deviceId, String tenantId);
+    /**
+     * Create a new device config and send it to the device.
+     *
+     * @param deviceConfig The device config
+     * @param deviceId     The device id
+     * @param tenantId     The tenant id
+     * @return Future of DeviceConfig
+     */
+    Future<DeviceConfig> modifyCloudToDeviceConfig(DeviceConfigRequest deviceConfig, String deviceId, String tenantId);
 
+    /**
+     * Lists all the configuration for a specific device.
+     *
+     * @param deviceId Device Id
+     * @param tenantId Tenant Id
+     * @param limit    Limit between 1 and 10
+     * @return Future of ListDeviceConfigVersionsResponse
+     */
     Future<ListDeviceConfigVersionsResponse> listAll(String deviceId, String tenantId, int limit);
 }

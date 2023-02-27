@@ -16,20 +16,22 @@
 
 package org.eclipse.hono.communication.api.service;
 
+import java.util.Map;
+
+import javax.enterprise.context.ApplicationScoped;
+
+import org.eclipse.hono.communication.api.config.DeviceConfigsConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.quarkus.runtime.Quarkus;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.sqlclient.templates.SqlTemplate;
-import org.eclipse.hono.communication.api.config.DeviceConfigsConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.enterprise.context.ApplicationScoped;
-import java.util.Map;
 
 /**
- * Creates all Database tables if they are not exist
+ * Creates all Database tables if they are not exist.
  */
 
 @ApplicationScoped
@@ -41,11 +43,18 @@ public class DatabaseSchemaCreatorImpl implements DatabaseSchemaCreator {
     private final DatabaseService db;
 
 
-    public DatabaseSchemaCreatorImpl(Vertx vertx, DatabaseService db) {
+    /**
+     * Creates a new DatabaseSchemaCreatorImpl.
+     *
+     * @param vertx The quarkus Vertx instance
+     * @param db    The database service
+     */
+    public DatabaseSchemaCreatorImpl(final Vertx vertx, final DatabaseService db) {
         this.vertx = vertx;
         this.db = db;
     }
 
+    @Override
     public void createDBTables() {
         createDeviceConfigTable();
     }
@@ -64,8 +73,7 @@ public class DatabaseSchemaCreatorImpl implements DatabaseSchemaCreator {
                                                 .forQuery(sqlConnection, script)
                                                 .execute(Map.of())))
                 .onSuccess(ok -> log.info(tableCreationSuccessMsg))
-                .onFailure(error ->
-                {
+                .onFailure(error -> {
                     log.error(tableCreationErrorMsg, error.getMessage());
                     db.close();
                     Quarkus.asyncExit(-1);

@@ -16,17 +16,12 @@
 
 package org.eclipse.hono.communication.api;
 
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.quarkus.runtime.Quarkus;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.HttpServerOptions;
-import io.vertx.ext.healthchecks.HealthCheckHandler;
-import io.vertx.ext.healthchecks.Status;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.openapi.RouterBuilder;
-import io.vertx.ext.web.validation.BadRequestException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+import javax.inject.Singleton;
+
 import org.eclipse.hono.communication.api.service.DatabaseSchemaCreator;
 import org.eclipse.hono.communication.api.service.DatabaseService;
 import org.eclipse.hono.communication.api.service.VertxHttpHandlerManagerService;
@@ -39,13 +34,21 @@ import org.eclipse.hono.communication.core.utils.ResponseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Singleton;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.quarkus.runtime.Quarkus;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.healthchecks.HealthCheckHandler;
+import io.vertx.ext.healthchecks.Status;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.openapi.RouterBuilder;
+import io.vertx.ext.web.validation.BadRequestException;
+
 
 /**
- * Vertx HTTP Server for the device communication api
+ * Vertx HTTP Server for the device communication api.
  */
 @Singleton
 public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer implements HttpServer {
@@ -59,11 +62,20 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
     private List<HttpEndpointHandler> httpEndpointHandlers;
 
 
-    public DeviceCommunicationHttpServer(ApplicationConfig appConfigs,
-                                         Vertx vertx,
-                                         VertxHttpHandlerManagerService httpHandlerManager,
-                                         DatabaseService databaseService,
-                                         DatabaseSchemaCreator databaseSchemaCreator) {
+    /**
+     * Creates a new DeviceCommunicationHttpServer with all dependencies.
+     *
+     * @param appConfigs            THe application configurations
+     * @param vertx                 The quarkus Vertx instance
+     * @param httpHandlerManager    The http handler manager
+     * @param databaseService       The database connection
+     * @param databaseSchemaCreator The database migrations service
+     */
+    public DeviceCommunicationHttpServer(final ApplicationConfig appConfigs,
+                                         final Vertx vertx,
+                                         final VertxHttpHandlerManagerService httpHandlerManager,
+                                         final DatabaseService databaseService,
+                                         final DatabaseSchemaCreator databaseSchemaCreator) {
         super(appConfigs, vertx);
         this.httpHandlerManager = httpHandlerManager;
         this.databaseSchemaCreator = databaseSchemaCreator;
@@ -80,10 +92,8 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
         // Create Endpoints Router
         this.httpEndpointHandlers = httpHandlerManager.getAvailableHandlerServices();
         RouterBuilder.create(this.vertx, appConfigs.getServerConfig().getOpenApiFilePath())
-                .onSuccess(routerBuilder ->
-                {
-
-                    Router apiRouter = this.createRouterWithEndpoints(routerBuilder, httpEndpointHandlers);
+                .onSuccess(routerBuilder -> {
+                    final Router apiRouter = this.createRouterWithEndpoints(routerBuilder, httpEndpointHandlers);
                     this.startVertxServer(apiRouter);
                 })
                 .onFailure(error -> {
@@ -103,26 +113,26 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
     }
 
     /**
-     * Creates the Router object and adds endpoints and handlers
+     * Creates the Router object and adds endpoints and handlers.
      *
      * @param routerBuilder        Vertx RouterBuilder object
      * @param httpEndpointHandlers All available http endpoint handlers
      * @return The created Router object
      */
-    Router createRouterWithEndpoints(RouterBuilder routerBuilder, List<HttpEndpointHandler> httpEndpointHandlers) {
+    Router createRouterWithEndpoints(final RouterBuilder routerBuilder, final List<HttpEndpointHandler> httpEndpointHandlers) {
         for (HttpEndpointHandler handlerService : httpEndpointHandlers) {
             handlerService.addRoutes(routerBuilder);
         }
-        var apiRouter = Router.router(vertx);
-        var router = routerBuilder.createRouter();
+        final var apiRouter = Router.router(vertx);
+        final var router = routerBuilder.createRouter();
         apiRouter.errorHandler(400, routingContext ->
                 ResponseUtils.errorResponse(routingContext, routingContext.failure()));
         apiRouter.errorHandler(404, routingContext ->
                 ResponseUtils.errorResponse(routingContext, routingContext.failure()));
 
-        var serverConfig = appConfigs.getServerConfig();
+        final var serverConfig = appConfigs.getServerConfig();
         addHealthCheckHandlers(apiRouter, serverConfig);
-        var basePath = String.format("%s*", serverConfig.getBasePath()); // absolut path not allowed only /*
+        final var basePath = String.format("%s*", serverConfig.getBasePath()); // absolut path not allowed only /*
 
         log.info("API base path: {}", basePath);
 
@@ -131,16 +141,16 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
     }
 
     /**
-     * Adds readiness and liveness handlers
+     * Adds readiness and liveness handlers.
      *
      * @param router Created router object
      */
-    private void addHealthCheckHandlers(Router router, ServerConfig serverConfig) {
+    private void addHealthCheckHandlers(final Router router, final ServerConfig serverConfig) {
         addReadinessHandlers(router, serverConfig.getReadinessPath());
         addLivenessHandlers(router, serverConfig.getLivenessPath());
     }
 
-    private void addReadinessHandlers(Router router, String readinessPath) {
+    private void addReadinessHandlers(final Router router, final String readinessPath) {
         log.info("Adding readiness path: {}", readinessPath);
         final HealthCheckHandler healthCheckHandler = HealthCheckHandler.create(vertx);
 
@@ -161,29 +171,25 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
     }
 
 
-    private void addLivenessHandlers(Router router, String livenessPath) {
+    private void addLivenessHandlers(final Router router, final String livenessPath) {
         log.info("Adding liveness path: {}", livenessPath);
         final HealthCheckHandler healthCheckHandler = HealthCheckHandler.create(vertx);
-
-        healthCheckHandler.register("liveness",
-                promise -> promise.tryComplete(Status.OK())
-        );
-
+        healthCheckHandler.register("liveness", promise -> promise.tryComplete(Status.OK()));
         router.get(livenessPath).handler(healthCheckHandler);
     }
 
     /**
-     * Starts the server and blocks until application is stopped
+     * Starts the server and blocks until application is stopped.
      *
      * @param router The Router object
      */
-    void startVertxServer(Router router) {
-        var serverConfigs = appConfigs.getServerConfig();
-        var serverOptions = new HttpServerOptions()
+    void startVertxServer(final Router router) {
+        final var serverConfigs = appConfigs.getServerConfig();
+        final var serverOptions = new HttpServerOptions()
                 .setPort(serverConfigs.getServerPort())
                 .setHost(serverConfigs.getServerUrl());
 
-        var serverCreationFuture = vertx
+        final var serverCreationFuture = vertx
                 .createHttpServer(serverOptions)
                 .requestHandler(router)
                 .listen();
@@ -200,9 +206,9 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
      * @param routingContext the routing context object
      * @Throws: NullPointerException – if routingContext is {@code null}.
      */
-    void addDefault400ExceptionHandler(RoutingContext routingContext) {
+    void addDefault400ExceptionHandler(final RoutingContext routingContext) {
         Objects.requireNonNull(routingContext);
-        String errorMsg = ((BadRequestException) routingContext.failure()).toJson().toString();
+        final String errorMsg = ((BadRequestException) routingContext.failure()).toJson().toString();
         log.error(errorMsg);
         routingContext.response().setStatusCode(400).end(errorMsg);
     }
@@ -213,7 +219,7 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
      * @param routingContext the routing context object
      * @Throws: NullPointerException – if routingContext is {@code null}.
      */
-    void addDefault404ExceptionHandler(RoutingContext routingContext) {
+    void addDefault404ExceptionHandler(final RoutingContext routingContext) {
         Objects.requireNonNull(routingContext);
         if (!routingContext.response().ended()) {
             routingContext.response().setStatusCode(404);

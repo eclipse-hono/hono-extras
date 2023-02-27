@@ -16,23 +16,37 @@
 
 package org.eclipse.hono.communication.api.mapper;
 
+import java.time.Instant;
+
+import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigEntity;
 import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
-import org.eclipse.hono.communication.api.data.DeviceConfigResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import java.time.Instant;
-
+/**
+ * Mapper for device config objects.
+ */
 @Mapper(componentModel = "cdi",
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface DeviceConfigMapper {
 
 
-    DeviceConfigResponse deviceConfigEntityToResponse(DeviceConfigEntity entity);
+    /**
+     * Convert device config entity to device config.
+     *
+     * @param entity The device config entity
+     * @return The device config
+     */
+    DeviceConfig deviceConfigEntityToConfig(DeviceConfigEntity entity);
 
-
+    /**
+     * Convert device config request to device config entity.
+     *
+     * @param request The device config request
+     * @return The device config entity
+     */
     @Mapping(target = "version", source = "request.versionToUpdate")
     @Mapping(target = "cloudUpdateTime", expression = "java(getDateTime())")
     DeviceConfigEntity configRequestToDeviceConfigEntity(DeviceConfigRequest request);

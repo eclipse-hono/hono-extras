@@ -19,8 +19,14 @@ package org.eclipse.hono.communication.api.service;
 import io.vertx.ext.web.RoutingContext;
 
 /**
- * Device commands interface
+ * Device commands interface.
  */
 public interface DeviceCommandService {
+
+    /**
+     * Post device command.
+     *
+     * @param routingContext The RoutingContext
+     */
     void postCommand(RoutingContext routingContext);
 }

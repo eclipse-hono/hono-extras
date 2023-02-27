@@ -16,6 +16,16 @@
 
 package org.eclipse.hono.communication.core.app;
 
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import javax.enterprise.event.Observes;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.Closeable;
@@ -23,35 +33,33 @@ import io.vertx.core.Vertx;
 import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.impl.cpu.CpuCoreSensor;
 import io.vertx.core.json.impl.JsonUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.enterprise.event.Observes;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 /**
- * Abstract Service application class
+ * Abstract Service application class.
  */
 public abstract class AbstractServiceApplication {
 
-    private final Logger log = LoggerFactory.getLogger(AbstractServiceApplication.class);
-
+    /**
+     * YAML file application configurations properties.
+     */
+    protected final ApplicationConfig appConfigs;
     /**
      * The vert.x instance managed by Quarkus.
      */
-    protected Vertx vertx;
-    /**
-     * YAML file application configurations properties
-     */
-    protected ApplicationConfig appConfigs;
+    protected final Vertx vertx;
+    private final Logger log = LoggerFactory.getLogger(AbstractServiceApplication.class);
     private Closeable addedVertxCloseHook;
 
 
+    /**
+     * Creates a new AbstractServiceApplication.
+     *
+     * @param vertx      The quarkus Vertx instance
+     * @param appConfigs The application configs
+     */
     public AbstractServiceApplication(final Vertx vertx,
-                                      ApplicationConfig appConfigs) {
+                                      final ApplicationConfig appConfigs) {
         this.vertx = vertx;
         this.appConfigs = appConfigs;
     }
@@ -78,7 +86,7 @@ public abstract class AbstractServiceApplication {
     }
 
     /**
-     * Registers a close hook that will be notified when the Vertx instance is being closed
+     * Registers a close hook that will be notified when the Vertx instance is being closed.
      */
     private void registerVertxCloseHook() {
         if (vertx instanceof VertxInternal vertxInternal) {
@@ -132,6 +140,9 @@ public abstract class AbstractServiceApplication {
         // do nothing
     }
 
+    /**
+     * Do work on application stop signal.
+     */
     protected void doStop() {
         // do nothing
     }

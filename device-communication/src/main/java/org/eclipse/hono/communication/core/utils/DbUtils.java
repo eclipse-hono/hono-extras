@@ -16,30 +16,37 @@
 
 package org.eclipse.hono.communication.core.utils;
 
+import org.eclipse.hono.communication.core.app.DatabaseConfig;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.PoolOptions;
-import org.eclipse.hono.communication.core.app.DatabaseConfig;
+
 
 /**
- * Database utilities class
+ * Database utilities class.
  */
-public class DbUtils {
+public final class DbUtils {
 
-    final static Logger log = LoggerFactory.getLogger(DbUtils.class);
-    final static String connectionFailedMsg = "Failed to connect to Database: %s";
-    final static String connectionSuccessMsg = "Database connection created successfully.";
+    static final Logger log = LoggerFactory.getLogger(DbUtils.class);
+    static final String connectionFailedMsg = "Failed to connect to Database: %s";
+    static final String connectionSuccessMsg = "Database connection created successfully.";
+
+    private DbUtils() {
+        // avoid instantiation
+    }
 
     /**
-     * Build DB client that is used to manage a pool of connections
+     * Build DB client that is used to manage a pool of connections.
      *
-     * @param vertx Vertx context
+     * @param vertx     The quarkus Vertx instance
+     * @param dbConfigs The database configs
      * @return PostgreSQL pool
      */
-    public static PgPool createDbClient(Vertx vertx, DatabaseConfig dbConfigs) {
+    public static PgPool createDbClient(final Vertx vertx, final DatabaseConfig dbConfigs) {
 
 
         final PgConnectOptions connectOptions = new PgConnectOptions()
@@ -50,7 +57,7 @@ public class DbUtils {
                 .setPassword(dbConfigs.getPassword());
 
         final PoolOptions poolOptions = new PoolOptions().setMaxSize(dbConfigs.getPoolMaxSize());
-        var pool = PgPool.pool(vertx, connectOptions, poolOptions);
+        final var pool = PgPool.pool(vertx, connectOptions, poolOptions);
         pool.getConnection(connection -> {
             if (connection.failed()) {
                 log.error(String.format(connectionFailedMsg, connection.cause().getMessage()));

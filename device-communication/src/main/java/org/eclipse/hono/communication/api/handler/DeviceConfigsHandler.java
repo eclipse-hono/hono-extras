@@ -16,43 +16,58 @@
 
 package org.eclipse.hono.communication.api.handler;
 
-import io.vertx.core.Future;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.openapi.RouterBuilder;
+import javax.enterprise.context.ApplicationScoped;
+
 import org.eclipse.hono.communication.api.config.DeviceConfigsConstants;
+import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
-import org.eclipse.hono.communication.api.data.DeviceConfigResponse;
 import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 import org.eclipse.hono.communication.api.service.DeviceConfigService;
 import org.eclipse.hono.communication.core.http.HttpEndpointHandler;
 import org.eclipse.hono.communication.core.utils.ResponseUtils;
 
-import javax.enterprise.context.ApplicationScoped;
+import io.vertx.core.Future;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.openapi.RouterBuilder;
+
+
+
 
 /**
- * Handler for device config endpoints
+ * Handler for device config endpoints.
  */
 @ApplicationScoped
 public class DeviceConfigsHandler implements HttpEndpointHandler {
 
     private final DeviceConfigService configService;
 
-    public DeviceConfigsHandler(DeviceConfigService configService) {
+    /**
+     * Creates a new DeviceConfigsHandler.
+     *
+     * @param configService The device configs
+     */
+    public DeviceConfigsHandler(final DeviceConfigService configService) {
         this.configService = configService;
     }
 
 
     @Override
-    public void addRoutes(RouterBuilder routerBuilder) {
+    public void addRoutes(final RouterBuilder routerBuilder) {
         routerBuilder.operation(DeviceConfigsConstants.LIST_CONFIG_VERSIONS_OP_ID)
                 .handler(this::handleListConfigVersions);
         routerBuilder.operation(DeviceConfigsConstants.POST_MODIFY_DEVICE_CONFIG_OP_ID)
                 .handler(this::handleModifyCloudToDeviceConfig);
     }
 
-    public Future<DeviceConfigResponse> handleModifyCloudToDeviceConfig(RoutingContext routingContext) {
-        var tenantId = routingContext.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
-        var deviceId = routingContext.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
+    /**
+     * Handles post device configs.
+     *
+     * @param routingContext The RoutingContext
+     * @return Future of DeviceConfig
+     */
+    public Future<DeviceConfig> handleModifyCloudToDeviceConfig(final RoutingContext routingContext) {
+        final var tenantId = routingContext.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
+        final var deviceId = routingContext.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
 
         final DeviceConfigRequest deviceConfig = routingContext.body()
                 .asJsonObject()
@@ -63,12 +78,18 @@ public class DeviceConfigsHandler implements HttpEndpointHandler {
                 .onFailure(err -> ResponseUtils.errorResponse(routingContext, err));
     }
 
-    public Future<ListDeviceConfigVersionsResponse> handleListConfigVersions(RoutingContext routingContext) {
-        var numVersions = routingContext.queryParams().get(DeviceConfigsConstants.NUM_VERSION_QUERY_PARAMS);
+    /**
+     * Handles get device configs.
+     *
+     * @param routingContext The RoutingContext
+     * @return Future of ListDeviceConfigVersionsResponse
+     */
+    public Future<ListDeviceConfigVersionsResponse> handleListConfigVersions(final RoutingContext routingContext) {
+        final var numVersions = routingContext.queryParams().get(DeviceConfigsConstants.NUM_VERSION_QUERY_PARAMS);
 
-        var limit = numVersions == null ? 0 : Integer.parseInt(numVersions);
-        var tenantId = routingContext.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
-        var deviceId = routingContext.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
+        final var limit = numVersions == null ? 0 : Integer.parseInt(numVersions);
+        final var tenantId = routingContext.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
+        final var deviceId = routingContext.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
 
         return configService.listAll(deviceId, tenantId, limit)
                 .onSuccess(result -> ResponseUtils.successResponse(routingContext, result))
