@@ -38,8 +38,8 @@ import io.vertx.sqlclient.templates.SqlTemplate;
 public class DatabaseSchemaCreatorImpl implements DatabaseSchemaCreator {
     private static final Logger log = LoggerFactory.getLogger(DatabaseSchemaCreatorImpl.class);
     private final Vertx vertx;
-    private final String tableCreationErrorMsg = "Table deviceConfig can not be created {}";
-    private final String tableCreationSuccessMsg = "Successfully migrate Table: deviceConfig.";
+    private final String tableCreationErrorMsg = "Tables can not be created {}";
+    private final String tableCreationSuccessMsg = "Successfully migrate Tables: device_configs, device_status.";
     private final DatabaseService db;
 
 
@@ -56,11 +56,11 @@ public class DatabaseSchemaCreatorImpl implements DatabaseSchemaCreator {
 
     @Override
     public void createDBTables() {
-        createDeviceConfigTable();
+        createCommunicationApiTables();
     }
 
 
-    private void createDeviceConfigTable() {
+    private void createCommunicationApiTables() {
         log.info("Running database migration from file {}", DeviceConfigsConstants.CREATE_SQL_SCRIPT_PATH);
 
         final Promise<Buffer> loadScriptTracker = Promise.promise();

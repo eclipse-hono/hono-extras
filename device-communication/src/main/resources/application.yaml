@@ -14,6 +14,8 @@ app:
       deviceConnectPayloadKey: ${COM_EVENT_CONNECT_PAYLOAD_KEY:cause}
       deviceConnectPayloadValue: ${COM_EVENT_CONNECT_PAYLOAD_VALUE:connected}
 
+    state:
+      topicFormat: ${COM_STATE_TOPIC_FORMAT:%s.event.state}  # TENANT_NAME.event.state
     config:
       ackTopic: ${COM_CONFIG_ACK_TOPIC:%s.config_response} # TENANT_NAME.config_response
       topicFormat: ${COM_CONFIG_TOPIC_FORMAT:%s.config}  # TENANT_NAME.config

@@ -20,13 +20,11 @@ import javax.inject.Singleton;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-
 /**
  * Configs for internal communication service.
  */
 @Singleton
 public class InternalMessagingConfig {
-
 
     @ConfigProperty(name = "app.projectId")
     String projectId;
@@ -39,7 +37,6 @@ public class InternalMessagingConfig {
     @ConfigProperty(name = "app.internalMessaging.message.attributeKeys.configVersionIdKey")
     String configVersionIdKey;
 
-
     //Event
     @ConfigProperty(name = "app.internalMessaging.event.onDeviceConnectTopic")
     String onConnectEventTopicFormat;
@@ -47,6 +44,10 @@ public class InternalMessagingConfig {
     String deviceConnectPayloadKey;
     @ConfigProperty(name = "app.internalMessaging.event.deviceConnectPayloadValue")
     String deviceConnectPayloadValue;
+
+    // State
+    @ConfigProperty(name = "app.internalMessaging.state.topicFormat")
+    String stateTopicFormat;
 
     // Config
     @ConfigProperty(name = "app.internalMessaging.config.ackTopic")
@@ -96,5 +97,9 @@ public class InternalMessagingConfig {
 
     public String getDeviceConnectPayloadValue() {
         return deviceConnectPayloadValue;
+    }
+
+    public String getStateTopicFormat() {
+        return stateTopicFormat;
     }
 }
