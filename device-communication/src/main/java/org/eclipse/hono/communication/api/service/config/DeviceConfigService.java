@@ -14,16 +14,18 @@
  *
  */
 
-package org.eclipse.hono.communication.api.service;
+package org.eclipse.hono.communication.api.service.config;
 
 
 import org.eclipse.hono.communication.api.data.DeviceConfig;
+import org.eclipse.hono.communication.api.data.DeviceConfigAckResponse;
 import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
 import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 
 import io.vertx.core.Future;
+
 /**
- * Device config interface
+ * Device config interface.
  */
 public interface DeviceConfigService {
 
@@ -47,5 +49,12 @@ public interface DeviceConfigService {
      */
     Future<ListDeviceConfigVersionsResponse> listAll(String deviceId, String tenantId, int limit);
 
+
+    /**
+     * Update field deviceAckTime when ack received from the device.
+     *
+     * @param configAckResponse Device config to ack
+     * @param deviceAckTime     Time of ack
+     */
     void updateDeviceAckTime(DeviceConfigAckResponse configAckResponse, String deviceAckTime);
 }

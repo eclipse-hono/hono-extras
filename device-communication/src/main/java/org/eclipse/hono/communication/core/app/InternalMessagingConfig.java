@@ -16,12 +16,13 @@
 
 package org.eclipse.hono.communication.core.app;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import javax.inject.Singleton;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+
 /**
- * Configs for internal communication service
+ * Configs for internal communication service.
  */
 @Singleton
 public class InternalMessagingConfig {

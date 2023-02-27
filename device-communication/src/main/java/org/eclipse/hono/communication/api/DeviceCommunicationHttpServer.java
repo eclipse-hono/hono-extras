@@ -22,8 +22,6 @@ import java.util.Objects;
 
 import javax.inject.Singleton;
 
-import org.eclipse.hono.communication.api.service.DatabaseSchemaCreator;
-import org.eclipse.hono.communication.api.service.DatabaseService;
 import org.eclipse.hono.communication.api.service.VertxHttpHandlerManagerService;
 import org.eclipse.hono.communication.api.service.database.DatabaseSchemaCreator;
 import org.eclipse.hono.communication.api.service.database.DatabaseService;

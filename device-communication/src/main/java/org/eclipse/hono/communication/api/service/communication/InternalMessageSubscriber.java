@@ -19,9 +19,16 @@ package org.eclipse.hono.communication.api.service.communication;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 
 /**
- * Interface for internal communication topic subscriber
+ * Interface for internal communication topic subscriber.
  */
 public interface InternalMessageSubscriber {
 
+    /**
+     * Subscribe to a topic.
+     *
+     * @param topic           The topic to subscribe
+     * @param callbackHandler The function to be called when a message is received
+     */
     void subscribe(String topic, MessageReceiver callbackHandler);
 }
+

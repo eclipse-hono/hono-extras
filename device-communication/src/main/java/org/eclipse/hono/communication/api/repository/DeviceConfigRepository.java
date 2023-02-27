@@ -23,31 +23,54 @@ import org.eclipse.hono.communication.api.data.DeviceConfigAckResponse;
 import org.eclipse.hono.communication.api.data.DeviceConfigEntity;
 
 import io.vertx.core.Future;
-import io.vertx.sqlclient.SqlConnection;
 
 /**
  * Device config repository interface.
  */
-public interface DeviceConfigsRepository {
+public interface DeviceConfigRepository {
 
     /**
      * Lists all config versions for a specific device. Result is order by version desc
      *
-     * @param sqlConnection The sql connection instance
-     * @param deviceId      The device id
-     * @param tenantId      The tenant id
-     * @param limit         The number of config to show
+     * @param deviceId The device id
+     * @param tenantId The tenant id
+     * @param limit    The number of config to show
      * @return A Future with a List of DeviceConfigs
      */
-    Future<List<DeviceConfig>> listAll(SqlConnection sqlConnection, String deviceId, String tenantId, int limit);
+    Future<List<DeviceConfig>> listAll(String deviceId, String tenantId, int limit);
 
 
     /**
      * Creates a new config version and deletes the oldest version if the total num of versions in DB is bigger than the MAX_LIMIT.
      *
-     * @param sqlConnection The sql connection instance
-     * @param entity        The instance to insert
+     * @param entity The instance to insert
      * @return A Future of the created DeviceConfigEntity
      */
-    Future<DeviceConfigEntity> createNew(SqlConnection sqlConnection, DeviceConfigEntity entity);
+    Future<DeviceConfigEntity> createNew(DeviceConfigEntity entity);
+
+    /**
+     * Update the deviceAckTime field.
+     *
+     * @param ack           The acknowledgment object
+     * @param deviceAckTime The ack Time
+     * @return Future of Void
+     */
+
+    Future<Void> updateDeviceAckTime(DeviceConfigAckResponse ack, String deviceAckTime);
+
+    /**
+     * List all distinct tenant ID's from device registrations table.
+     *
+     * @return Future of List with all tenants
+     */
+    Future<List<String>> listTenants();
+
+    /**
+     * Get device latest config max(version).
+     *
+     * @param deviceId The device id
+     * @param tenantId The tenant id
+     * @return Future of DeviceConfigEntity
+     */
+    Future<DeviceConfigEntity> getDeviceLatestConfig(String deviceId, String tenantId);
 }

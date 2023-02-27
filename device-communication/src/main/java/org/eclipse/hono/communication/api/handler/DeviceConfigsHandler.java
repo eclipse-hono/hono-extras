@@ -31,8 +31,6 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 
 
-
-
 /**
  * Handler for device config endpoints.
  */

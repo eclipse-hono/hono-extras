@@ -19,8 +19,17 @@ package org.eclipse.hono.communication.api.service.communication;
 import java.util.Map;
 
 /**
- * Interface for internal communication topic publisher
+ * Interface for internal communication topic publisher.
  */
 public interface InternalMessagePublisher {
+
+    /**
+     * Publish a message to a topic.
+     *
+     * @param topic      The topic to publish the message
+     * @param message    The message to publish
+     * @param attributes The message attributes
+     * @throws Exception Throws Exception if subscription can't be created
+     */
     void publish(String topic, String message, Map<String, String> attributes) throws Exception;
 }

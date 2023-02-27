@@ -16,22 +16,35 @@
 
 package org.eclipse.hono.communication.api.data;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Objects;
 
 /**
- * Device config response acknowledgment object
+ * Device config response acknowledgment object.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceConfigAckResponse {
     private String version;
     private String tenantId;
     private String deviceId;
+
+    /**
+     * Creates a new DeviceConfigAckResponse.
+     */
     public DeviceConfigAckResponse() {
     }
-    public DeviceConfigAckResponse(String version, String tenantId, String deviceId) {
+
+    /**
+     * Creates a new DeviceConfigAckResponse.
+     *
+     * @param version  Device config version
+     * @param tenantId Tenant id
+     * @param deviceId device id
+     */
+    public DeviceConfigAckResponse(final String version, final String tenantId, final String deviceId) {
         this.version = version;
         this.tenantId = tenantId;
         this.deviceId = deviceId;
@@ -42,7 +55,7 @@ public class DeviceConfigAckResponse {
         return version;
     }
 
-    public void setVersion(String version) {
+    public void setVersion(final String version) {
         this.version = version;
     }
 
@@ -52,7 +65,7 @@ public class DeviceConfigAckResponse {
         return tenantId;
     }
 
-    public void setTenantId(String tenantId) {
+    public void setTenantId(final String tenantId) {
         this.tenantId = tenantId;
     }
 
@@ -61,7 +74,7 @@ public class DeviceConfigAckResponse {
         return deviceId;
     }
 
-    public void setDeviceId(String deviceId) {
+    public void setDeviceId(final String deviceId) {
         this.deviceId = deviceId;
     }
 
@@ -75,10 +88,14 @@ public class DeviceConfigAckResponse {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DeviceConfigAckResponse that = (DeviceConfigAckResponse) o;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final DeviceConfigAckResponse that = (DeviceConfigAckResponse) o;
         return version.equals(that.version) && tenantId.equals(that.tenantId) && deviceId.equals(that.deviceId);
     }
 

@@ -16,25 +16,33 @@
 
 package org.eclipse.hono.communication.api.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import org.eclipse.hono.communication.api.service.communication.InternalMessaging;
 import org.eclipse.hono.communication.core.app.InternalMessagingConfig;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
+
 /**
- * Abstract device service class
+ * Abstract device service class.
  */
 public abstract class DeviceServiceAbstract {
 
-    protected final static ObjectWriter ow = new ObjectMapper().writer();
-    protected final static ObjectReader or = new ObjectMapper().reader();
+    protected final ObjectWriter ow = new ObjectMapper().writer();
+    protected final ObjectReader or = new ObjectMapper().reader();
 
     protected final InternalMessagingConfig messagingConfig;
     protected final InternalMessaging internalMessaging;
 
-    protected DeviceServiceAbstract(InternalMessagingConfig messagingConfig,
-                                    InternalMessaging internalMessaging) {
+    /**
+     * Creates a new DeviceServiceAbstract.
+     *
+     * @param messagingConfig   The internal messaging configs
+     * @param internalMessaging The internal messaging interface
+     */
+    protected DeviceServiceAbstract(final InternalMessagingConfig messagingConfig,
+                                    final InternalMessaging internalMessaging) {
 
         this.messagingConfig = messagingConfig;
         this.internalMessaging = internalMessaging;

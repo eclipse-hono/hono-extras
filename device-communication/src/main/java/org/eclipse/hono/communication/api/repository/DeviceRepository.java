@@ -16,14 +16,30 @@
 
 package org.eclipse.hono.communication.api.repository;
 
-import io.vertx.core.Future;
-
 import java.util.List;
 
+import io.vertx.core.Future;
+
+
+/**
+ * Device repository interface.
+ */
 public interface DeviceRepository {
 
+    /**
+     * Check if device exist.
+     *
+     * @param deviceId The device id
+     * @param tenantId The tenant id
+     * @return Future of integer
+     */
     Future<Integer> searchForDevice(String deviceId, String tenantId);
 
+    /**
+     * Lists all unique tenants.
+     *
+     * @return Future of list with all tenants.
+     */
     Future<List<String>> listDistinctTenants();
 
 }

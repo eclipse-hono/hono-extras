@@ -16,7 +16,10 @@
 
 package org.eclipse.hono.communication.api.service.command;
 
-import io.vertx.core.Future;
+import java.util.Map;
+
+import javax.inject.Singleton;
+
 import org.eclipse.hono.communication.api.data.DeviceCommandRequest;
 import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
 import org.eclipse.hono.communication.api.repository.DeviceRepository;
@@ -26,34 +29,34 @@ import org.eclipse.hono.communication.core.app.InternalMessagingConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Singleton;
-import java.util.Map;
+import io.vertx.core.Future;
+
 
 /**
- * Service for device commands
+ * Service for device commands.
  */
 @Singleton
 public class DeviceCommandServiceImpl extends DeviceServiceAbstract implements DeviceCommandService {
     private final Logger log = LoggerFactory.getLogger(DeviceCommandServiceImpl.class);
     private final DeviceRepository deviceRepository;
 
-    public DeviceCommandServiceImpl(DeviceRepository deviceRepository,
-                                    InternalMessaging internalMessaging,
-                                    InternalMessagingConfig messagingConfig) {
+    /**
+     * Creates a new DeviceCommandServiceImpl.
+     *
+     * @param deviceRepository  The device repository interface
+     * @param internalMessaging The internal messaging interface
+     * @param messagingConfig   The internal messaging configs
+     */
+    public DeviceCommandServiceImpl(final DeviceRepository deviceRepository,
+                                    final InternalMessaging internalMessaging,
+                                    final InternalMessagingConfig messagingConfig) {
 
         super(messagingConfig, internalMessaging);
         this.deviceRepository = deviceRepository;
     }
 
-    /**
-     * Handles device post commands
-     *
-     * @param commandRequest The command from request body
-     * @param tenantId       Tenant id
-     * @param deviceId       Device Id
-     * @return Future of Void
-     */
-    public Future<Void> postCommand(DeviceCommandRequest commandRequest, String tenantId, String deviceId) {
+    @Override
+    public Future<Void> postCommand(final DeviceCommandRequest commandRequest, final String tenantId, final String deviceId) {
         return deviceRepository.searchForDevice(deviceId, tenantId)
                 .compose(
                         counter -> {
@@ -63,10 +66,10 @@ public class DeviceCommandServiceImpl extends DeviceServiceAbstract implements D
                                         deviceId,
                                         tenantId));
                             }
-                            var topic = String.format(messagingConfig.getCommandTopicFormat(), tenantId);
-                            Map<String, String> attributes = Map.of("deviceId", deviceId, "tenantId", tenantId, "subject", "command");
+                            final var topic = String.format(messagingConfig.getCommandTopicFormat(), tenantId);
+                            final Map<String, String> attributes = Map.of("deviceId", deviceId, "tenantId", tenantId, "subject", "command");
                             try {
-                                String commandJson = ow.writeValueAsString(commandRequest.getBinaryData());
+                                final String commandJson = ow.writeValueAsString(commandRequest.getBinaryData());
                                 internalMessaging.publish(topic, commandJson, attributes);
                                 log.info("Command was published successfully");
                             } catch (Exception ex) {

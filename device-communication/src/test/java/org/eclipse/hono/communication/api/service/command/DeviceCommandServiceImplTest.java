@@ -16,8 +16,11 @@
 
 package org.eclipse.hono.communication.api.service.command;
 
-import io.vertx.core.Future;
-import io.vertx.pgclient.PgPool;
+import static org.mockito.Mockito.*;
+
+import java.io.IOException;
+
+
 import org.eclipse.hono.communication.api.data.DeviceCommandRequest;
 import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
 import org.eclipse.hono.communication.api.mapper.DeviceConfigMapper;
@@ -32,9 +35,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import io.vertx.core.Future;
+import io.vertx.pgclient.PgPool;
 
-import static org.mockito.Mockito.*;
 
 class DeviceCommandServiceImplTest {
 
@@ -48,7 +51,7 @@ class DeviceCommandServiceImplTest {
     private final DatabaseConfig databaseConfig;
 
 
-    public DeviceCommandServiceImplTest() {
+    DeviceCommandServiceImplTest() {
         this.repositoryMock = mock(DeviceRepository.class);
         this.dbMock = mock(DatabaseServiceImpl.class);
         this.mapperMock = mock(DeviceConfigMapper.class);
@@ -79,16 +82,16 @@ class DeviceCommandServiceImplTest {
 
     @Test
     public void postCommand_whenDeviceExists_shouldSucceed() throws Exception {
-        String deviceId = "device123";
-        String tenantId = "tenant123";
-        DeviceCommandRequest commandRequest = new DeviceCommandRequest();
+        final String deviceId = "device123";
+        final String tenantId = "tenant123";
+        final DeviceCommandRequest commandRequest = new DeviceCommandRequest();
         commandRequest.setBinaryData("test");
 
         when(repositoryMock.searchForDevice(deviceId, tenantId)).thenReturn(Future.succeededFuture(1));
         when(communicationConfig.getCommandTopicFormat()).thenReturn("%s.command");
         doNothing().when(internalCommunication).publish(anyString(), anyString(), any());
 
-        Future<Void> result = deviceCommandService.postCommand(commandRequest, tenantId, deviceId);
+        final Future<Void> result = deviceCommandService.postCommand(commandRequest, tenantId, deviceId);
 
         verify(repositoryMock).searchForDevice(deviceId, tenantId);
         verify(communicationConfig).getCommandTopicFormat();
@@ -98,14 +101,14 @@ class DeviceCommandServiceImplTest {
 
     @Test
     public void postCommand_whenDeviceDoesNotExist_shouldThrowDeviceNotFoundException() throws Exception {
-        String deviceId = "device123";
-        String tenantId = "tenant123";
-        DeviceCommandRequest commandRequest = new DeviceCommandRequest();
+        final String deviceId = "device123";
+        final String tenantId = "tenant123";
+        final DeviceCommandRequest commandRequest = new DeviceCommandRequest();
         commandRequest.setBinaryData("test");
 
         when(repositoryMock.searchForDevice(deviceId, tenantId)).thenReturn(Future.succeededFuture(0));
 
-        Future<Void> result = deviceCommandService.postCommand(commandRequest, tenantId, deviceId);
+        final Future<Void> result = deviceCommandService.postCommand(commandRequest, tenantId, deviceId);
         verify(repositoryMock).searchForDevice(deviceId, tenantId);
         Assertions.assertTrue(result.failed());
         Assertions.assertSame(result.cause().getClass(), DeviceNotFoundException.class);
@@ -113,16 +116,16 @@ class DeviceCommandServiceImplTest {
 
     @Test
     public void postCommand_publish_error_shouldFailed() throws Exception {
-        String deviceId = "device123";
-        String tenantId = "tenant123";
-        DeviceCommandRequest commandRequest = new DeviceCommandRequest();
+        final String deviceId = "device123";
+        final String tenantId = "tenant123";
+        final DeviceCommandRequest commandRequest = new DeviceCommandRequest();
         commandRequest.setBinaryData("test");
 
         when(repositoryMock.searchForDevice(deviceId, tenantId)).thenReturn(Future.succeededFuture(1));
         when(communicationConfig.getCommandTopicFormat()).thenReturn("%s.command");
         doThrow(new IOException()).when(internalCommunication).publish(anyString(), anyString(), any());
 
-        Future<Void> result = deviceCommandService.postCommand(commandRequest, tenantId, deviceId);
+        final Future<Void> result = deviceCommandService.postCommand(commandRequest, tenantId, deviceId);
 
         verify(repositoryMock).searchForDevice(deviceId, tenantId);
         verify(communicationConfig).getCommandTopicFormat();

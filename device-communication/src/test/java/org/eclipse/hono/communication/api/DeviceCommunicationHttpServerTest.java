@@ -22,12 +22,13 @@ import static org.mockito.Mockito.*;
 
 import java.util.List;
 
+
 import org.eclipse.hono.communication.api.handler.DeviceCommandHandler;
-import org.eclipse.hono.communication.api.service.DatabaseSchemaCreator;
-import org.eclipse.hono.communication.api.service.DatabaseSchemaCreatorImpl;
-import org.eclipse.hono.communication.api.service.DatabaseService;
-import org.eclipse.hono.communication.api.service.DatabaseServiceImpl;
 import org.eclipse.hono.communication.api.service.VertxHttpHandlerManagerService;
+import org.eclipse.hono.communication.api.service.database.DatabaseSchemaCreator;
+import org.eclipse.hono.communication.api.service.database.DatabaseSchemaCreatorImpl;
+import org.eclipse.hono.communication.api.service.database.DatabaseService;
+import org.eclipse.hono.communication.api.service.database.DatabaseServiceImpl;
 import org.eclipse.hono.communication.core.app.ApplicationConfig;
 import org.eclipse.hono.communication.core.app.ServerConfig;
 import org.junit.jupiter.api.AfterEach;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.quarkus.runtime.Quarkus;
@@ -51,19 +53,6 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.ext.web.validation.BadRequestException;
-import org.eclipse.hono.communication.api.handler.DeviceCommandsHandler;
-import org.eclipse.hono.communication.api.service.VertxHttpHandlerManagerService;
-import org.eclipse.hono.communication.api.service.database.DatabaseSchemaCreator;
-import org.eclipse.hono.communication.api.service.database.DatabaseSchemaCreatorImpl;
-import org.eclipse.hono.communication.api.service.database.DatabaseService;
-import org.eclipse.hono.communication.api.service.database.DatabaseServiceImpl;
-import org.eclipse.hono.communication.core.app.ApplicationConfig;
-import org.eclipse.hono.communication.core.app.ServerConfig;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
 
 class DeviceCommunicationHttpServerTest {

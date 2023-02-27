@@ -16,19 +16,12 @@
 
 package org.eclipse.hono.communication.api.service.communication;
 
+/**
+ * Internal messaging interface.
+ */
 public interface InternalMessaging extends InternalMessageSubscriber, InternalMessagePublisher {
 
-/**
- * Device commands interface.
- */
-public interface DeviceCommandService {
-
-    /**
-     * Post device command.
-     *
-     * @param routingContext The RoutingContext
-     */
-    void postCommand(RoutingContext routingContext);
 
 }
+
 

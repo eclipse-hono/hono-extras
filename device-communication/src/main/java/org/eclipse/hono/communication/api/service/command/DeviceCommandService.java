@@ -16,12 +16,23 @@
 
 package org.eclipse.hono.communication.api.service.command;
 
-import io.vertx.core.Future;
 import org.eclipse.hono.communication.api.data.DeviceCommandRequest;
 
+import io.vertx.core.Future;
+
 /**
- * Device commands interface
+ * Device commands interface.
  */
 public interface DeviceCommandService {
+
+    /**
+     * proceed Post device command.
+     *
+     * @param commandRequest The commandRequest
+     * @param tenantId       Tenant id
+     * @param deviceId       Device Id
+     * @return Future of Void
+     */
     Future<Void> postCommand(DeviceCommandRequest commandRequest, String tenantId, String deviceId);
+
 }
