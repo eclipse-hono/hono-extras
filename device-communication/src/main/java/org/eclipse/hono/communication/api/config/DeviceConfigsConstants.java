@@ -41,7 +41,7 @@ public final class DeviceConfigsConstants {
     /**
      * Sql migrations script path.
      */
-    public static final String CREATE_SQL_SCRIPT_PATH = "db/create_device_config_table.sql";
+    public static final String CREATE_SQL_SCRIPT_PATH = "db/v1_create_table.sql";
     /**
      * OpenApi POST device configs operation id.
      */
