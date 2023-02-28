@@ -14,24 +14,23 @@
  *
  */
 
-package org.eclipse.hono.communication.api.service.state;
-
-import org.eclipse.hono.communication.api.data.ListDeviceStatesResponse;
-
-import io.vertx.core.Future;
+package org.eclipse.hono.communication.api.config;
 
 /**
- * Device state interface.
+ * Device states constant values.
  */
-public interface DeviceStateService {
+public final class DeviceStatesConstants {
 
     /**
-     * Lists all the states for a specific device.
-     *
-     * @param deviceId Device Id
-     * @param tenantId Tenant Id
-     * @param limit Limit between 1 and 10
-     * @return Future of ListDeviceStatesResponse
+     * OpenApi GET device states operation id.
      */
-    Future<ListDeviceStatesResponse> listAll(String deviceId, String tenantId, int limit);
+    public static final String LIST_STATES_OP_ID = "listStates";
+    /**
+     * Path parameter name for number of states.
+     */
+    public static final String NUM_STATES_QUERY_PARAMS = "numStates";
+
+    private DeviceStatesConstants() {
+        // avoid instantiation
+    }
 }

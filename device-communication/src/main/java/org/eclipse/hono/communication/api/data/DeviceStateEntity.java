@@ -23,19 +23,18 @@ import java.util.Objects;
  **/
 public class DeviceStateEntity {
 
-    private int version;
+    private int id;
     private String tenantId;
     private String deviceId;
-
-    private String cloudUpdateTime;
+    private String updateTime;
     private String binaryData;
 
-    public int getVersion() {
-        return version;
+    public int getId() {
+        return id;
     }
 
-    public void setVersion(final int version) {
-        this.version = version;
+    public void setId(final int id) {
+        this.id = id;
     }
 
     public String getTenantId() {
@@ -54,13 +53,12 @@ public class DeviceStateEntity {
         this.deviceId = deviceId;
     }
 
-
-    public String getCloudUpdateTime() {
-        return cloudUpdateTime;
+    public String getUpdateTime() {
+        return updateTime;
     }
 
-    public void setCloudUpdateTime(final String cloudUpdateTime) {
-        this.cloudUpdateTime = cloudUpdateTime;
+    public void setUpdateTime(final String updateTime) {
+        this.updateTime = updateTime;
     }
 
     public String getBinaryData() {
@@ -73,11 +71,11 @@ public class DeviceStateEntity {
 
     @Override
     public String toString() {
-        return "DeviceConfigEntity{" +
-                "version=" + version +
+        return "DeviceStateEntity{" +
+                "id=" + id +
                 ", tenantId='" + tenantId + '\'' +
                 ", deviceId='" + deviceId + '\'' +
-                ", cloudUpdateTime='" + cloudUpdateTime + '\'' +
+                ", updateTime='" + updateTime + '\'' +
                 ", binaryData='" + binaryData + '\'' +
                 '}';
     }
@@ -91,12 +89,12 @@ public class DeviceStateEntity {
             return false;
         }
         final DeviceStateEntity that = (DeviceStateEntity) o;
-        return version == that.version && tenantId.equals(that.tenantId) && deviceId.equals(that.deviceId) && cloudUpdateTime.equals(that.cloudUpdateTime) && binaryData.equals(that.binaryData);
+        return id == that.id && tenantId.equals(that.tenantId) && deviceId.equals(that.deviceId) && updateTime.equals(that.updateTime) && binaryData.equals(that.binaryData);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(version, tenantId, deviceId, cloudUpdateTime, binaryData);
+        return Objects.hash(id, tenantId, deviceId, updateTime, binaryData);
     }
 
 }

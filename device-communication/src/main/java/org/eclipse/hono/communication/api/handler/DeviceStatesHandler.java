@@ -18,9 +18,15 @@ package org.eclipse.hono.communication.api.handler;
 
 import javax.enterprise.context.ApplicationScoped;
 
+import org.eclipse.hono.communication.api.config.DeviceConstants;
+import org.eclipse.hono.communication.api.config.DeviceStatesConstants;
+import org.eclipse.hono.communication.api.data.ListDeviceStatesResponse;
 import org.eclipse.hono.communication.api.service.state.DeviceStateService;
 import org.eclipse.hono.communication.core.http.HttpEndpointHandler;
+import org.eclipse.hono.communication.core.utils.ResponseUtils;
 
+import io.vertx.core.Future;
+import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 
 /**
@@ -41,7 +47,25 @@ public class DeviceStatesHandler implements HttpEndpointHandler {
     }
 
     @Override
-    public void addRoutes(final RouterBuilder router) {
+    public void addRoutes(final RouterBuilder routerBuilder) {
+        routerBuilder.operation(DeviceStatesConstants.LIST_STATES_OP_ID).handler(this::handleListStates);
+    }
 
+    /**
+     * Handles get device states.
+     *
+     * @param routingContext The RoutingContext
+     * @return Future of ListDeviceStatesResponse
+     */
+    public Future<ListDeviceStatesResponse> handleListStates(final RoutingContext routingContext) {
+        final var numStates = routingContext.queryParams().get(DeviceStatesConstants.NUM_STATES_QUERY_PARAMS);
+
+        final var limit = numStates == null ? 0 : Integer.parseInt(numStates);
+        final var tenantId = routingContext.pathParam(DeviceConstants.TENANT_PATH_PARAMS);
+        final var deviceId = routingContext.pathParam(DeviceConstants.DEVICE_PATH_PARAMS);
+
+        return stateService.listAll(deviceId, tenantId, limit)
+                .onSuccess(result -> ResponseUtils.successResponse(routingContext, result))
+                .onFailure(err -> ResponseUtils.errorResponse(routingContext, err));
     }
 }

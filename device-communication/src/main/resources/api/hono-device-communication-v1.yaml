@@ -122,6 +122,51 @@ paths:
           type: string
         in: path
         required: true
+  /states/{tenantid}/{deviceid}:
+    summary: Device states
+    description: List states for a specific device
+    get:
+      tags:
+        - STATES
+      parameters:
+        - name: numStates
+          description: "The number of states to list. States are listed in decreasing
+          order of the state id. The maximum number of states saved in Database is
+          10. If this value is zero, it will return all the states available."
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 10
+          in: query
+          required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListDeviceStatesResponse'
+          description: Lists the device states
+        "404":
+          description: Device not found
+        "500":
+          description: Internal server error
+      operationId: listStates
+      summary: List the device states
+      description: "Lists the last few states of the device in descending
+        order (i.e.: newest first)."
+    parameters:
+      - name: tenantid
+        description: Unique registry id
+        schema:
+          type: string
+        in: path
+        required: true
+      - name: deviceid
+        description: Unique device id
+        schema:
+          type: string
+        in: path
+        required: true
 components:
   schemas:
     DeviceCommandRequest:
@@ -212,4 +257,36 @@ components:
         version: string
         cloudUpdateTime: string
         deviceAckTime: string
+        binaryData: string
+    ListDeviceStatesResponse:
+      title: Root Type for ListDeviceStatesResponse
+      description: A list of a device states
+      type: object
+      properties:
+        deviceStates:
+          description: List of DeviceState objects
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceState'
+      example:
+        deviceStates:
+          - object: DeviceState
+    DeviceState:
+      title: Root Type for DeviceState
+      description: The device state.
+      type: object
+      properties:
+        updateTime:
+          description: "String (Timestamp format) [Output only] The time at
+            which this state version was updated. This
+            timestamp is set by the server. Timestamp in 
+            RFC3339 UTC \"Zulu\" format, accurate to nanoseconds. 
+            Example: \"2014-10-02T15:01:23.045123456Z\"."
+          type: string
+        binaryData:
+          description: "string (bytes format) The device state data
+            in string base64-encoded format."
+          type: string
+      example:
+        updateTime: string
         binaryData: string

@@ -29,11 +29,11 @@ CREATE TABLE IF NOT EXISTS device_configs
 
 CREATE TABLE IF NOT EXISTS device_status
 (
-    version           INT          not null,
+    id                SERIAL       not null,
     tenant_id         VARCHAR(100) not null,
     device_id         VARCHAR(100) not null,
     cloud_update_time VARCHAR(100) not null,
     binary_data       VARCHAR      not null,
 
-    PRIMARY KEY (version, tenant_id, device_id)
+    PRIMARY KEY (id, tenant_id, device_id)
 )

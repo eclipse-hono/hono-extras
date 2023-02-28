@@ -18,6 +18,7 @@ package org.eclipse.hono.communication.api.mapper;
 
 import java.time.Instant;
 
+import org.eclipse.hono.communication.api.data.DeviceState;
 import org.eclipse.hono.communication.api.data.DeviceStateEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -32,16 +33,23 @@ import com.google.pubsub.v1.PubsubMessage;
 public interface DeviceStateMapper {
 
     /**
+     * Convert device state entity to device state.
+     *
+     * @param entity The device state entity
+     * @return The device state
+     */
+    DeviceState deviceStateEntityToDeviceState(DeviceStateEntity entity);
+
+    /**
      * Convert Pub/Sub message to device state entity.
      *
      * @param pubsubMessage The Pub/Sub message.
      * @return The device state entity.
      */
-    @Mapping(target = "version", source = "request.versionToUpdate")
     @Mapping(target = "cloudUpdateTime", expression = "java(getDateTime())")
-    @Mapping(target = "tenantId", source = "pubsubMessage.getAttributesMap().get(\"tenantId\")")
-    @Mapping(target = "deviceId", source = "pubsubMessage.getAttributesMap().get(\"deviceId\")")
-    @Mapping(target = "binaryData", source = "pubsubMessage.getData()")
+    @Mapping(target = "tenantId", expression = "java(pubsubMessage.getAttributesMap().get(\"tenantId\"))")
+    @Mapping(target = "deviceId", expression = "java(pubsubMessage.getAttributesMap().get(\"deviceId\"))")
+    @Mapping(target = "binaryData", source = "pubsubMessage.data_")
     DeviceStateEntity pubSubMessageToDeviceStateEntity(PubsubMessage pubsubMessage);
 
     default String getDateTime() {

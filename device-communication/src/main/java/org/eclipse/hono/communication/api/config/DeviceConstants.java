@@ -14,24 +14,27 @@
  *
  */
 
-package org.eclipse.hono.communication.api.service.state;
-
-import org.eclipse.hono.communication.api.data.ListDeviceStatesResponse;
-
-import io.vertx.core.Future;
+package org.eclipse.hono.communication.api.config;
 
 /**
- * Device state interface.
+ * Device constant values.
  */
-public interface DeviceStateService {
+public final class DeviceConstants {
 
     /**
-     * Lists all the states for a specific device.
-     *
-     * @param deviceId Device Id
-     * @param tenantId Tenant Id
-     * @param limit Limit between 1 and 10
-     * @return Future of ListDeviceStatesResponse
+     * Path parameter name for tenantId.
      */
-    Future<ListDeviceStatesResponse> listAll(String deviceId, String tenantId, int limit);
+    public static final String TENANT_PATH_PARAMS = "tenantid";
+    /**
+     * Path parameter name for deviceId.
+     */
+    public static final String DEVICE_PATH_PARAMS = "deviceid";
+    /**
+     * Sql migrations script path.
+     */
+    public static final String CREATE_SQL_SCRIPT_PATH = "db/v1_create_table.sql";
+
+    private DeviceConstants() {
+        // avoid instantiation
+    }
 }

@@ -18,6 +18,7 @@ package org.eclipse.hono.communication.api.repository;
 
 import java.util.List;
 
+import org.eclipse.hono.communication.api.data.DeviceState;
 import org.eclipse.hono.communication.api.data.DeviceStateEntity;
 
 import io.vertx.core.Future;
@@ -26,6 +27,16 @@ import io.vertx.core.Future;
  * Device state repository interface.
  */
 public interface DeviceStateRepository {
+
+    /**
+     * Lists all states for a specific device. Result is ordered by version desc
+     *
+     * @param deviceId The device id
+     * @param tenantId The tenant id
+     * @param limit    The number of states to show
+     * @return A Future with a List of DeviceStates
+     */
+    Future<List<DeviceState>> listAll(String deviceId, String tenantId, int limit);
 
     /**
      * List all distinct tenant ID's from device registrations table.

@@ -16,8 +16,11 @@
 
 package org.eclipse.hono.communication.api.repository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.eclipse.hono.communication.api.data.DeviceState;
 import org.eclipse.hono.communication.api.data.DeviceStateEntity;
 import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
 import org.eclipse.hono.communication.api.service.database.DatabaseService;
@@ -35,10 +38,13 @@ import io.vertx.sqlclient.templates.SqlTemplate;
  */
 public class DeviceStateRepositoryImpl implements DeviceStateRepository {
 
-    private static final String SQL_INSERT = "INSERT INTO device_configs (version, tenant_id, device_id, cloud_update_time, device_ack_time, binary_data) "
-            +
-            "VALUES (#{version}, #{tenantId}, #{deviceId}, #{cloudUpdateTime}, #{deviceAckTime}, #{binaryData}) RETURNING version";
     private static final Logger log = LoggerFactory.getLogger(DeviceStateRepositoryImpl.class);
+    private final String SQL_INSERT = "INSERT INTO device_status (version, tenant_id, device_id, cloud_update_time, binary_data) "
+            +
+            "VALUES (#{version}, #{tenantId}, #{deviceId}, #{cloudUpdateTime}, #{binaryData}) RETURNING version";
+    private final String SQL_LIST = "SELECT version, cloud_update_time, binary_data " +
+            "FROM device_status WHERE device_id = #{deviceId} and tenant_id =  #{tenantId} ORDER BY version DESC LIMIT #{limit}";
+    private final int MAX_LIMIT = 10;
     private final DatabaseConfig databaseConfig;
     private final DatabaseService db;
     private final DeviceRepository deviceRepository;
@@ -57,6 +63,34 @@ public class DeviceStateRepositoryImpl implements DeviceStateRepository {
         this.databaseConfig = databaseConfig;
         this.db = db;
         this.deviceRepository = deviceRepository;
+    }
+
+    @Override
+    public Future<List<DeviceState>> listAll(final String deviceId, final String tenantId, final int limit) {
+        final int queryLimit = limit == 0 ? MAX_LIMIT : limit;
+        return db.getDbClient().withConnection(
+                sqlConnection -> deviceRepository.searchForDevice(deviceId, tenantId)
+                        .compose(
+                                counter -> {
+                                    if (counter < 1) {
+                                        throw new DeviceNotFoundException(String.format("Device with id %s and tenant id %s doesn't exist",
+                                                deviceId,
+                                                tenantId));
+                                    }
+                                    return SqlTemplate
+                                            .forQuery(sqlConnection, SQL_LIST)
+                                            .mapTo(DeviceState.class)
+                                            .execute(Map.of("deviceId", deviceId, "tenantId", tenantId, "limit", queryLimit))
+                                            .map(rowSet -> {
+                                                final List<DeviceState> states = new ArrayList<>();
+                                                rowSet.forEach(states::add);
+                                                return states;
+                                            })
+                                            .onSuccess(success -> log.info(
+                                                    String.format("Listing all states for device %s and tenant %s",
+                                                            deviceId, tenantId)))
+                                            .onFailure(throwable -> log.error("Error: {}", throwable.getMessage()));
+                                }));
     }
 
     @Override
@@ -97,7 +131,6 @@ public class DeviceStateRepositoryImpl implements DeviceStateRepository {
                 .map(rowSet -> {
                     final RowIterator<DeviceStateEntity> iterator = rowSet.iterator();
                     if (iterator.hasNext()) {
-                        entity.setVersion(iterator.next().getVersion());
                         return entity;
                     } else {
                         throw new IllegalStateException(String.format("Can't create device state: %s", entity));

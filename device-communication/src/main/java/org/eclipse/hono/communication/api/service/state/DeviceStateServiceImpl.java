@@ -18,6 +18,7 @@ package org.eclipse.hono.communication.api.service.state;
 
 import javax.inject.Singleton;
 
+import org.eclipse.hono.communication.api.data.ListDeviceStatesResponse;
 import org.eclipse.hono.communication.api.mapper.DeviceStateMapper;
 import org.eclipse.hono.communication.api.repository.DeviceStateRepository;
 import org.eclipse.hono.communication.api.service.DeviceServiceAbstract;
@@ -29,6 +30,8 @@ import org.slf4j.LoggerFactory;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.common.base.Strings;
 import com.google.pubsub.v1.PubsubMessage;
+
+import io.vertx.core.Future;
 
 /**
  * Service for device commands.
@@ -44,10 +47,10 @@ public class DeviceStateServiceImpl extends DeviceServiceAbstract implements Dev
     /**
      * Creates a new DeviceStateServiceImpl.
      *
-     * @param repository              The device state repository
-     * @param mapper                  The device state mapper
+     * @param repository The device state repository
+     * @param mapper The device state mapper
      * @param internalMessagingConfig The internal messaging config
-     * @param internalMessaging       The internal messaging interface
+     * @param internalMessaging The internal messaging interface
      */
     protected DeviceStateServiceImpl(final DeviceStateRepository repository, final DeviceStateMapper mapper,
             final InternalMessagingConfig internalMessagingConfig, final InternalMessaging internalMessaging) {
@@ -69,6 +72,18 @@ public class DeviceStateServiceImpl extends DeviceServiceAbstract implements Dev
 
                         }))
                 .onFailure(err -> log.error("Error subscribing to all state topics: {}", err.getMessage()));
+    }
+
+    @Override
+    public Future<ListDeviceStatesResponse> listAll(final String deviceId, final String tenantId, final int limit) {
+        return repository.listAll(deviceId, tenantId, limit)
+                .map(
+                        result -> {
+                            final var listState = new ListDeviceStatesResponse();
+                            listState.setDeviceStates(result);
+                            return listState;
+                        });
+
     }
 
     /**
