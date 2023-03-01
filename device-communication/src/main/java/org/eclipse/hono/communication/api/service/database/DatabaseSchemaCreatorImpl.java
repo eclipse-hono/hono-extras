@@ -38,8 +38,8 @@ import io.vertx.sqlclient.templates.SqlTemplate;
 public class DatabaseSchemaCreatorImpl implements DatabaseSchemaCreator {
     private static final Logger log = LoggerFactory.getLogger(DatabaseSchemaCreatorImpl.class);
     private final Vertx vertx;
-    private final String tableCreationErrorMsg = "Table deviceConfig can not be created {}";
-    private final String tableCreationSuccessMsg = "Successfully migrate Table: deviceConfig.";
+    private final String tableCreationErrorMsg = "Table %s can not be created {}";
+    private final String tableCreationSuccessMsg = "Successfully migrate Table: %s.";
     private final DatabaseService db;
 
 
@@ -56,15 +56,21 @@ public class DatabaseSchemaCreatorImpl implements DatabaseSchemaCreator {
 
     @Override
     public void createDBTables() {
-        createDeviceConfigTable();
+        createTables();
     }
 
 
-    private void createDeviceConfigTable() {
+    private void createTables() {
         log.info("Running database migration from file {}", DeviceConfigsConstants.CREATE_SQL_SCRIPT_PATH);
 
         final Promise<Buffer> loadScriptTracker = Promise.promise();
         vertx.fileSystem().readFile(DeviceConfigsConstants.CREATE_SQL_SCRIPT_PATH, loadScriptTracker);
+        createTableIfNotExist(loadScriptTracker, "device_config");
+
+
+    }
+
+    private void createTableIfNotExist(final Promise<Buffer> loadScriptTracker, final String tableName) {
         db.getDbClient().withTransaction(
                         sqlConnection ->
                                 loadScriptTracker.future()
@@ -72,13 +78,11 @@ public class DatabaseSchemaCreatorImpl implements DatabaseSchemaCreator {
                                         .compose(script -> SqlTemplate
                                                 .forQuery(sqlConnection, script)
                                                 .execute(Map.of())))
-                .onSuccess(ok -> log.info(tableCreationSuccessMsg))
+                .onSuccess(ok -> log.info(tableCreationSuccessMsg.formatted(tableName)))
                 .onFailure(error -> {
-                    log.error(tableCreationErrorMsg, error.getMessage());
+                    log.error(tableCreationErrorMsg.formatted(tableName), error.getMessage());
                     db.close();
                     Quarkus.asyncExit(-1);
                 });
-
-
     }
 }
