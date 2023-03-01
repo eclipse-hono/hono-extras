@@ -21,6 +21,7 @@ package org.eclipse.hono.communication.api.config;
  */
 public final class DeviceStatesConstants {
 
+    public static ApiCommonConstants API_COMMON;
     /**
      * OpenApi GET device states operation id.
      */
@@ -28,7 +29,12 @@ public final class DeviceStatesConstants {
     /**
      * Path parameter name for number of states.
      */
+
     public static final String NUM_STATES_QUERY_PARAMS = "numStates";
+    /**
+     * Sql migrations script path.
+     */
+    public static final String CREATE_SQL_SCRIPT_PATH = "db/v1_create_state_table.sql";
 
     private DeviceStatesConstants() {
         // avoid instantiation

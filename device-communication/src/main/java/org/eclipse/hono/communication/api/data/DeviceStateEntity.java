@@ -18,22 +18,24 @@ package org.eclipse.hono.communication.api.data;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * The device state entity object.
  **/
 public class DeviceStateEntity {
 
-    private int id;
+    private String id;
     private String tenantId;
     private String deviceId;
     private String updateTime;
     private String binaryData;
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(final int id) {
+    public void setId(final String id) {
         this.id = id;
     }
 
@@ -53,18 +55,22 @@ public class DeviceStateEntity {
         this.deviceId = deviceId;
     }
 
+    @JsonProperty("updateTime")
     public String getUpdateTime() {
         return updateTime;
     }
 
+    @JsonProperty("update_time")
     public void setUpdateTime(final String updateTime) {
         this.updateTime = updateTime;
     }
 
+    @JsonProperty("binaryData")
     public String getBinaryData() {
         return binaryData;
     }
 
+    @JsonProperty("binary_data")
     public void setBinaryData(final String binaryData) {
         this.binaryData = binaryData;
     }
@@ -89,7 +95,8 @@ public class DeviceStateEntity {
             return false;
         }
         final DeviceStateEntity that = (DeviceStateEntity) o;
-        return id == that.id && tenantId.equals(that.tenantId) && deviceId.equals(that.deviceId) && updateTime.equals(that.updateTime) && binaryData.equals(that.binaryData);
+        return id.equals(that.id) && tenantId.equals(that.tenantId) && deviceId.equals(that.deviceId)
+                && updateTime.equals(that.updateTime) && binaryData.equals(that.binaryData);
     }
 
     @Override

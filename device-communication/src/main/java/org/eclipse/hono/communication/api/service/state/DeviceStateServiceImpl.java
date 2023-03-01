@@ -96,6 +96,15 @@ public class DeviceStateServiceImpl extends DeviceServiceAbstract implements Dev
 
         consumer.ack(); // message was received and processed only once
 
+        final var messageAttributes = pubsubMessage.getAttributesMap();
+        final var deviceId = messageAttributes.get(messagingConfig.getDeviceIdKey());
+        final var tenantId = messageAttributes.get(messagingConfig.getTenantIdKey());
+
+        if (Strings.isNullOrEmpty(deviceId) || Strings.isNullOrEmpty(tenantId)) {
+            log.warn("Skip device state message: deviceId or tenantId is empty");
+            return;
+        }
+
         final String msg = pubsubMessage.getData().toStringUtf8();
 
         if (Strings.isNullOrEmpty(msg)) {

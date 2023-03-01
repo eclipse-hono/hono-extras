@@ -30,7 +30,6 @@ import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 import org.eclipse.hono.communication.api.mapper.DeviceConfigMapper;
 import org.eclipse.hono.communication.api.repository.DeviceConfigRepository;
 import org.eclipse.hono.communication.api.service.DeviceServiceAbstract;
-import org.eclipse.hono.communication.api.service.command.DeviceCommandServiceImpl;
 import org.eclipse.hono.communication.api.service.communication.InternalMessaging;
 import org.eclipse.hono.communication.core.app.InternalMessagingConfig;
 import org.slf4j.Logger;
@@ -41,7 +40,6 @@ import com.google.common.base.Strings;
 import com.google.pubsub.v1.PubsubMessage;
 
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonObject;
 
 
 /**
@@ -51,16 +49,13 @@ import io.vertx.core.json.JsonObject;
 @Singleton
 public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements DeviceConfigService {
 
-    private final Logger log = LoggerFactory.getLogger(DeviceCommandServiceImpl.class);
+    private final Logger log = LoggerFactory.getLogger(DeviceConfigServiceImpl.class);
     private final DeviceConfigRepository repository;
     private final String deviceIdKey = "deviceId";
     private final String tenantIdKey = "tenantId";
     private final String configVersionIdKey = "configVersion";
 
     private final DeviceConfigMapper mapper;
-
-
-    private final InternalMessaging internalMessaging;
 
     /**
      * Creates a new DeviceConfigServiceImpl.
@@ -80,7 +75,6 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
 
         this.repository = repository;
         this.mapper = mapper;
-        this.internalMessaging = internalMessaging;
         subscribeToAllEventTenants();
     }
 
@@ -96,9 +90,6 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
                             internalMessaging.subscribe(topic, this::onDeviceConnectEvent);
 
                         })).onFailure(err -> log.error("Error subscribing to all tenant events: {}", err.getMessage()));
-        final JsonObject payload = new JsonObject();
-        payload.put("cause", "test");
-        log.info("{}", payload.toBuffer());
     }
 
     /**

@@ -21,27 +21,19 @@ package org.eclipse.hono.communication.api.config;
  */
 public final class DeviceConfigsConstants {
 
+    public static ApiCommonConstants API_COMMON;
     /**
      * OpenApi GET device configs operation id.
      */
     public static final String LIST_CONFIG_VERSIONS_OP_ID = "listConfigVersions";
     /**
-     * Path parameter name for tenantId.
-     */
-    public static final String TENANT_PATH_PARAMS = "tenantid";
-    /**
-     * Path parameter name for deviceId.
-     */
-    public static final String DEVICE_PATH_PARAMS = "deviceid";
-    /**
      * Path parameter name for number of versions.
      */
     public static final String NUM_VERSION_QUERY_PARAMS = "numVersions";
-
     /**
      * Sql migrations script path.
      */
-    public static final String CREATE_SQL_SCRIPT_PATH = "db/v1_create_table.sql";
+    public static final String CREATE_SQL_SCRIPT_PATH = "db/v1_create_config_table.sql";
     /**
      * OpenApi POST device configs operation id.
      */

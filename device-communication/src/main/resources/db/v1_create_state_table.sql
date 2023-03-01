@@ -15,25 +15,13 @@
  */
 
 
-CREATE TABLE IF NOT EXISTS device_configs
-(
-    version           INT          not null,
-    tenant_id         VARCHAR(100) not null,
-    device_id         VARCHAR(100) not null,
-    cloud_update_time VARCHAR(100) not null,
-    device_ack_time   VARCHAR(100),
-    binary_data       VARCHAR      not null,
-
-    PRIMARY KEY (version, tenant_id, device_id)
-)
-
 CREATE TABLE IF NOT EXISTS device_status
 (
-    id                SERIAL       not null,
+    id                VARCHAR(100) not null,
     tenant_id         VARCHAR(100) not null,
     device_id         VARCHAR(100) not null,
-    cloud_update_time VARCHAR(100) not null,
+    update_time       VARCHAR(100) not null,
     binary_data       VARCHAR      not null,
 
     PRIMARY KEY (id, tenant_id, device_id)
-)
+);

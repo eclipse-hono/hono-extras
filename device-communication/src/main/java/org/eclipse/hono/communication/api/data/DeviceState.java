@@ -47,12 +47,12 @@ public class DeviceState {
         this.binaryData = binaryData;
     }
 
-    @JsonProperty("cloudUpdateTime")
+    @JsonProperty("updateTime")
     public String getUpdateTime() {
         return updateTime;
     }
 
-    @JsonProperty("cloud_update_time")
+    @JsonProperty("update_time")
     public void setUpdateTime(final String updateTime) {
         this.updateTime = updateTime;
     }

@@ -46,10 +46,11 @@ public interface DeviceStateMapper {
      * @param pubsubMessage The Pub/Sub message.
      * @return The device state entity.
      */
-    @Mapping(target = "cloudUpdateTime", expression = "java(getDateTime())")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "updateTime", expression = "java(getDateTime())")
     @Mapping(target = "tenantId", expression = "java(pubsubMessage.getAttributesMap().get(\"tenantId\"))")
     @Mapping(target = "deviceId", expression = "java(pubsubMessage.getAttributesMap().get(\"deviceId\"))")
-    @Mapping(target = "binaryData", source = "pubsubMessage.data_")
+    @Mapping(target = "binaryData", expression = "java(pubsubMessage.getData().toStringUtf8())")
     DeviceStateEntity pubSubMessageToDeviceStateEntity(PubsubMessage pubsubMessage);
 
     default String getDateTime() {

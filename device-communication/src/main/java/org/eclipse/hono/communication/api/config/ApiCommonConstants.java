@@ -19,7 +19,7 @@ package org.eclipse.hono.communication.api.config;
 /**
  * Device constant values.
  */
-public final class DeviceConstants {
+public final class ApiCommonConstants {
 
     /**
      * Path parameter name for tenantId.
@@ -29,12 +29,8 @@ public final class DeviceConstants {
      * Path parameter name for deviceId.
      */
     public static final String DEVICE_PATH_PARAMS = "deviceid";
-    /**
-     * Sql migrations script path.
-     */
-    public static final String CREATE_SQL_SCRIPT_PATH = "db/v1_create_table.sql";
 
-    private DeviceConstants() {
+    private ApiCommonConstants() {
         // avoid instantiation
     }
 }

@@ -31,7 +31,6 @@ import org.eclipse.hono.communication.api.data.DeviceConfigAckResponse;
 import org.eclipse.hono.communication.api.data.DeviceConfigEntity;
 import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
 import org.eclipse.hono.communication.api.service.database.DatabaseService;
-import org.eclipse.hono.communication.core.app.DatabaseConfig;
 import org.graalvm.collections.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,10 +67,12 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
     private final String SQL_FIND_DEVICE_LATEST_CONFIG = "SELECT * FROM device_config" +
             "WHERE tenant_id = #{tenantId} AND device_id = #{deviceId} AND version = #{version}";
 
+    private final String deviceIdKey = "deviceId";
+    private final String tenantIdKey = "tenantId";
+    private final String versionKey = "version";
     private final int MAX_LIMIT = 10;
     private final Logger log = LoggerFactory.getLogger(DeviceConfigRepositoryImpl.class);
 
-    private final DatabaseConfig databaseConfig;
     private final DatabaseService db;
 
     private final DeviceRepository deviceRepository;
@@ -80,14 +81,11 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
      * Creates a new DeviceConfigRepositoryImpl.
      *
      * @param db               The database connection
-     * @param databaseConfig   The database configs
      * @param deviceRepository The device repository interface
      */
     public DeviceConfigRepositoryImpl(final DatabaseService db,
-                                      final DatabaseConfig databaseConfig,
                                       final DeviceRepository deviceRepository) {
 
-        this.databaseConfig = databaseConfig;
         this.db = db;
         this.deviceRepository = deviceRepository;
     }
@@ -99,7 +97,7 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
         return SqlTemplate
                 .forQuery(sqlConnection, SQL_FIND_TOTAL_AND_MAX_VERSION)
                 .mapTo(ROW_MAPPER)
-                .execute(Map.of("deviceId", deviceId, "tenantId", tenantId)).map(rowSet -> {
+                .execute(Map.of(deviceIdKey, deviceId, tenantIdKey, tenantId)).map(rowSet -> {
                     final RowIterator<Pair<Integer, Integer>> iterator = rowSet.iterator();
                     return iterator.next();
                 });
@@ -122,7 +120,7 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
                                     return SqlTemplate
                                             .forQuery(sqlConnection, SQL_LIST)
                                             .mapTo(DeviceConfig.class)
-                                            .execute(Map.of("deviceId", deviceId, "tenantId", tenantId, "limit", queryLimit))
+                                            .execute(Map.of(deviceIdKey, deviceId, tenantIdKey, tenantId, "limit", queryLimit))
                                             .map(rowSet -> {
                                                 final List<DeviceConfig> configs = new ArrayList<>();
                                                 rowSet.forEach(configs::add);
@@ -172,7 +170,7 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
      */
 
     private Future<Integer> deleteMinVersion(final SqlConnection sqlConnection, final DeviceConfigEntity entity) {
-        final RowMapper<Integer> ROW_MAPPER = row -> row.getInteger("version");
+        final RowMapper<Integer> ROW_MAPPER = row -> row.getInteger(versionKey);
         return SqlTemplate
                 .forQuery(sqlConnection, SQL_DELETE_MIN_VERSION)
                 .mapFrom(DeviceConfigEntity.class)
@@ -221,14 +219,14 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
     @Override
     public Future<Void> updateDeviceAckTime(final DeviceConfigAckResponse ack, final String deviceAckTime) {
         final Map<String, Object> parameters = new HashMap<>();
-        parameters.put("deviceId", ack.getDeviceId());
-        parameters.put("tenantId", ack.getTenantId());
+        parameters.put(deviceIdKey, ack.getDeviceId());
+        parameters.put(tenantIdKey, ack.getTenantId());
         parameters.put("deviceAckTime", deviceAckTime);
         final String sqlCommand;
         if (Strings.isNullOrEmpty(ack.getVersion())) {
             sqlCommand = SQL_UPDATE_DEVICE_ACK_TIME_FOR_MAX_VERSION;
         } else {
-            parameters.put("version", Integer.parseInt(ack.getVersion()));
+            parameters.put(versionKey, Integer.parseInt(ack.getVersion()));
             sqlCommand = SQL_UPDATE_DEVICE_ACK_TIME;
         }
 
@@ -262,9 +260,9 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
                                         return Future.failedFuture(new NoSuchElementException("No configs are found for device %s and tenant %s".formatted(deviceId, tenantId)));
                                     }
                                     final Map<String, Object> parameters = new HashMap<>();
-                                    parameters.put("deviceId", deviceId);
-                                    parameters.put("tenantId", tenantId);
-                                    parameters.put("version", maxVersion);
+                                    parameters.put(deviceIdKey, deviceId);
+                                    parameters.put(tenantIdKey, tenantId);
+                                    parameters.put(versionKey, maxVersion);
 
                                     return SqlTemplate
                                             .forQuery(sqlConnection, SQL_FIND_DEVICE_LATEST_CONFIG)

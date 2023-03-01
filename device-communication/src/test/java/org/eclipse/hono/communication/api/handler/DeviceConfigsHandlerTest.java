@@ -113,8 +113,8 @@ class DeviceConfigsHandlerTest {
 
     @Test
     void handleModifyCloudToDeviceConfig_success() {
-        when(routingContextMock.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS)).thenReturn(tenantID);
-        when(routingContextMock.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS)).thenReturn(deviceID);
+        when(routingContextMock.pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS)).thenReturn(tenantID);
+        when(routingContextMock.pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS)).thenReturn(deviceID);
         when(routingContextMock.body()).thenReturn(requestBodyMock);
         when(requestBodyMock.asJsonObject()).thenReturn(jsonObjMock);
         when(jsonObjMock.mapTo(DeviceConfigRequest.class)).thenReturn(deviceConfigRequest);
@@ -127,8 +127,8 @@ class DeviceConfigsHandlerTest {
         final var results = deviceConfigsHandler.handleModifyCloudToDeviceConfig(routingContextMock);
 
         verify(configServiceMock).modifyCloudToDeviceConfig(deviceConfigRequest, deviceID, tenantID);
-        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
-        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
+        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS);
+        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS);
         verify(routingContextMock, times(1)).body();
         verify(requestBodyMock, times(1)).asJsonObject();
         verify(jsonObjMock, times(1)).mapTo(DeviceConfigRequest.class);
@@ -139,8 +139,8 @@ class DeviceConfigsHandlerTest {
 
     @Test
     void handleModifyCloudToDeviceConfig_failure() {
-        when(routingContextMock.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS)).thenReturn(tenantID);
-        when(routingContextMock.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS)).thenReturn(deviceID);
+        when(routingContextMock.pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS)).thenReturn(tenantID);
+        when(routingContextMock.pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS)).thenReturn(deviceID);
         when(routingContextMock.body()).thenReturn(requestBodyMock);
         when(requestBodyMock.asJsonObject()).thenReturn(jsonObjMock);
         when(jsonObjMock.mapTo(DeviceConfigRequest.class)).thenReturn(deviceConfigRequest);
@@ -154,9 +154,9 @@ class DeviceConfigsHandlerTest {
         final var results = deviceConfigsHandler.handleModifyCloudToDeviceConfig(routingContextMock);
 
         verify(configServiceMock).modifyCloudToDeviceConfig(deviceConfigRequest, deviceID, tenantID);
-        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
+        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS);
 
-        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
+        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS);
         verify(routingContextMock, times(1)).body();
         verify(requestBodyMock, times(1)).asJsonObject();
         verify(jsonObjMock, times(1)).mapTo(DeviceConfigRequest.class);
@@ -171,8 +171,8 @@ class DeviceConfigsHandlerTest {
         final var listDeviceConfigVersionsResponse = new ListDeviceConfigVersionsResponse(List.of(deviceConfig));
         final MultiMap queryParams = MultiMap.caseInsensitiveMultiMap().add(DeviceConfigsConstants.NUM_VERSION_QUERY_PARAMS, String.valueOf(10));
         when(routingContextMock.queryParams()).thenReturn(queryParams);
-        when(routingContextMock.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS)).thenReturn(tenantID);
-        when(routingContextMock.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS)).thenReturn(deviceID);
+        when(routingContextMock.pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS)).thenReturn(tenantID);
+        when(routingContextMock.pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS)).thenReturn(deviceID);
         when(routingContextMock.response()).thenReturn(httpServerResponseMock);
         when(httpServerResponseMock.setStatusCode(anyInt())).thenReturn(httpServerResponseMock);
         when(httpServerResponseMock.putHeader("Content-Type",
@@ -183,8 +183,8 @@ class DeviceConfigsHandlerTest {
 
         verify(configServiceMock, times(1)).listAll(deviceID, tenantID, 10);
         verify(routingContextMock, times(1)).queryParams();
-        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
-        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
+        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS);
+        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS);
 
         verifySuccessResponse(results, listDeviceConfigVersionsResponse);
 
@@ -195,8 +195,8 @@ class DeviceConfigsHandlerTest {
     void handleListConfigVersions_failed() {
         final MultiMap queryParams = MultiMap.caseInsensitiveMultiMap().add(DeviceConfigsConstants.NUM_VERSION_QUERY_PARAMS, String.valueOf(10));
         when(routingContextMock.queryParams()).thenReturn(queryParams);
-        when(routingContextMock.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS)).thenReturn(tenantID);
-        when(routingContextMock.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS)).thenReturn(deviceID);
+        when(routingContextMock.pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS)).thenReturn(tenantID);
+        when(routingContextMock.pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS)).thenReturn(deviceID);
         when(routingContextMock.response()).thenReturn(httpServerResponseMock);
         when(httpServerResponseMock.setStatusCode(anyInt())).thenReturn(httpServerResponseMock);
         when(illegalArgumentExceptionMock.getMessage()).thenReturn(errorMsg);
@@ -208,9 +208,9 @@ class DeviceConfigsHandlerTest {
 
         verify(configServiceMock, times(1)).listAll(deviceID, tenantID, 10);
         verify(routingContextMock, times(1)).queryParams();
-        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
+        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS);
 
-        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
+        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS);
         verifyErrorResponse(results);
 
 

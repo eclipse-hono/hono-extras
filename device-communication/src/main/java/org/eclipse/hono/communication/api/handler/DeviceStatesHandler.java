@@ -18,7 +18,6 @@ package org.eclipse.hono.communication.api.handler;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import org.eclipse.hono.communication.api.config.DeviceConstants;
 import org.eclipse.hono.communication.api.config.DeviceStatesConstants;
 import org.eclipse.hono.communication.api.data.ListDeviceStatesResponse;
 import org.eclipse.hono.communication.api.service.state.DeviceStateService;
@@ -61,8 +60,8 @@ public class DeviceStatesHandler implements HttpEndpointHandler {
         final var numStates = routingContext.queryParams().get(DeviceStatesConstants.NUM_STATES_QUERY_PARAMS);
 
         final var limit = numStates == null ? 0 : Integer.parseInt(numStates);
-        final var tenantId = routingContext.pathParam(DeviceConstants.TENANT_PATH_PARAMS);
-        final var deviceId = routingContext.pathParam(DeviceConstants.DEVICE_PATH_PARAMS);
+        final var tenantId = routingContext.pathParam(DeviceStatesConstants.API_COMMON.TENANT_PATH_PARAMS);
+        final var deviceId = routingContext.pathParam(DeviceStatesConstants.API_COMMON.DEVICE_PATH_PARAMS);
 
         return stateService.listAll(deviceId, tenantId, limit)
                 .onSuccess(result -> ResponseUtils.successResponse(routingContext, result))

@@ -21,6 +21,7 @@ import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 
 import org.eclipse.hono.communication.api.config.DeviceConfigsConstants;
+import org.eclipse.hono.communication.api.config.DeviceStatesConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +39,8 @@ import io.vertx.sqlclient.templates.SqlTemplate;
 public class DatabaseSchemaCreatorImpl implements DatabaseSchemaCreator {
     private static final Logger log = LoggerFactory.getLogger(DatabaseSchemaCreatorImpl.class);
     private final Vertx vertx;
-    private final String tableCreationErrorMsg = "Tables can not be created {}";
-    private final String tableCreationSuccessMsg = "Successfully migrate Tables: device_configs, device_status.";
+    private final String tableCreationErrorMsg = "Table %s can not be created {}";
+    private final String tableCreationSuccessMsg = "Successfully migrate Table: %s.";
     private final DatabaseService db;
 
 
@@ -56,15 +57,20 @@ public class DatabaseSchemaCreatorImpl implements DatabaseSchemaCreator {
 
     @Override
     public void createDBTables() {
-        createCommunicationApiTables();
+        createTables(DeviceConfigsConstants.CREATE_SQL_SCRIPT_PATH, "device_config");
+        createTables(DeviceStatesConstants.CREATE_SQL_SCRIPT_PATH, "device_status");
     }
 
 
-    private void createCommunicationApiTables() {
-        log.info("Running database migration from file {}", DeviceConfigsConstants.CREATE_SQL_SCRIPT_PATH);
+    private void createTables(final String filePath, final String tableName) {
+        log.info("Running database migration from file {}", filePath);
 
         final Promise<Buffer> loadScriptTracker = Promise.promise();
-        vertx.fileSystem().readFile(DeviceConfigsConstants.CREATE_SQL_SCRIPT_PATH, loadScriptTracker);
+        vertx.fileSystem().readFile(filePath, loadScriptTracker);
+        createTableIfNotExist(loadScriptTracker, tableName);
+    }
+
+    private void createTableIfNotExist(final Promise<Buffer> loadScriptTracker, final String tableName) {
         db.getDbClient().withTransaction(
                         sqlConnection ->
                                 loadScriptTracker.future()
@@ -72,13 +78,11 @@ public class DatabaseSchemaCreatorImpl implements DatabaseSchemaCreator {
                                         .compose(script -> SqlTemplate
                                                 .forQuery(sqlConnection, script)
                                                 .execute(Map.of())))
-                .onSuccess(ok -> log.info(tableCreationSuccessMsg))
+                .onSuccess(ok -> log.info(tableCreationSuccessMsg.formatted(tableName)))
                 .onFailure(error -> {
-                    log.error(tableCreationErrorMsg, error.getMessage());
+                    log.error(tableCreationErrorMsg.formatted(tableName), error.getMessage());
                     db.close();
                     Quarkus.asyncExit(-1);
                 });
-
-
     }
 }

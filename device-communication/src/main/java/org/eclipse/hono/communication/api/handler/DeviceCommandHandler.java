@@ -62,8 +62,8 @@ public class DeviceCommandHandler implements HttpEndpointHandler {
         final var deviceConfig = routingContext.body()
                 .asJsonObject()
                 .mapTo(DeviceCommandRequest.class);
-        final var tenantId = routingContext.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
-        final var deviceId = routingContext.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
+        final var tenantId = routingContext.pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS);
+        final var deviceId = routingContext.pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS);
         commandService.postCommand(deviceConfig, tenantId, deviceId)
                 .onSuccess(res -> routingContext.response().setStatusCode(200).end())
                 .onFailure(err -> ResponseUtils.errorResponse(routingContext, err));
