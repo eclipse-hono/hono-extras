@@ -66,10 +66,10 @@ class DatabaseSchemaCreatorImplTest {
 
         databaseSchemaCreator.createDBTables();
 
-        verify(vertxMock).fileSystem();
-        verify(fileSystemMock).readFile(anyString(), any());
-        verify(dbMock).getDbClient();
-        verify(pgPoolMock).withTransaction(any());
+        verify(vertxMock, times(2)).fileSystem();
+        verify(fileSystemMock, times(2)).readFile(anyString(), any());
+        verify(dbMock, times(2)).getDbClient();
+        verify(pgPoolMock, times(2)).withTransaction(any());
 
     }
 
@@ -83,11 +83,11 @@ class DatabaseSchemaCreatorImplTest {
 
         databaseSchemaCreator.createDBTables();
 
-        verify(vertxMock).fileSystem();
-        verify(fileSystemMock).readFile(anyString(), any());
-        verify(dbMock).getDbClient();
-        verify(dbMock).close();
-        verify(pgPoolMock).withTransaction(any());
+        verify(vertxMock, times(2)).fileSystem();
+        verify(fileSystemMock, times(2)).readFile(anyString(), any());
+        verify(dbMock, times(2)).getDbClient();
+        verify(dbMock, times(2)).close();
+        verify(pgPoolMock, times(2)).withTransaction(any());
 
     }
 }

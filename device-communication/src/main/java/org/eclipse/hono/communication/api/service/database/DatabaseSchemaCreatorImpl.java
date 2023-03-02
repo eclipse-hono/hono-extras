@@ -57,12 +57,12 @@ public class DatabaseSchemaCreatorImpl implements DatabaseSchemaCreator {
 
     @Override
     public void createDBTables() {
-        createTables(DeviceConfigsConstants.CREATE_SQL_SCRIPT_PATH, "device_config");
-        createTables(DeviceStatesConstants.CREATE_SQL_SCRIPT_PATH, "device_status");
+        createTable(DeviceConfigsConstants.CREATE_SQL_SCRIPT_PATH, "device_config");
+        createTable(DeviceStatesConstants.CREATE_SQL_SCRIPT_PATH, "device_status");
     }
 
 
-    private void createTables(final String filePath, final String tableName) {
+    private void createTable(final String filePath, final String tableName) {
         log.info("Running database migration from file {}", filePath);
 
         final Promise<Buffer> loadScriptTracker = Promise.promise();
