@@ -32,7 +32,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.sqlclient.templates.SqlTemplate;
 
 /**
- * Creates all Database tables if they are not exist.
+ * Creates all Database tables if they do not exist.
  */
 
 @ApplicationScoped
