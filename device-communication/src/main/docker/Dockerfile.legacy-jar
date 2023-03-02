@@ -81,6 +81,7 @@ ENV LANGUAGE='en_US:en'
 
 RUN mkdir api/
 RUN mkdir db/
+RUN mkdir creds/
 
 COPY target/classes/api/* /api/
 COPY target/classes/db/* /db/

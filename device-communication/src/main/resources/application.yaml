@@ -37,7 +37,7 @@ vertx:
   database:
     pool-max-size: ${COM_POOL_MAX_SIZE:5}
     name: ${COM_DB_NAME:hono}
-    host: ${COM_DB_HOST:localhost}
+    host: ${COM_DB_HOST:host.docker.internal}
     port: ${COM_DB_PORT:5432}
     username: ${COM_DB_USERNAME:postgres}
     password: ${COM_DB_PASSWORD:mysecretpassword}
@@ -54,5 +54,5 @@ quarkus:
   container-image:
     builder: docker
     build: true
-    push: false
-    image: "gcr.io/sotec-iot-core-dev/hono-device-communication"
+    push: true
+    image: "gcr.io/sotec-iot-core-dev/hono-device-communication:sandbox-release-2-4-0"
