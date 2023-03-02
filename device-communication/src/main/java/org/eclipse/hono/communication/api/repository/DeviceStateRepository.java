@@ -46,7 +46,7 @@ public interface DeviceStateRepository {
     Future<List<String>> listTenants();
 
     /**
-     * Creates a new state in the DB.
+     * Creates a new state and deletes the oldest one if the total number of versions in the DB is bigger than the MAX_LIMIT.
      *
      * @param entity The instance to insert.
      * @return A Future of the created DeviceStateEntity.

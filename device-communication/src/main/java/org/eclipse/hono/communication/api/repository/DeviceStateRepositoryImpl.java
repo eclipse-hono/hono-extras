@@ -91,8 +91,9 @@ public class DeviceStateRepositoryImpl implements DeviceStateRepository {
                                                     queryLimit))
                                             .map(rowSet -> {
                                                 final List<DeviceState> states = new ArrayList<>();
-                                                rowSet.forEach(entity -> states.add(new DeviceState(entity.getUpdateTime(),
-                                                        entity.getBinaryData())));
+                                                rowSet.forEach(
+                                                        entity -> states.add(new DeviceState(entity.getUpdateTime(),
+                                                                entity.getBinaryData())));
                                                 return states;
                                             })
                                             .onSuccess(success -> log.debug(
@@ -110,36 +111,33 @@ public class DeviceStateRepositoryImpl implements DeviceStateRepository {
     @Override
     public Future<DeviceStateEntity> createNew(final DeviceStateEntity entity) {
         return db.getDbClient().withTransaction(
-                sqlConnection -> countStates(entity.getDeviceId(), entity.getTenantId()).compose(
-                        stateCounter -> {
-                            if (stateCounter >= 10) {
-                                deleteStates(sqlConnection, entity);
-                            }
-                            return deviceRepository.searchForDevice(entity.getDeviceId(), entity.getTenantId())
-                                    .compose(
-                                            deviceCounter -> {
-                                                if (deviceCounter < 1) {
-                                                    throw new DeviceNotFoundException(
-                                                            String.format(
-                                                                    "Device with id %s and tenant id %s doesn't exist",
-                                                                    entity.getDeviceId(),
-                                                                    entity.getTenantId()));
+                sqlConnection -> deviceRepository.searchForDevice(entity.getDeviceId(), entity.getTenantId())
+                        .compose(
+                                deviceCounter -> {
+                                    if (deviceCounter < 1) {
+                                        throw new DeviceNotFoundException(
+                                                String.format(
+                                                        "Device with id %s and tenant id %s doesn't exist",
+                                                        entity.getDeviceId(),
+                                                        entity.getTenantId()));
+                                    }
+                                    return countStates(entity.getDeviceId(), entity.getTenantId()).compose(
+                                            stateCounter -> {
+                                                if (stateCounter >= 10) {
+                                                    deleteStates(sqlConnection, entity);
                                                 }
-
                                                 return insert(sqlConnection, entity);
                                             });
-                        }
-
-                )
+                                })
                         .onFailure(error -> log.error(error.getMessage())));
     }
 
     private Future<Integer> countStates(final String deviceId, final String tenantId) {
-        final RowMapper<Integer> ROW_MAPPER = row -> row.getInteger("total");
+        final RowMapper<Integer> rowMapper = row -> row.getInteger("total");
         return db.getDbClient().withConnection(
                 sqlConnection -> SqlTemplate
                         .forQuery(sqlConnection, SQL_COUNT_STATES_WITH_PK_FILTER)
-                        .mapTo(ROW_MAPPER)
+                        .mapTo(rowMapper)
                         .execute(Map.of(deviceIdKey, deviceId, tenantIdKey, tenantId)).map(rowSet -> {
                             final RowIterator<Integer> iterator = rowSet.iterator();
                             return iterator.next();
@@ -173,8 +171,8 @@ public class DeviceStateRepositoryImpl implements DeviceStateRepository {
                         throw new IllegalStateException(String.format("Can't create device state: %s", entity));
                     }
                 })
-                .onSuccess(success -> log.debug("Device state created successfully: {}", success.toString()))
-                .onFailure(throwable -> log.error("repo {}", throwable.getMessage()));
+                .onSuccess(success -> log.debug("Device state created successfully: {}", success))
+                .onFailure(throwable -> log.error(throwable.getMessage()));
 
     }
 }
