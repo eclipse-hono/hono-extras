@@ -144,7 +144,7 @@ public class PubSubService implements InternalMessaging {
     private ProjectSubscriptionName initSubscription(final String topic) throws IOException {
         final var subscriptionName = ProjectSubscriptionName.of(
                 projectId,
-                String.format("%s-sub", topic)
+                String.format("%s", topic)
         );
         final var subscriptionAdminSettings = SubscriptionAdminSettings.newBuilder()
                 .build();
