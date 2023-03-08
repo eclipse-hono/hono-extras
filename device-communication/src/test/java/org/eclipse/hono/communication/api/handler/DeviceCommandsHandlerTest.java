@@ -107,8 +107,8 @@ class DeviceCommandsHandlerTest {
         // Set up mock behavior for RoutingContext
         when(routingContextMock.body()).thenReturn(requestBodyMock);
         when(requestBodyMock.asJsonObject()).thenReturn(new JsonObject("{}"));
-        when(routingContextMock.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS)).thenReturn(tenantId);
-        when(routingContextMock.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS)).thenReturn(deviceId);
+        when(routingContextMock.pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS)).thenReturn(tenantId);
+        when(routingContextMock.pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS)).thenReturn(deviceId);
         when(routingContextMock.response()).thenReturn(responseMock);
         when(responseMock.setStatusCode(200)).thenReturn(responseMock);
 
@@ -125,8 +125,8 @@ class DeviceCommandsHandlerTest {
         verify(routingContextMock).response();
 
         verify(commandServiceMock).postCommand(any(), anyString(), anyString());
-        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
-        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
+        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS);
+        verify(routingContextMock, times(1)).pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS);
 
 
         verify(responseMock, times(1)).setStatusCode(200);
