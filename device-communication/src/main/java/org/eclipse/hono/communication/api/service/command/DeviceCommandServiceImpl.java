@@ -71,7 +71,7 @@ public class DeviceCommandServiceImpl extends DeviceServiceAbstract implements D
                             try {
                                 final String commandJson = ow.writeValueAsString(commandRequest.getBinaryData());
                                 internalMessaging.publish(topic, commandJson, attributes);
-                                log.info("Command was published successfully");
+                                log.info("Command {} was published successfully to topic {}", commandJson, topic);
                             } catch (Exception ex) {
                                 log.error("Command can't be published: {}", ex.getMessage());
                                 return Future.failedFuture(ex);
