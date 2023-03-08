@@ -162,7 +162,7 @@ public class PubSubService implements InternalMessaging {
                         subscriptionName,
                         topicName,
                         PushConfig.getDefaultInstance(),
-                        0
+                        50
                 );
             }
         }

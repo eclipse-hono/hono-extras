@@ -70,13 +70,13 @@ class DeviceConfigServiceImplTest {
 
     void init_with_success_subscription() {
         when(repositoryMock.listTenants()).thenReturn(Future.succeededFuture(List.of("1", "2")));
-        when(communicationConfigMock.getOnConnectEventTopicFormat()).thenReturn("%s.test");
+        when(communicationConfigMock.getEventTopicFormat()).thenReturn("%s.test");
         doNothing().when(internalCommunicationMock).subscribe(anyString(), any());
 
         this.deviceConfigService = createServiceObj();
 
         verify(repositoryMock).listTenants();
-        verify(communicationConfigMock, times(2)).getOnConnectEventTopicFormat();
+        verify(communicationConfigMock, times(2)).getEventTopicFormat();
         verify(internalCommunicationMock, times(2)).subscribe(anyString(), any());
 
 
@@ -234,7 +234,7 @@ class DeviceConfigServiceImplTest {
                 ));
         when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
         when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
-        when(communicationConfigMock.getConfigVersionIdKey()).thenReturn("config");
+        when(communicationConfigMock.getConfigVersionIdKey()).thenReturn("configVersion");
 
         doNothing().when(deviceConfigSpy).updateDeviceAckTime(any(), anyString());
 
@@ -259,60 +259,70 @@ class DeviceConfigServiceImplTest {
         when(pubsubMessageMock.getData()).thenReturn(ByteString.copyFromUtf8("{\"cause\": \"connected\"}"));
         when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
         when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
+        when(communicationConfigMock.getContentTypeKey()).thenReturn("content-type");
 
         deviceConfigService.onDeviceConnectEvent(pubsubMessageMock, ackReplyConsumerMock);
 
+
         verify(pubsubMessageMock).getAttributesMap();
-        verify(pubsubMessageMock).getData();
         verify(communicationConfigMock).getDeviceIdKey();
         verify(communicationConfigMock).getTenantIdKey();
+        verify(communicationConfigMock).getContentTypeKey();
         verify(ackReplyConsumerMock).ack();
     }
 
     @Test
-    public void onDeviceConnectEvent_SkipsEventIsNotConnected() {
+    public void onDeviceConnectEvent_SkipsEvent() {
         init_with_success_subscription();
         when(pubsubMessageMock.getAttributesMap())
                 .thenReturn(Map.of(
                         "deviceId", "device-123",
-                        "tenantId", "tenant-123"
+                        "tenantId", "tenant-123",
+                        "content-type", "test"
                 ));
-        when(pubsubMessageMock.getData()).thenReturn(ByteString.copyFromUtf8("{\"cause\": \"notConnected\"}"));
+
         when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
         when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
-        when(communicationConfigMock.getDeviceConnectPayloadKey()).thenReturn("cause");
-        when(communicationConfigMock.getDeviceConnectPayloadValue()).thenReturn("connected");
+        when(communicationConfigMock.getContentTypeKey()).thenReturn("content-type");
+        when(communicationConfigMock.getEmptyNotificationEventContentType()).thenReturn("skip-content");
+
 
         deviceConfigService.onDeviceConnectEvent(pubsubMessageMock, ackReplyConsumerMock);
 
         verify(pubsubMessageMock).getAttributesMap();
-        verify(pubsubMessageMock).getData();
         verify(communicationConfigMock).getDeviceIdKey();
         verify(communicationConfigMock).getTenantIdKey();
-        verify(communicationConfigMock).getDeviceConnectPayloadKey();
-        verify(communicationConfigMock).getDeviceConnectPayloadValue();
+        verify(communicationConfigMock).getContentTypeKey();
+        verify(communicationConfigMock, times(2)).getEmptyNotificationEventContentType();
+
         verify(ackReplyConsumerMock).ack();
     }
 
 
     @Test
-    public void onDeviceConnectEvent_SkipsPayloadFormatFalse() {
+    public void onDeviceConnectEvent_SkipsContentTypeFalse() {
         init_with_success_subscription();
         when(pubsubMessageMock.getAttributesMap())
                 .thenReturn(Map.of(
                         "deviceId", "device-123",
-                        "tenantId", "tenant-123"
+                        "tenantId", "tenant-123",
+                        "content", "no-event"
                 ));
-        when(pubsubMessageMock.getData()).thenReturn(ByteString.copyFromUtf8("{\"cause\"}"));
+
         when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
         when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
-        when(communicationConfigMock.getDeviceConnectPayloadKey()).thenReturn("cause");
-        when(communicationConfigMock.getDeviceConnectPayloadValue()).thenReturn("connected");
+        when(communicationConfigMock.getContentTypeKey()).thenReturn("content");
+        when(communicationConfigMock.getEmptyNotificationEventContentType()).thenReturn("event");
+
 
         deviceConfigService.onDeviceConnectEvent(pubsubMessageMock, ackReplyConsumerMock);
 
-        verify(pubsubMessageMock).getData();
+        verify(pubsubMessageMock).getAttributesMap();
         verify(ackReplyConsumerMock).ack();
+        verify(communicationConfigMock).getContentTypeKey();
+        verify(communicationConfigMock).getDeviceIdKey();
+        verify(communicationConfigMock).getTenantIdKey();
+        verify(communicationConfigMock, times(2)).getEmptyNotificationEventContentType();
     }
 
     @Test
@@ -325,20 +335,20 @@ class DeviceConfigServiceImplTest {
         final String message = "{}";
         final Map<String, String> messageAttributes = Map.of(
                 "deviceId", deviceId,
-                "tenantId", tenantId
+                "tenantId", tenantId,
+                "content", "event"
         );
         final var deviceConfigEntity = new DeviceConfigEntity();
         final var deviceConfigEntityResponse = new DeviceConfig();
 
         when(pubsubMessageMock.getAttributesMap()).thenReturn(messageAttributes);
-        when(pubsubMessageMock.getData()).thenReturn(ByteString.copyFromUtf8("{\"cause\": \"connected\"}"));
         when(repositoryMock.getDeviceLatestConfig(deviceId, tenantId)).thenReturn(Future.succeededFuture(deviceConfigEntity));
         when(mapperMock.deviceConfigEntityToConfig(deviceConfigEntity)).thenReturn(deviceConfigEntityResponse);
         when(communicationConfigMock.getConfigTopicFormat()).thenReturn("%s-config");
         when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
         when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
-        when(communicationConfigMock.getDeviceConnectPayloadKey()).thenReturn("cause");
-        when(communicationConfigMock.getDeviceConnectPayloadValue()).thenReturn("connected");
+        when(communicationConfigMock.getContentTypeKey()).thenReturn("content");
+        when(communicationConfigMock.getEmptyNotificationEventContentType()).thenReturn("event");
         when(communicationConfigMock.getConfigAckTopicFormat()).thenReturn("%s.ack");
         doNothing().when(internalCommunicationMock).publish(topic, message, messageAttributes);
         doNothing().when(internalCommunicationMock).subscribe(anyString(), any());
@@ -346,12 +356,11 @@ class DeviceConfigServiceImplTest {
         deviceConfigService.onDeviceConnectEvent(pubsubMessageMock, ackReplyConsumerMock);
 
         verify(pubsubMessageMock).getAttributesMap();
-        verify(pubsubMessageMock).getData();
         verify(repositoryMock).getDeviceLatestConfig(deviceId, tenantId);
         verify(mapperMock).deviceConfigEntityToConfig(deviceConfigEntity);
         verify(communicationConfigMock).getConfigTopicFormat();
-        verify(communicationConfigMock).getDeviceConnectPayloadKey();
-        verify(communicationConfigMock).getDeviceConnectPayloadValue();
+        verify(communicationConfigMock).getContentTypeKey();
+        verify(communicationConfigMock).getEmptyNotificationEventContentType();
         verify(communicationConfigMock).getDeviceIdKey();
         verify(communicationConfigMock).getTenantIdKey();
         verify(communicationConfigMock).getConfigAckTopicFormat();
@@ -369,6 +378,7 @@ class DeviceConfigServiceImplTest {
 
         final Map<String, String> messageAttributes = Map.of(
                 "deviceId", deviceId,
+                "content", "event",
                 "tenantId", tenantId
         );
 
@@ -377,19 +387,19 @@ class DeviceConfigServiceImplTest {
         when(pubsubMessageMock.getData()).thenReturn(ByteString.copyFromUtf8("{\"cause\": \"connected\"}"));
         when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
         when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
-        when(communicationConfigMock.getDeviceConnectPayloadKey()).thenReturn("cause");
-        when(communicationConfigMock.getDeviceConnectPayloadValue()).thenReturn("connected");
+        when(communicationConfigMock.getContentTypeKey()).thenReturn("content");
+        when(communicationConfigMock.getEmptyNotificationEventContentType()).thenReturn("event");
         when(communicationConfigMock.getConfigAckTopicFormat()).thenReturn("%s.ack");
 
         deviceConfigService.onDeviceConnectEvent(pubsubMessageMock, ackReplyConsumerMock);
 
         verify(pubsubMessageMock).getAttributesMap();
-        verify(pubsubMessageMock).getData();
         verify(repositoryMock).getDeviceLatestConfig(deviceId, tenantId);
         verify(ackReplyConsumerMock).ack();
-        verify(communicationConfigMock).getDeviceConnectPayloadKey();
-        verify(communicationConfigMock).getDeviceConnectPayloadValue();
+
         verify(communicationConfigMock).getDeviceIdKey();
         verify(communicationConfigMock).getTenantIdKey();
+        verify(communicationConfigMock).getContentTypeKey();
+        verify(communicationConfigMock).getEmptyNotificationEventContentType();
     }
 }

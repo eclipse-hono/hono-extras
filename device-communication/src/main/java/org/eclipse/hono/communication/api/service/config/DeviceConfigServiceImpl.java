@@ -16,10 +16,11 @@
 
 package org.eclipse.hono.communication.api.service.config;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
 
 import javax.inject.Singleton;
 
@@ -51,9 +52,6 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
 
     private final Logger log = LoggerFactory.getLogger(DeviceConfigServiceImpl.class);
     private final DeviceConfigRepository repository;
-    private final String deviceIdKey = "deviceId";
-    private final String tenantIdKey = "tenantId";
-    private final String configVersionIdKey = "configVersion";
 
     private final DeviceConfigMapper mapper;
 
@@ -86,7 +84,7 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
         repository.listTenants()
                 .onSuccess(tenants -> tenants
                         .forEach(tenant -> {
-                            final var topic = messagingConfig.getOnConnectEventTopicFormat().formatted(tenant);
+                            final var topic = messagingConfig.getEventTopicFormat().formatted(tenant);
                             internalMessaging.subscribe(topic, this::onDeviceConnectEvent);
 
                         })).onFailure(err -> log.error("Error subscribing to all tenant events: {}", err.getMessage()));
@@ -112,16 +110,16 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
                     final var topicToPublish = String.format(messagingConfig.getConfigTopicFormat(), entity.getTenantId());
                     final var ackTopicToSubscribe = String.format(messagingConfig.getConfigAckTopicFormat(), entity.getTenantId());
                     final var messageAttributes = Map.of(
-                            deviceIdKey, entity.getDeviceId(),
-                            tenantId, entity.getTenantId(),
-                            configVersionIdKey, result.getVersion());
+                            messagingConfig.getDeviceIdKey(), entity.getDeviceId(),
+                            messagingConfig.getTenantIdKey(), entity.getTenantId(),
+                            messagingConfig.getConfigVersionIdKey(), result.getVersion());
 
                     try {
                         final String configJson = ow.writeValueAsString(result);
-                        internalMessaging.publish(topicToPublish, configJson, messageAttributes);
                         internalMessaging.subscribe(ackTopicToSubscribe, this::onDeviceConfigAck);
+                        internalMessaging.publish(topicToPublish, configJson, messageAttributes);
 
-                        log.info("Config {} is published on topic {}", configJson, topicToPublish);
+                        log.info("New Config {} is published to PubSub topic {}", configJson, topicToPublish);
                     } catch (Exception ex) {
                         log.error("Internal communication error: {}", ex.getMessage());
                     }
@@ -158,7 +156,7 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
     public void updateDeviceAckTime(final DeviceConfigAckResponse configAckResponse, final String deviceAckTime) {
         repository.updateDeviceAckTime(configAckResponse, deviceAckTime)
                 .onSuccess(ok -> {
-                    log.info("Device acknowledged config {}", configAckResponse);
+                    log.info("Successfully updated device acknowledged time for {}", configAckResponse);
                 });
     }
 
@@ -170,6 +168,8 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
      */
 
     public void onDeviceConfigAck(final PubsubMessage pubsubMessage, final AckReplyConsumer consumer) {
+        consumer.ack(); // message was received and processed only once
+
         final var messageAttributes = pubsubMessage.getAttributesMap();
         final var deviceId = messageAttributes.get(messagingConfig.getDeviceIdKey());
         final var tenantId = messageAttributes.get(messagingConfig.getTenantIdKey());
@@ -179,12 +179,12 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
 
         log.info("New Config ack was received {}", ackResponse);
         updateDeviceAckTime(ackResponse, Instant.now().toString());
-        consumer.ack();
+
 
     }
 
     /**
-     * Handle incoming device onConnect events.
+     * Handle incoming empty notification events.
      *
      * @param pubsubMessage The message to handle
      * @param consumer      The message consumer
@@ -193,26 +193,13 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
 
         consumer.ack(); // message was received and processed only once
 
-        final HashMap payload;
-        final String msg = pubsubMessage.getData().toStringUtf8();
-
-        if (Strings.isNullOrEmpty(msg)) {
-            log.debug("Skip Event: payload is empty");
-            return;
-        }
-
-        try {
-            payload = or.readValue(msg, HashMap.class);
-        } catch (IOException e) {
-            log.error("Error deserialize event payload: {}", e.getMessage());
-            return;
-        }
-
         final var messageAttributes = pubsubMessage.getAttributesMap();
         final var deviceId = messageAttributes.get(messagingConfig.getDeviceIdKey());
         final var tenantId = messageAttributes.get(messagingConfig.getTenantIdKey());
+        final var emptyNotificationEventContentType = messageAttributes.get(messagingConfig.getContentTypeKey());
 
-        if (skipIncomingDeviceEvent(payload, deviceId, tenantId)) {
+
+        if (skipIncomingDeviceEvent(emptyNotificationEventContentType, deviceId, tenantId)) {
             return;
         }
 
@@ -222,9 +209,12 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
                     final var topicToPublish = String.format(messagingConfig.getConfigTopicFormat(), tenantId);
                     final var ackTopicToSubscribe = String.format(messagingConfig.getConfigAckTopicFormat(), tenantId);
                     try {
-                        internalMessaging.publish(topicToPublish, ow.writeValueAsString(config), messageAttributes);
+                        final var attributes = new HashMap<String, String>(messageAttributes);
+                        attributes.put(messagingConfig.getConfigVersionIdKey(), config.getVersion());
                         internalMessaging.subscribe(ackTopicToSubscribe, this::onDeviceConfigAck);
-                        log.info("Handle onConnect event, publish device config {}", res);
+                        internalMessaging.publish(topicToPublish, ow.writeValueAsString(config), attributes);
+
+                        log.info("Handle empty notification event, publish device config {}", res);
                     } catch (Exception ex) {
                         log.error("Error serialize config {}", config);
                     }
@@ -232,15 +222,15 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
                 .onFailure(err -> log.error("Can't publish configs: {}", err.getMessage()));
     }
 
-    private boolean skipIncomingDeviceEvent(final HashMap payload, final String deviceId, final String tenantId) {
+    private boolean skipIncomingDeviceEvent(final String contentType, final String deviceId, final String tenantId) {
         if (Strings.isNullOrEmpty(deviceId) || Strings.isNullOrEmpty(tenantId)) {
             log.warn("Skip device onConnect event: deviceId or tenantId is empty");
             return true;
         }
 
-        final var eventType = payload.getOrDefault(messagingConfig.getDeviceConnectPayloadKey(), "");
-        if (!eventType.equals(messagingConfig.getDeviceConnectPayloadValue())) {
-            log.debug("Skip device event: cause is not equal connected");
+        if (!Objects.equals(contentType, messagingConfig.getEmptyNotificationEventContentType())) {
+            log.debug("Skip device event: cause content-type is not {}",
+                    messagingConfig.getEmptyNotificationEventContentType());
             return true;
         }
 

@@ -141,6 +141,11 @@
             <artifactId>guava</artifactId>
             <version>${com.google.guava.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-core</artifactId>
+            <version>4.3.7</version>
+        </dependency>
 
     </dependencies>
     <build>

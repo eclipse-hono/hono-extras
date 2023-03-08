@@ -36,14 +36,15 @@ public class InternalMessagingConfig {
     String tenantIdKey;
     @ConfigProperty(name = "app.internalMessaging.message.attributeKeys.configVersionIdKey")
     String configVersionIdKey;
+    @ConfigProperty(name = "app.internalMessaging.message.attributeKeys.contentTypeKey")
+    String contentTypeKey;
 
     //Event
-    @ConfigProperty(name = "app.internalMessaging.event.onDeviceConnectTopic")
-    String onConnectEventTopicFormat;
-    @ConfigProperty(name = "app.internalMessaging.event.deviceConnectPayloadKey")
-    String deviceConnectPayloadKey;
-    @ConfigProperty(name = "app.internalMessaging.event.deviceConnectPayloadValue")
-    String deviceConnectPayloadValue;
+    @ConfigProperty(name = "app.internalMessaging.event.topicFormat")
+    String eventTopicFormat;
+
+    @ConfigProperty(name = "app.internalMessaging.event.emptyNotificationEventContentType")
+    String emptyNotificationEventContentType;
 
     // State
     @ConfigProperty(name = "app.internalMessaging.state.topicFormat")
@@ -75,8 +76,12 @@ public class InternalMessagingConfig {
         return projectId;
     }
 
-    public String getOnConnectEventTopicFormat() {
-        return onConnectEventTopicFormat;
+    public String getContentTypeKey() {
+        return contentTypeKey;
+    }
+
+    public String getEventTopicFormat() {
+        return eventTopicFormat;
     }
 
     public String getDeviceIdKey() {
@@ -91,12 +96,8 @@ public class InternalMessagingConfig {
         return configVersionIdKey;
     }
 
-    public String getDeviceConnectPayloadKey() {
-        return deviceConnectPayloadKey;
-    }
-
-    public String getDeviceConnectPayloadValue() {
-        return deviceConnectPayloadValue;
+    public String getEmptyNotificationEventContentType() {
+        return emptyNotificationEventContentType;
     }
 
     public String getStateTopicFormat() {
