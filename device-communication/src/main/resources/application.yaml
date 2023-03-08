@@ -8,11 +8,11 @@ app:
       attributeKeys:
         deviceIdKey: ${COM_EVENT_ATTRIBUTE_DEVICE_ID:deviceId}
         tenantIdKey: ${COM_EVENT_ATTRIBUTE_TENANT_ID:tenantId}
-        configVersionIdKey: ${COM_EVENT_ATTRIBUTE_CONFIG_VERSION:configVersion}
+        configVersionIdKey: ${COM_EVENT_ATTRIBUTE_CONFIG_VERSION:config-version}
+        contentTypeKey: ${COM_EVENT_ATTRIBUTE_CONTENT_TYPE:content-type}
     event:
-      onDeviceConnectTopic: ${COM_EVENT_ON_CONNECT_TOPIC_FORMAT:%s.event} # TENANT_NAME.event
-      deviceConnectPayloadKey: ${COM_EVENT_CONNECT_PAYLOAD_KEY:cause}
-      deviceConnectPayloadValue: ${COM_EVENT_CONNECT_PAYLOAD_VALUE:connected}
+      topicFormat: ${COM_EVENT_ON_CONNECT_TOPIC_FORMAT:%s.event} # TENANT_NAME.event
+      emptyNotificationEventContentType: ${COM_EVENT_EMPTY_NOTIFICATION_CONTENT_TYPE:application/vnd.eclipse-hono-empty-notification}
 
     config:
       ackTopic: ${COM_CONFIG_ACK_TOPIC:%s.config_response} # TENANT_NAME.config_response
@@ -28,7 +28,7 @@ vertx:
     url: ${COM_SERVER_HOST:0.0.0.0}
     port: ${COM_SERVER_PORT:8080}
     paths:
-      base: ${COM_SERVER_BASE_PATH:/api/v1/}  # base path should always end with "/"
+      base: ${COM_SERVER_BASE_PATH:/v1/}  # base path should always end with "/"
       liveness: ${COM_SERVER_LIVENESS_PATH:/alive}
       readiness: ${COM_SERVER_READINESS_PATH:/ready}
 
@@ -52,5 +52,5 @@ quarkus:
   container-image:
     builder: docker
     build: true
-    push: true
+    push: false
     image: "gcr.io/sotec-iot-core-dev/hono-device-communication:sandbox-release-2-4-0"

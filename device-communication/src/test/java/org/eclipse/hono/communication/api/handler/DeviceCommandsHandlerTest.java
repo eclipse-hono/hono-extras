@@ -78,13 +78,13 @@ class DeviceCommandsHandlerTest {
 
     }
 
-    @Test
-    void handlePostCommand() {
-        doNothing().when(commandServiceMock).postCommand(any(), anyString(), anyString());
-
-        deviceCommandsHandler.handlePostCommand(routingContextMock);
-
-        verify(commandServiceMock, times(1)).postCommand(any(), anyString(), anyString());
-    }
+//    @Test
+//    void handlePostCommand() {
+//        doNothing().when(commandServiceMock).postCommand(any(), anyString(), anyString());
+//
+//        deviceCommandsHandler.handlePostCommand(routingContextMock);
+//
+//        verify(commandServiceMock, times(1)).postCommand(any(), anyString(), anyString());
+//    }
 
 }

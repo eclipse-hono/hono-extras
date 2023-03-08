@@ -44,35 +44,23 @@ Expected message Attributes:
 
 - deviceId
 - tenantId
+- content-type
 
-And the Body should be a JSON object:
-
-``````
-
-  {
-    "cause": "connected",
-    "remote-id": "mqtt-client-id-1",
-    "source": "hono-mqtt",
-    "data": {
-            "foo": "bar"
-            }
-  }
-  
-``````
-
-Application will <b>proceed only connect events (cause is equal to "connected")</b>.
+Application will <b>proceed only empty Notifications events (content-type is
+application/vnd.eclipse-hono-empty-notification)</b>.
 
 ### Configs
 
 Application will publish the latest device configuration when:
 
-- a device "connected" event was received
+- an empty Notifications event was received
 - a new device config was created
 
 Message will be published with the following attributes:
 
 - deviceId
 - tenantId
+- config-version
 
 The Body will be a JSON object with the device config object.
 

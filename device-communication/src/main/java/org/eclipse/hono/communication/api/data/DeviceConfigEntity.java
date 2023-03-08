@@ -18,6 +18,8 @@ package org.eclipse.hono.communication.api.data;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * The device configuration entity object.
  **/
@@ -48,43 +50,52 @@ public class DeviceConfigEntity {
         this.version = version;
     }
 
+    @JsonProperty("tenantId")
     public String getTenantId() {
         return tenantId;
     }
 
+    @JsonProperty("tenant_id")
     public void setTenantId(final String tenantId) {
         this.tenantId = tenantId;
     }
 
+    @JsonProperty("deviceId")
     public String getDeviceId() {
         return deviceId;
     }
 
+    @JsonProperty("device_id")
     public void setDeviceId(final String deviceId) {
         this.deviceId = deviceId;
     }
 
-
+    @JsonProperty("cloudUpdateTime")
     public String getCloudUpdateTime() {
         return cloudUpdateTime;
     }
 
+    @JsonProperty("cloud_update_time")
     public void setCloudUpdateTime(final String cloudUpdateTime) {
         this.cloudUpdateTime = cloudUpdateTime;
     }
 
+    @JsonProperty("deviceAckTime")
     public String getDeviceAckTime() {
         return deviceAckTime;
     }
 
+    @JsonProperty("device_ack_time")
     public void setDeviceAckTime(final String deviceAckTime) {
         this.deviceAckTime = deviceAckTime;
     }
 
+    @JsonProperty("binaryData")
     public String getBinaryData() {
         return binaryData;
     }
 
+    @JsonProperty("binary_data")
     public void setBinaryData(final String binaryData) {
         this.binaryData = binaryData;
     }

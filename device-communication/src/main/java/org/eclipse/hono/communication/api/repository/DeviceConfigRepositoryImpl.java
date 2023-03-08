@@ -62,11 +62,11 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
     private final String SQL_UPDATE_DEVICE_ACK_TIME = "UPDATE device_configs SET device_ack_time = #{deviceAckTime} " +
             "WHERE tenant_id = #{tenantId} AND device_id = #{deviceId} AND version = #{version}";
 
-    private final String SQL_UPDATE_DEVICE_ACK_TIME_FOR_MAX_VERSION = "UPDATE device_config SET device_ack_time = #{deviceAckTime} " +
+    private final String SQL_UPDATE_DEVICE_ACK_TIME_FOR_MAX_VERSION = "UPDATE device_configs SET device_ack_time = #{deviceAckTime} " +
             "WHERE tenant_id = #{tenantId} AND device_id = #{deviceId} AND version = " +
-            "(SELECT MAX(version) FROM device_config WHERE tenant_id = #{tenantId} AND device_id = #{deviceId})";
-    private final String SQL_FIND_DEVICE_LATEST_CONFIG = "SELECT * FROM device_config" +
-            "WHERE tenant_id = #{tenantId} AND device_id = #{deviceId} AND version = #{version}";
+            "(SELECT MAX(version) FROM device_configs WHERE tenant_id = #{tenantId} AND device_id = #{deviceId})";
+    private final String SQL_FIND_DEVICE_LATEST_CONFIG = "SELECT * FROM device_configs " +
+            " WHERE tenant_id = #{tenantId} AND device_id = #{deviceId} AND version = #{version}";
 
     private final int MAX_LIMIT = 10;
     private final Logger log = LoggerFactory.getLogger(DeviceConfigRepositoryImpl.class);
@@ -144,6 +144,11 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
      * @return A Future of the created DeviceConfigEntity
      */
     private Future<DeviceConfigEntity> insert(final SqlConnection sqlConnection, final DeviceConfigEntity entity) {
+//        final Map<String, Object> parameters = new HashMap<>();
+//        parameters.put("deviceId", entity.getDeviceId());
+//        parameters.put("tenantId", entity.getTenantId());
+//        parameters.put("deviceAckTime", entity.getDeviceAckTime());
+
         return SqlTemplate
                 .forUpdate(sqlConnection, SQL_INSERT)
                 .mapFrom(DeviceConfigEntity.class)
@@ -240,7 +245,7 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
                             if (rowSet.rowCount() > 0) {
                                 return Future.succeededFuture();
                             } else {
-                                final var msg = "Device doesn't exist: %s".formatted(ack.toString());
+                                final var msg = "Entity doesn't exist: %s".formatted(ack.toString());
                                 log.error(msg);
                                 throw new NoSuchElementException(msg);
                             }
