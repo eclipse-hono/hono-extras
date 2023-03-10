@@ -55,6 +55,7 @@ class DeviceConfigServiceImplTest {
     private final String deviceId = "device_ID";
     private final PubsubMessage pubsubMessageMock;
     private final AckReplyConsumer ackReplyConsumerMock;
+
     private DeviceConfigServiceImpl deviceConfigService;
 
     DeviceConfigServiceImplTest() {
@@ -124,11 +125,19 @@ class DeviceConfigServiceImplTest {
         when(mapperMock.configRequestToDeviceConfigEntity(any())).thenReturn(deviceConfigEntity);
         when(communicationConfigMock.getConfigTopicFormat()).thenReturn("%s.config");
         when(communicationConfigMock.getConfigAckTopicFormat()).thenReturn("%s.ack");
+        when(communicationConfigMock.getDeviceIdKey()).thenReturn("device");
+        when(communicationConfigMock.getTenantIdKey()).thenReturn("tenant");
+        when(communicationConfigMock.getConfigVersionIdKey()).thenReturn("version");
+        when(communicationConfigMock.getConfigTopicFormat()).thenReturn("version");
+
         doNothing().when(internalCommunicationMock).publish(anyString(), anyString(), any());
 
         final var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
 
         verify(repositoryMock).createNew(any());
+        verify(communicationConfigMock).getConfigVersionIdKey();
+        verify(communicationConfigMock).getTenantIdKey();
+        verify(communicationConfigMock).getDeviceIdKey();
         verify(internalCommunicationMock, times(1)).publish(anyString(), anyString(), any());
         verify(internalCommunicationMock, times(3)).subscribe(anyString(), any());
         verify(mapperMock, times(1)).configRequestToDeviceConfigEntity(deviceConfigRequest);
@@ -155,7 +164,7 @@ class DeviceConfigServiceImplTest {
     }
 
     @Test
-    void modifyCloudToDeviceConfig_publish_failure() throws Exception {
+    void modifyCloudToDeviceConfig_publish_failure() {
         init_with_success_subscription();
         final var deviceConfigRequest = new DeviceConfigRequest();
         final var deviceConfigEntity = new DeviceConfigEntity();
@@ -170,12 +179,19 @@ class DeviceConfigServiceImplTest {
         when(mapperMock.configRequestToDeviceConfigEntity(any())).thenReturn(deviceConfigEntity);
         when(communicationConfigMock.getConfigTopicFormat()).thenReturn("%s.config");
         when(communicationConfigMock.getConfigAckTopicFormat()).thenReturn("%s.ack");
-        doThrow(new RuntimeException()).when(internalCommunicationMock).publish(anyString(), anyString(), any());
+        when(communicationConfigMock.getDeviceIdKey()).thenReturn("device");
+        when(communicationConfigMock.getTenantIdKey()).thenReturn("tenant");
+        when(communicationConfigMock.getConfigVersionIdKey()).thenReturn("version");
+        when(communicationConfigMock.getConfigTopicFormat()).thenReturn("version");
+        doThrow(new RuntimeException()).when(internalCommunicationMock).subscribe(anyString(), any());
 
         final var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
 
         verify(repositoryMock).createNew(any());
-        verify(internalCommunicationMock, times(1)).publish(anyString(), anyString(), any());
+        verify(communicationConfigMock).getConfigVersionIdKey();
+        verify(communicationConfigMock).getTenantIdKey();
+        verify(communicationConfigMock).getDeviceIdKey();
+        verify(internalCommunicationMock, times(3)).subscribe(anyString(), any());
         verify(mapperMock, times(1)).configRequestToDeviceConfigEntity(deviceConfigRequest);
         verify(mapperMock, times(1)).deviceConfigEntityToConfig(deviceConfigEntity);
         verify(communicationConfigMock).getConfigTopicFormat();
@@ -362,16 +378,19 @@ class DeviceConfigServiceImplTest {
         verify(communicationConfigMock).getContentTypeKey();
         verify(communicationConfigMock).getEmptyNotificationEventContentType();
         verify(communicationConfigMock).getDeviceIdKey();
+        verify(communicationConfigMock).getConfigVersionIdKey();
         verify(communicationConfigMock).getTenantIdKey();
         verify(communicationConfigMock).getConfigAckTopicFormat();
-        verify(internalCommunicationMock).publish(topic, message, messageAttributes);
-        verify(internalCommunicationMock, times(1)).subscribe(anyString(), any());
+        verify(internalCommunicationMock).publish(anyString(), anyString(), any());
+        verify(internalCommunicationMock).subscribe(anyString(), any());
+        verify(internalCommunicationMock).subscribe(anyString(), any());
+
         verify(ackReplyConsumerMock).ack();
     }
 
 
     @Test
-    public void onDeviceConnectEvent_PublishesDeviceConfig_failed() throws Exception {
+    public void onDeviceConnectEvent_PublishesDeviceConfig_failed() {
         init_with_success_subscription();
         final String deviceId = "device-123";
         final String tenantId = "tenant-123";
