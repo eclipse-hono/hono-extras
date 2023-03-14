@@ -16,14 +16,19 @@
 
 package org.eclipse.hono.communication.api.service.config;
 
+
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 
 import javax.inject.Singleton;
 
+import org.eclipse.hono.client.pubsub.PubSubBasedAdminClientManager;
+import org.eclipse.hono.client.pubsub.PubSubMessageHelper;
+import org.eclipse.hono.communication.api.config.PubSubConstants;
 import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigAckResponse;
 import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
@@ -34,15 +39,21 @@ import org.eclipse.hono.communication.api.service.DeviceServiceAbstract;
 import org.eclipse.hono.communication.api.service.command.DeviceCommandServiceImpl;
 import org.eclipse.hono.communication.api.service.communication.InternalMessaging;
 import org.eclipse.hono.communication.core.app.InternalMessagingConfig;
+import org.eclipse.hono.notification.deviceregistry.LifecycleChange;
+import org.eclipse.hono.notification.deviceregistry.TenantChangeNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.common.base.Strings;
 import com.google.pubsub.v1.PubsubMessage;
 
-import io.vertx.core.Future;
 
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 
 /**
  * Service for device commands.
@@ -51,6 +62,7 @@ import io.vertx.core.Future;
 @Singleton
 public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements DeviceConfigService {
 
+    static ObjectMapper objectMapper = new ObjectMapper();
     private final Logger log = LoggerFactory.getLogger(DeviceCommandServiceImpl.class);
     private final DeviceConfigRepository repository;
 
@@ -58,6 +70,7 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
 
 
     private final InternalMessaging internalMessaging;
+    private final Vertx vertx;
 
     /**
      * Creates a new DeviceConfigServiceImpl.
@@ -66,11 +79,13 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
      * @param mapper                  The device config mapper
      * @param internalMessagingConfig The internal messaging config
      * @param internalMessaging       The internal messaging interface
+     * @param vertx                   The quarkus vertx instance
      */
     public DeviceConfigServiceImpl(final DeviceConfigRepository repository,
                                    final DeviceConfigMapper mapper,
                                    final InternalMessagingConfig internalMessagingConfig,
-                                   final InternalMessaging internalMessaging
+                                   final InternalMessaging internalMessaging,
+                                   final Vertx vertx
     ) {
 
         super(internalMessagingConfig, internalMessaging);
@@ -78,21 +93,34 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
         this.repository = repository;
         this.mapper = mapper;
         this.internalMessaging = internalMessaging;
-        subscribeToAllEventTenants();
+        this.vertx = vertx;
+
+        initPubSubTopicsAndSubscriptions();
+
+    }
+
+    private void initPubSubTopicsAndSubscriptions() {
+        repository.listTenants()
+                .onSuccess(this::createTopicsAndSubscribeToEvents)
+                .onFailure(err -> log.error("Error by creating and  subscribing to topics: {}", err.getMessage()));
+        internalMessaging.subscribe(PubSubConstants.TENANT_NOTIFICATIONS, this::onTenantChanges);
     }
 
 
-    /**
-     * Subscribe to all tenant event topics.
-     */
-    void subscribeToAllEventTenants() {
-        repository.listTenants()
-                .onSuccess(tenants -> tenants
-                        .forEach(tenant -> {
-                            final var topic = messagingConfig.getEventTopicFormat().formatted(tenant);
-                            internalMessaging.subscribe(topic, this::onDeviceConnectEvent);
+    private void createTopicsAndSubscribeToEvents(final List<String> tenants) {
 
-                        })).onFailure(err -> log.error("Error subscribing to all tenant events: {}", err.getMessage()));
+        final var context = Vertx.currentContext();
+        context.executeBlocking(feature -> {
+            tenants.forEach(this::createPubSubTopicsAndSubscriptions);
+            tenants.forEach(this::subscribeToEventTopic);
+
+        });
+
+    }
+
+    private void subscribeToEventTopic(final String tenant) {
+        final var topic = messagingConfig.getEventTopicFormat().formatted(tenant);
+        internalMessaging.subscribe(topic, this::onDeviceConnectEvent);
     }
 
     /**
@@ -160,9 +188,7 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
     @Override
     public void updateDeviceAckTime(final DeviceConfigAckResponse configAckResponse, final String deviceAckTime) {
         repository.updateDeviceAckTime(configAckResponse, deviceAckTime)
-                .onSuccess(ok -> {
-                    log.info("Successfully updated device acknowledged time for {}", configAckResponse);
-                });
+                .onSuccess(ok -> log.info("Successfully updated device acknowledged time for {}", configAckResponse));
     }
 
     /**
@@ -214,7 +240,7 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
                     final var topicToPublish = String.format(messagingConfig.getConfigTopicFormat(), tenantId);
                     final var ackTopicToSubscribe = String.format(messagingConfig.getConfigAckTopicFormat(), tenantId);
                     try {
-                        final var attributes = new HashMap<String, String>(messageAttributes);
+                        final var attributes = new HashMap<>(messageAttributes);
                         attributes.put(messagingConfig.getConfigVersionIdKey(), config.getVersion());
                         internalMessaging.subscribe(ackTopicToSubscribe, this::onDeviceConfigAck);
                         internalMessaging.publish(topicToPublish, ow.writeValueAsString(config), attributes);
@@ -243,4 +269,49 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
     }
 
 
+    /**
+     * Handle incoming tenant CREATE notifications.
+     *
+     * @param pubsubMessage The message to handle
+     * @param consumer      The message consumer
+     */
+    public void onTenantChanges(final PubsubMessage pubsubMessage, final AckReplyConsumer consumer) {
+        consumer.ack();
+        final String jsonString = pubsubMessage.getData().toStringUtf8();
+        final TenantChangeNotification notification;
+        log.info("Handle tenant change notification {}", jsonString);
+        try {
+            notification = objectMapper.readValue(jsonString, TenantChangeNotification.class);
+        } catch (JsonProcessingException e) {
+            log.error("Can't deserialize tenant change notification: {}", e.getMessage());
+            return;
+        }
+
+        if (notification.getChange() == LifecycleChange.CREATE && !Strings.isNullOrEmpty(notification.getTenantId())) {
+            createPubSubTopicsAndSubscriptions(notification.getTenantId());
+            subscribeToEventTopic(notification.getTenantId());
+
+        }
+    }
+
+
+    private void createPubSubTopicsAndSubscriptions(final String tenantId) {
+
+        final FixedCredentialsProvider credentialsProvider;
+        if (PubSubMessageHelper.getCredentialsProvider().isEmpty() || messagingConfig.getProjectId() == null) {
+            return;
+        }
+        credentialsProvider = PubSubMessageHelper.getCredentialsProvider().get();
+
+        final var topics = PubSubMessageHelper.getTopicsToCreate();
+
+        topics.forEach(topic -> {
+            final var pubSubBasedTopicManager = new PubSubBasedAdminClientManager(messagingConfig.getProjectId(), credentialsProvider, vertx);
+            pubSubBasedTopicManager.getOrCreateTopicAndSubscription(topic, tenantId);
+            pubSubBasedTopicManager.closeAdminClients();
+
+        });
+        log.info("All Topics created for {}", tenantId);
+
+    }
 }
