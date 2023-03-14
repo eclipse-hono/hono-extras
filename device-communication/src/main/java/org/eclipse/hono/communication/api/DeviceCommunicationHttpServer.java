@@ -204,7 +204,7 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
      * Adds status code 400 and sets the error message for the routingContext response.
      *
      * @param routingContext the routing context object
-     * @Throws: NullPointerException – if routingContext is {@code null}.
+     * @throws: NullPointerException – if routingContext is {@code null}.
      */
     void addDefault400ExceptionHandler(final RoutingContext routingContext) {
         Objects.requireNonNull(routingContext);
@@ -217,7 +217,7 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
      * Adds status code 404 and sets the error message for the routingContext response.
      *
      * @param routingContext the routing context object
-     * @Throws: NullPointerException – if routingContext is {@code null}.
+     * @throws: NullPointerException – if routingContext is {@code null}.
      */
     void addDefault404ExceptionHandler(final RoutingContext routingContext) {
         Objects.requireNonNull(routingContext);
