@@ -162,4 +162,23 @@ Adding new Endpoint steps:
 2. Use an existing const Class or create a new one under /config and set the operation id name
 3. Implement an HttpEndpointHandler and set the Routes
 
+## PubSub Events
+
+Application subscribes and uses to the following topics:
+
+1. TENANT_ID.command
+2. TENANT_ID.command_response
+3. TENANT_ID.config
+4. TENANT_ID.config_response
+5. TENANT_ID.event
+6. registry-tenant.notification
+
+## Automatically create PubSub topics and subscriptions
+
+Application creates all tenants topics and subscriptions when:
+
+1. Application starts if are not exist
+2. New tenant is created
+
+
 
