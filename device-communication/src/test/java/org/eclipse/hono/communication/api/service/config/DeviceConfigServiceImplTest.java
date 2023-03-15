@@ -74,7 +74,6 @@ class DeviceConfigServiceImplTest {
     private final String tenantId = "tenant_ID";
     private final String deviceId = "device_ID";
     private final PubsubMessage pubsubMessageMock;
-    private final Vertx vertxMock;
     private final Context contextMock;
     private final AckReplyConsumer ackReplyConsumerMock;
     private final ByteString byteStringMock;
@@ -87,7 +86,6 @@ class DeviceConfigServiceImplTest {
         this.internalCommunicationMock = mock(InternalMessaging.class);
         this.pubsubMessageMock = mock(PubsubMessage.class);
         this.ackReplyConsumerMock = mock(AckReplyConsumer.class);
-        this.vertxMock = mock(Vertx.class);
         this.contextMock = mock(Context.class);
         this.byteStringMock = mock(ByteString.class);
 
@@ -126,8 +124,7 @@ class DeviceConfigServiceImplTest {
         return new DeviceConfigServiceImpl(repositoryMock,
                 mapperMock,
                 communicationConfigMock,
-                internalCommunicationMock,
-                vertxMock);
+                internalCommunicationMock);
     }
 
     @AfterEach
@@ -139,7 +136,6 @@ class DeviceConfigServiceImplTest {
                 pubsubMessageMock,
                 ackReplyConsumerMock,
                 byteStringMock,
-                vertxMock,
                 contextMock);
     }
 
@@ -493,7 +489,6 @@ class DeviceConfigServiceImplTest {
         try (MockedStatic<PubSubMessageHelper> mockedPubSubMessageHelper = mockStatic(PubSubMessageHelper.class)) {
             final var credMock = mock(FixedCredentialsProvider.class);
             mockedPubSubMessageHelper.when(PubSubMessageHelper::getCredentialsProvider).thenReturn(Optional.of(credMock));
-            mockedPubSubMessageHelper.when(PubSubMessageHelper::getTopicsToCreate).thenReturn(List.of(tenantId));
 
             init_with_success_subscription();
             final TenantChangeNotification notification = new TenantChangeNotification(LifecycleChange.CREATE, tenantId, Instant.now(), false, false);
