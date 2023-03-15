@@ -29,6 +29,7 @@ import org.eclipse.hono.util.TelemetryConstants;
 public final class PubSubConstants {
 
     public static String TENANT_NOTIFICATIONS = "registry-tenant.notification";
+    public static String EVENT_STATES_SUBTOPIC_ENDPOINT = "event.state";
 
     private PubSubConstants() {
     }
@@ -44,7 +45,7 @@ public final class PubSubConstants {
                 CommandConstants.COMMAND_RESPONSE_ENDPOINT,
                 ConfigConstants.CONFIG_RESPONSE_ENDPOINT,
                 ConfigConstants.CONFIG_ENDPOINT,
-                EventConstants.EVENT_STATES_SUBTOPIC_ENDPOINT,
+                EVENT_STATES_SUBTOPIC_ENDPOINT,
                 TelemetryConstants.TELEMETRY_ENDPOINT);
     }
 }

@@ -36,7 +36,6 @@ import org.eclipse.hono.communication.api.data.ListDeviceConfigVersionsResponse;
 import org.eclipse.hono.communication.api.mapper.DeviceConfigMapper;
 import org.eclipse.hono.communication.api.repository.DeviceConfigRepository;
 import org.eclipse.hono.communication.api.service.DeviceServiceAbstract;
-import org.eclipse.hono.communication.api.service.command.DeviceCommandServiceImpl;
 import org.eclipse.hono.communication.api.service.communication.InternalMessaging;
 import org.eclipse.hono.communication.core.app.InternalMessagingConfig;
 import org.eclipse.hono.notification.deviceregistry.LifecycleChange;
@@ -70,7 +69,7 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
 
 
     private final InternalMessaging internalMessaging;
-    private final Vertx vertx;
+
 
     /**
      * Creates a new DeviceConfigServiceImpl.
@@ -79,13 +78,11 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
      * @param mapper                  The device config mapper
      * @param internalMessagingConfig The internal messaging config
      * @param internalMessaging       The internal messaging interface
-     * @param vertx                   The quarkus vertx instance
      */
     public DeviceConfigServiceImpl(final DeviceConfigRepository repository,
                                    final DeviceConfigMapper mapper,
                                    final InternalMessagingConfig internalMessagingConfig,
-                                   final InternalMessaging internalMessaging,
-                                   final Vertx vertx
+                                   final InternalMessaging internalMessaging
     ) {
 
         super(internalMessagingConfig, internalMessaging);
@@ -93,7 +90,6 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
         this.repository = repository;
         this.mapper = mapper;
         this.internalMessaging = internalMessaging;
-        this.vertx = vertx;
 
         initPubSubTopicsAndSubscriptions();
 
@@ -306,7 +302,7 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
         final var topics = PubSubConstants.getTopicsToCreate();
 
         topics.forEach(topic -> {
-            final var pubSubBasedTopicManager = new PubSubBasedAdminClientManager(messagingConfig.getProjectId(), credentialsProvider, vertx);
+            final var pubSubBasedTopicManager = new PubSubBasedAdminClientManager(messagingConfig.getProjectId(), credentialsProvider);
             pubSubBasedTopicManager.getOrCreateTopicAndSubscription(topic, tenantId);
             pubSubBasedTopicManager.closeAdminClients();
 
