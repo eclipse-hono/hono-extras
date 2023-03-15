@@ -18,6 +18,7 @@ package org.eclipse.hono.communication.core.app;
 
 import javax.inject.Singleton;
 
+import org.eclipse.hono.util.EventConstants;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
@@ -43,8 +44,6 @@ public class InternalMessagingConfig {
     @ConfigProperty(name = "app.internalMessaging.event.topicFormat")
     String eventTopicFormat;
 
-    @ConfigProperty(name = "app.internalMessaging.event.emptyNotificationEventContentType")
-    String emptyNotificationEventContentType;
 
     // State
     @ConfigProperty(name = "app.internalMessaging.state.topicFormat")
@@ -97,7 +96,7 @@ public class InternalMessagingConfig {
     }
 
     public String getEmptyNotificationEventContentType() {
-        return emptyNotificationEventContentType;
+        return EventConstants.CONTENT_TYPE_EMPTY_NOTIFICATION;
     }
 
     public String getStateTopicFormat() {

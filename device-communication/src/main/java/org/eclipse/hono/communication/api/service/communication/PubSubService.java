@@ -16,6 +16,7 @@
 
 package org.eclipse.hono.communication.api.service.communication;
 
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +55,7 @@ import com.google.pubsub.v1.TopicName;
 @ApplicationScoped
 public class PubSubService implements InternalMessaging {
 
+    public static final String COMMUNICATION_API_SUBSCRIPTION_NAME = "%s-communication-api";
     private final Logger log = LoggerFactory.getLogger(PubSubService.class);
     private final Map<String, Subscriber> activeSubscriptions = new HashMap<>();
 
@@ -141,10 +143,11 @@ public class PubSubService implements InternalMessaging {
      * @return The ProjectSubscriptionName object
      * @throws IOException if subscription can't be created
      */
+
     private ProjectSubscriptionName initSubscription(final String topic) throws IOException {
         final var subscriptionName = ProjectSubscriptionName.of(
                 projectId,
-                String.format("%s", topic)
+                String.format(COMMUNICATION_API_SUBSCRIPTION_NAME, topic)
         );
         final var subscriptionAdminSettings = SubscriptionAdminSettings.newBuilder()
                 .build();
@@ -159,7 +162,7 @@ public class PubSubService implements InternalMessaging {
             if (existing.isEmpty()) {
 
                 subscriptionAdminClient.createSubscription(
-                        subscriptionName,
+                        subscriptionName.toString(),
                         topicName,
                         PushConfig.getDefaultInstance(),
                         50
