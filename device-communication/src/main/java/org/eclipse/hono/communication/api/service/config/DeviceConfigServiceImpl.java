@@ -63,7 +63,7 @@ import io.vertx.core.Vertx;
 public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements DeviceConfigService {
 
     static ObjectMapper objectMapper = new ObjectMapper();
-    private final Logger log = LoggerFactory.getLogger(DeviceCommandServiceImpl.class);
+    private final Logger log = LoggerFactory.getLogger(DeviceConfigServiceImpl.class);
     private final DeviceConfigRepository repository;
 
     private final DeviceConfigMapper mapper;
@@ -303,7 +303,7 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
         }
         credentialsProvider = PubSubMessageHelper.getCredentialsProvider().get();
 
-        final var topics = PubSubMessageHelper.getTopicsToCreate();
+        final var topics = PubSubConstants.getTopicsToCreate();
 
         topics.forEach(topic -> {
             final var pubSubBasedTopicManager = new PubSubBasedAdminClientManager(messagingConfig.getProjectId(), credentialsProvider, vertx);

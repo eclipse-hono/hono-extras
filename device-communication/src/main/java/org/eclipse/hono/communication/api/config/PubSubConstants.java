@@ -16,6 +16,13 @@
 
 package org.eclipse.hono.communication.api.config;
 
+import java.util.List;
+
+import org.eclipse.hono.util.CommandConstants;
+import org.eclipse.hono.util.ConfigConstants;
+import org.eclipse.hono.util.EventConstants;
+import org.eclipse.hono.util.TelemetryConstants;
+
 /**
  * Constant values for PubSub.
  */
@@ -24,5 +31,20 @@ public final class PubSubConstants {
     public static String TENANT_NOTIFICATIONS = "registry-tenant.notification";
 
     private PubSubConstants() {
+    }
+
+    /**
+     * Gets the list of all topics need to be created per tenant.
+     *
+     * @return List of all topics.
+     */
+    public static List<String> getTopicsToCreate() {
+        return List.of(EventConstants.EVENT_ENDPOINT,
+                CommandConstants.COMMAND_ENDPOINT,
+                CommandConstants.COMMAND_RESPONSE_ENDPOINT,
+                ConfigConstants.CONFIG_RESPONSE_ENDPOINT,
+                ConfigConstants.CONFIG_ENDPOINT,
+                EventConstants.EVENT_STATES_SUBTOPIC_ENDPOINT,
+                TelemetryConstants.TELEMETRY_ENDPOINT);
     }
 }
