@@ -19,6 +19,7 @@ package org.eclipse.hono.communication.api.service.state;
 import javax.inject.Singleton;
 
 import org.eclipse.hono.communication.api.data.ListDeviceStatesResponse;
+import org.eclipse.hono.communication.api.handler.StateTopicEventHandler;
 import org.eclipse.hono.communication.api.mapper.DeviceStateMapper;
 import org.eclipse.hono.communication.api.repository.DeviceStateRepository;
 import org.eclipse.hono.communication.api.service.DeviceServiceAbstract;
@@ -38,7 +39,7 @@ import io.vertx.core.Future;
  */
 
 @Singleton
-public class DeviceStateServiceImpl extends DeviceServiceAbstract implements DeviceStateService {
+public class DeviceStateServiceImpl extends DeviceServiceAbstract implements DeviceStateService, StateTopicEventHandler {
 
     private final Logger log = LoggerFactory.getLogger(DeviceStateServiceImpl.class);
     private final DeviceStateRepository repository;
@@ -57,21 +58,6 @@ public class DeviceStateServiceImpl extends DeviceServiceAbstract implements Dev
         super(internalMessagingConfig, internalMessaging);
         this.repository = repository;
         this.mapper = mapper;
-        subscribeToAllStateTopics();
-    }
-
-    /**
-     * Subscribe to all tenant state topics.
-     */
-    public void subscribeToAllStateTopics() {
-        repository.listTenants()
-                .onSuccess(tenants -> tenants
-                        .forEach(tenant -> {
-                            final var topic = messagingConfig.getStateTopicFormat().formatted(tenant);
-                            internalMessaging.subscribe(topic, this::onStateMessage);
-
-                        }))
-                .onFailure(err -> log.error("Error subscribing to all state topics: {}", err.getMessage()));
     }
 
     @Override
@@ -86,12 +72,7 @@ public class DeviceStateServiceImpl extends DeviceServiceAbstract implements Dev
 
     }
 
-    /**
-     * Handle incoming messages on state topics.
-     *
-     * @param pubsubMessage The message to handle.
-     * @param consumer The message consumer.
-     */
+    @Override
     public void onStateMessage(final PubsubMessage pubsubMessage, final AckReplyConsumer consumer) {
 
         consumer.ack(); // message was received and processed only once

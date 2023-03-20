@@ -16,7 +16,6 @@
 
 package org.eclipse.hono.communication.api.service.communication;
 
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +46,6 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.PushConfig;
 import com.google.pubsub.v1.Subscription;
 import com.google.pubsub.v1.TopicName;
-
 
 /**
  * Internal messaging interface implementation.
@@ -143,7 +141,6 @@ public class PubSubService implements InternalMessaging {
      * @return The ProjectSubscriptionName object
      * @throws IOException if subscription can't be created
      */
-
     private ProjectSubscriptionName initSubscription(final String topic) throws IOException {
         final var subscriptionName = ProjectSubscriptionName.of(
                 projectId,
@@ -171,5 +168,4 @@ public class PubSubService implements InternalMessaging {
         }
         return subscriptionName;
     }
-
 }

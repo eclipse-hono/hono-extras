@@ -48,7 +48,7 @@ class DeviceStateServiceImplTest {
     private final AckReplyConsumer ackReplyConsumerMock;
     private final String tenantId = "tenant_ID";
     private final String deviceId = "device_ID";
-    private DeviceStateServiceImpl deviceStateService;
+    private final DeviceStateServiceImpl deviceStateService;
 
     DeviceStateServiceImplTest() {
         this.repositoryMock = mock(DeviceStateRepositoryImpl.class);
@@ -57,6 +57,8 @@ class DeviceStateServiceImplTest {
         this.internalCommunicationMock = mock(InternalMessaging.class);
         this.pubsubMessageMock = mock(PubsubMessage.class);
         this.ackReplyConsumerMock = mock(AckReplyConsumer.class);
+        deviceStateService = new DeviceStateServiceImpl(repositoryMock, mapperMock, communicationConfigMock,
+                internalCommunicationMock);
     }
 
     @AfterEach
@@ -68,23 +70,8 @@ class DeviceStateServiceImplTest {
                 pubsubMessageMock);
     }
 
-    void init_with_success_subscription() {
-        when(repositoryMock.listTenants()).thenReturn(Future.succeededFuture(List.of("1", "2")));
-        when(communicationConfigMock.getStateTopicFormat()).thenReturn("%s.event.state");
-        doNothing().when(internalCommunicationMock).subscribe(anyString(), any());
-
-        deviceStateService = new DeviceStateServiceImpl(repositoryMock, mapperMock, communicationConfigMock,
-                internalCommunicationMock);
-
-        verify(repositoryMock).listTenants();
-        verify(communicationConfigMock, times(2)).getStateTopicFormat();
-        verify(internalCommunicationMock, times(2)).subscribe(anyString(), any());
-
-    }
-
     @Test
     void testListAll_success() {
-        init_with_success_subscription();
         when(repositoryMock.listAll(deviceId, tenantId, 10))
                 .thenReturn(Future.succeededFuture(List.of(new DeviceState())));
 
@@ -97,7 +84,6 @@ class DeviceStateServiceImplTest {
 
     @Test
     void testListAll_failed() {
-        init_with_success_subscription();
         when(repositoryMock.listAll(deviceId, tenantId, 10)).thenReturn(Future.failedFuture(new RuntimeException()));
 
         final var results = deviceStateService.listAll(deviceId, tenantId, 10);
@@ -109,7 +95,6 @@ class DeviceStateServiceImplTest {
 
     @Test
     public void testOnStateMessage_SkipsIfDeviceIdOrTenantIdIsEmpty() {
-        init_with_success_subscription();
         when(pubsubMessageMock.getAttributesMap())
                 .thenReturn(Map.of(
                         "deviceId", "",
@@ -126,7 +111,6 @@ class DeviceStateServiceImplTest {
 
     @Test
     public void testOnStateMessage_SkipsPayloadEmpty() {
-        init_with_success_subscription();
         when(pubsubMessageMock.getAttributesMap())
                 .thenReturn(Map.of(
                         "deviceId", "device-123",
@@ -146,7 +130,6 @@ class DeviceStateServiceImplTest {
 
     @Test
     public void testOnStateMessage_CreatesNewStateEntryInDB() {
-        init_with_success_subscription();
         final String deviceId = "device-123";
         final String tenantId = "tenant-123";
 
