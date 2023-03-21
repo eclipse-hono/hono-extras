@@ -107,6 +107,7 @@ public class InternalTopicManagerImpl implements InternalTopicManager {
         final String projectId = internalMessagingConfig.getProjectId();
         final FixedCredentialsProvider credentialsProvider;
         if (PubSubMessageHelper.getCredentialsProvider().isEmpty() || projectId == null) {
+            log.error("Either credentials provider is empty: {} or project id ({}) is null.", PubSubMessageHelper.getCredentialsProvider().isEmpty(), projectId);
             return;
         }
         credentialsProvider = PubSubMessageHelper.getCredentialsProvider().get();
