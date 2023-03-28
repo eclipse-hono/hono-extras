@@ -86,10 +86,8 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
 
     @Override
     public void start() {
-        //Create Database Tables
         databaseSchemaCreator.createDBTables();
 
-        // Create Endpoints Router
         this.httpEndpointHandlers = httpHandlerManager.getAvailableHandlerServices();
         RouterBuilder.create(this.vertx, appConfigs.getServerConfig().getOpenApiFilePath())
                 .onSuccess(routerBuilder -> {
@@ -107,7 +105,6 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
 
                 });
 
-        // Wait until application is stopped
         Quarkus.waitForExit();
 
     }
@@ -237,7 +234,6 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
 
     @Override
     public void stop() {
-        // stop server custom functionality
         db.close();
 
     }
