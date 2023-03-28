@@ -27,6 +27,5 @@ public final class DeviceCommandConstants {
     public static final String POST_DEVICE_COMMAND_OP_ID = "postCommand";
 
     private DeviceCommandConstants() {
-        // avoid instantiation
     }
 }
