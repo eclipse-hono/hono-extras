@@ -36,7 +36,7 @@ public abstract class AbstractVertxHttpServer {
      * @param appConfigs The application configs
      * @param vertx      The quarkus Vertx instance
      */
-    public AbstractVertxHttpServer(final ApplicationConfig appConfigs, final Vertx vertx) {
+    protected AbstractVertxHttpServer(final ApplicationConfig appConfigs, final Vertx vertx) {
         this.appConfigs = appConfigs;
         this.vertx = vertx;
     }
