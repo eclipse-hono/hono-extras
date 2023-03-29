@@ -54,25 +54,28 @@ public class InternalTopicManagerImpl implements InternalTopicManager {
     private final StateTopicEventHandler stateTopicEventHandler;
     private final InternalMessaging internalMessaging;
     private final InternalMessagingConfig internalMessagingConfig;
+    private final Vertx vertx;
 
     /**
      * Creates a new InternalTopicManagerImpl.
      *
-     * @param deviceRepository The device repository
-     * @param configTopicEventHandler The config topic event handler.
-     * @param stateTopicEventHandler The state topic event handler.
-     * @param internalMessaging The internal messaging interface.
-     * @param internalMessagingConfig The internal messaging config.
+     * @param deviceRepository          The device repository
+     * @param configTopicEventHandler   The config topic event handler.
+     * @param stateTopicEventHandler    The state topic event handler.
+     * @param internalMessaging         The internal messaging interface.
+     * @param internalMessagingConfig   The internal messaging config.
+     * @param vertx                     The Vertx instance to use
      */
     public InternalTopicManagerImpl(final DeviceRepository deviceRepository,
             final ConfigTopicEventHandler configTopicEventHandler,
             final StateTopicEventHandler stateTopicEventHandler, final InternalMessaging internalMessaging,
-            final InternalMessagingConfig internalMessagingConfig) {
+            final InternalMessagingConfig internalMessagingConfig, final Vertx vertx) {
         this.deviceRepository = deviceRepository;
         this.configTopicEventHandler = configTopicEventHandler;
         this.stateTopicEventHandler = stateTopicEventHandler;
         this.internalMessaging = internalMessaging;
         this.internalMessagingConfig = internalMessagingConfig;
+        this.vertx = vertx;
     }
 
     @Override
@@ -115,9 +118,9 @@ public class InternalTopicManagerImpl implements InternalTopicManager {
         final List<String> topics = PubSubConstants.getTopicsToCreate();
 
         topics.forEach(topic -> {
-            final var pubSubBasedTopicManager = new PubSubBasedAdminClientManager(projectId, credentialsProvider);
+            final var pubSubBasedTopicManager = new PubSubBasedAdminClientManager(projectId, credentialsProvider, vertx);
             pubSubBasedTopicManager.getOrCreateTopicAndSubscription(topic, tenantId);
-            pubSubBasedTopicManager.closeAdminClients();
+            pubSubBasedTopicManager.closeAdminClientsBlocking();
 
         });
         log.info("All Topics created for {}", tenantId);

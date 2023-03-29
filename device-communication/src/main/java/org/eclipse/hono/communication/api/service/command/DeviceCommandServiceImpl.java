@@ -29,6 +29,8 @@ import org.eclipse.hono.communication.core.app.InternalMessagingConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
+
 import io.vertx.core.Future;
 
 
@@ -37,6 +39,10 @@ import io.vertx.core.Future;
  */
 @Singleton
 public class DeviceCommandServiceImpl extends DeviceServiceAbstract implements DeviceCommandService {
+
+    public static final String DEVICE_ID = "deviceId";
+    public static final String TENANT_ID = "tenantId";
+    public static final String SUBJECT = "subject";
     private final Logger log = LoggerFactory.getLogger(DeviceCommandServiceImpl.class);
     private final DeviceRepository deviceRepository;
 
@@ -66,8 +72,9 @@ public class DeviceCommandServiceImpl extends DeviceServiceAbstract implements D
                                         deviceId,
                                         tenantId));
                             }
+                            final String subject = Strings.isNullOrEmpty(commandRequest.getSubfolder()) ? "command" : commandRequest.getSubfolder();
                             final var topic = String.format(messagingConfig.getCommandTopicFormat(), tenantId);
-                            final Map<String, String> attributes = Map.of("deviceId", deviceId, "tenantId", tenantId, "subject", "command");
+                            final Map<String, String> attributes = Map.of(DEVICE_ID, deviceId, TENANT_ID, tenantId, SUBJECT, subject);
                             try {
                                 final String commandJson = ow.writeValueAsString(commandRequest.getBinaryData());
                                 internalMessaging.publish(topic, commandJson, attributes);

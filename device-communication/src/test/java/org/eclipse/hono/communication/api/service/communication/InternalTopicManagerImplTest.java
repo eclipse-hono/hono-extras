@@ -43,6 +43,7 @@ import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 
 import io.vertx.core.Context;
+import io.vertx.core.Vertx;
 
 class InternalTopicManagerImplTest {
 
@@ -57,6 +58,7 @@ class InternalTopicManagerImplTest {
     private final ByteString byteStringMock;
     private final ConfigTopicEventHandler configTopicEventHandler;
     private final StateTopicEventHandler stateTopicEventHandler;
+    private final Vertx vertxMock;
     private final InternalTopicManagerImpl internalTopicManager;
 
     InternalTopicManagerImplTest() {
@@ -70,8 +72,9 @@ class InternalTopicManagerImplTest {
         this.byteStringMock = mock(ByteString.class);
         this.configTopicEventHandler = mock(ConfigTopicEventHandler.class);
         this.stateTopicEventHandler = mock(StateTopicEventHandler.class);
+        this.vertxMock = mock(Vertx.class);
         this.internalTopicManager = new InternalTopicManagerImpl(deviceRepositoryMock, configTopicEventHandler,
-                stateTopicEventHandler, internalCommunicationMock, communicationConfigMock);
+                stateTopicEventHandler, internalCommunicationMock, communicationConfigMock, vertxMock);
 
     }
 
@@ -86,7 +89,8 @@ class InternalTopicManagerImplTest {
                 byteStringMock,
                 configTopicEventHandler,
                 stateTopicEventHandler,
-                contextMock);
+                contextMock,
+                vertxMock);
     }
 
     @Test

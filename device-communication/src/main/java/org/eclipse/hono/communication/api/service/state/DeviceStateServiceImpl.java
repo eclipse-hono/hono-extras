@@ -75,7 +75,7 @@ public class DeviceStateServiceImpl extends DeviceServiceAbstract implements Dev
     @Override
     public void onStateMessage(final PubsubMessage pubsubMessage, final AckReplyConsumer consumer) {
 
-        consumer.ack(); // message was received and processed only once
+        consumer.ack();
 
         final var messageAttributes = pubsubMessage.getAttributesMap();
         final var deviceId = messageAttributes.get(messagingConfig.getDeviceIdKey());
