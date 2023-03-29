@@ -74,7 +74,7 @@ public class DeviceCommandServiceImpl extends DeviceServiceAbstract implements D
                             }
                             final String subject = Strings.isNullOrEmpty(commandRequest.getSubfolder()) ? "command" : commandRequest.getSubfolder();
                             final var topic = String.format(messagingConfig.getCommandTopicFormat(), tenantId);
-                            final Map<String, String> attributes = Map.of(DEVICE_ID, deviceId, TENANT_ID, tenantId, SUBJECT, subject);
+                            final Map<String, String> attributes = Map.of(DEVICE_ID, deviceId, TENANT_ID, tenantId, SUBJECT, subject, "correlation-id", "hono");
                             try {
                                 final String commandJson = ow.writeValueAsString(commandRequest.getBinaryData());
                                 internalMessaging.publish(topic, commandJson, attributes);
