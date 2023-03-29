@@ -64,11 +64,9 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
     static ObjectMapper objectMapper = new ObjectMapper();
     private final Logger log = LoggerFactory.getLogger(DeviceConfigServiceImpl.class);
     private final DeviceConfigRepository repository;
-
     private final DeviceConfigMapper mapper;
-
-
     private final InternalMessaging internalMessaging;
+    private final Vertx vertx;
 
 
     /**
@@ -78,18 +76,20 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
      * @param mapper                  The device config mapper
      * @param internalMessagingConfig The internal messaging config
      * @param internalMessaging       The internal messaging interface
+     * @param vertx                   The Vertx instance to use
      */
     public DeviceConfigServiceImpl(final DeviceConfigRepository repository,
                                    final DeviceConfigMapper mapper,
                                    final InternalMessagingConfig internalMessagingConfig,
-                                   final InternalMessaging internalMessaging
-    ) {
+                                   final InternalMessaging internalMessaging,
+                                   final Vertx vertx) {
 
         super(internalMessagingConfig, internalMessaging);
 
         this.repository = repository;
         this.mapper = mapper;
         this.internalMessaging = internalMessaging;
+        this.vertx = vertx;
 
         initPubSubTopicsAndSubscriptions();
 
@@ -302,9 +302,9 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract implements De
         final var topics = PubSubConstants.getTopicsToCreate();
 
         topics.forEach(topic -> {
-            final var pubSubBasedTopicManager = new PubSubBasedAdminClientManager(messagingConfig.getProjectId(), credentialsProvider);
+            final var pubSubBasedTopicManager = new PubSubBasedAdminClientManager(messagingConfig.getProjectId(), credentialsProvider, vertx);
             pubSubBasedTopicManager.getOrCreateTopicAndSubscription(topic, tenantId);
-            pubSubBasedTopicManager.closeAdminClients();
+            pubSubBasedTopicManager.closeAdminClientsBlocking();
 
         });
         log.info("All Topics created for {}", tenantId);

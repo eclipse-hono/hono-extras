@@ -77,6 +77,7 @@ class DeviceConfigServiceImplTest {
     private final Context contextMock;
     private final AckReplyConsumer ackReplyConsumerMock;
     private final ByteString byteStringMock;
+    private final Vertx vertxMock;
     private DeviceConfigServiceImpl deviceConfigService;
 
     DeviceConfigServiceImplTest() {
@@ -88,6 +89,7 @@ class DeviceConfigServiceImplTest {
         this.ackReplyConsumerMock = mock(AckReplyConsumer.class);
         this.contextMock = mock(Context.class);
         this.byteStringMock = mock(ByteString.class);
+        this.vertxMock = mock(Vertx.class);
 
 
     }
@@ -124,7 +126,7 @@ class DeviceConfigServiceImplTest {
         return new DeviceConfigServiceImpl(repositoryMock,
                 mapperMock,
                 communicationConfigMock,
-                internalCommunicationMock);
+                internalCommunicationMock, vertxMock);
     }
 
     @AfterEach
@@ -136,7 +138,8 @@ class DeviceConfigServiceImplTest {
                 pubsubMessageMock,
                 ackReplyConsumerMock,
                 byteStringMock,
-                contextMock);
+                contextMock,
+                vertxMock);
     }
 
     @Test
