@@ -66,12 +66,12 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
     /**
      * Creates a new DeviceCommunicationHttpServer with all dependencies.
      *
-     * @param appConfigs THe application configurations
-     * @param vertx The quarkus Vertx instance
-     * @param httpHandlerManager The http handler manager
-     * @param databaseService The database connection
+     * @param appConfigs            THe application configurations
+     * @param vertx                 The quarkus Vertx instance
+     * @param httpHandlerManager    The http handler manager
+     * @param databaseService       The database connection
      * @param databaseSchemaCreator The database migrations service
-     * @param internalTopicManager The internal topic manager
+     * @param internalTopicManager  The internal topic manager
      */
     public DeviceCommunicationHttpServer(final ApplicationConfig appConfigs,
             final Vertx vertx,
@@ -88,13 +88,10 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
 
     @Override
     public void start() {
-        // Create Database Tables
         databaseSchemaCreator.createDBTables();
 
-        // Create topics and subscriptions
         internalTopicManager.initPubSubTopicsAndSubscriptions();
 
-        // Create Endpoints Router
         this.httpEndpointHandlers = httpHandlerManager.getAvailableHandlerServices();
         RouterBuilder.create(this.vertx, appConfigs.getServerConfig().getOpenApiFilePath())
                 .onSuccess(routerBuilder -> {
@@ -112,7 +109,6 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
 
                 });
 
-        // Wait until application is stopped
         Quarkus.waitForExit();
 
     }
@@ -120,7 +116,7 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
     /**
      * Creates the Router object and adds endpoints and handlers.
      *
-     * @param routerBuilder Vertx RouterBuilder object
+     * @param routerBuilder        Vertx RouterBuilder object
      * @param httpEndpointHandlers All available http endpoint handlers
      * @return The created Router object
      */
@@ -131,10 +127,10 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
         }
         final var apiRouter = Router.router(vertx);
         final var router = routerBuilder.createRouter();
-        apiRouter.errorHandler(400,
-                routingContext -> ResponseUtils.errorResponse(routingContext, routingContext.failure()));
-        apiRouter.errorHandler(404,
-                routingContext -> ResponseUtils.errorResponse(routingContext, routingContext.failure()));
+        apiRouter.errorHandler(400, routingContext ->
+                ResponseUtils.errorResponse(routingContext, routingContext.failure()));
+        apiRouter.errorHandler(404, routingContext ->
+                ResponseUtils.errorResponse(routingContext, routingContext.failure()));
 
         final var serverConfig = appConfigs.getServerConfig();
         addHealthCheckHandlers(apiRouter, serverConfig);
@@ -161,15 +157,17 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
         final HealthCheckHandler healthCheckHandler = HealthCheckHandler.create(vertx);
 
         healthCheckHandler.register("database-communication-is-ready",
-                promise -> db.getDbClient().getConnection(connection -> {
-                    if (connection.failed()) {
-                        log.error(connection.cause().getMessage());
-                        promise.tryComplete(Status.KO());
-                    } else {
-                        connection.result().close();
-                        promise.tryComplete(Status.OK());
-                    }
-                }));
+                promise ->
+                        db.getDbClient().getConnection(connection -> {
+                            if (connection.failed()) {
+                                log.error(connection.cause().getMessage());
+                                promise.tryComplete(Status.KO());
+                            } else {
+                                connection.result().close();
+                                promise.tryComplete(Status.OK());
+                            }
+                        })
+        );
 
         router.get(readinessPath).handler(healthCheckHandler);
     }
@@ -239,7 +237,6 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
 
     @Override
     public void stop() {
-        // stop server custom functionality
         db.close();
 
     }

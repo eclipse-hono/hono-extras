@@ -53,17 +53,16 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract
 
     private final Logger log = LoggerFactory.getLogger(DeviceConfigServiceImpl.class);
     private final DeviceConfigRepository repository;
-
     private final DeviceConfigMapper mapper;
     private final InternalMessaging internalMessaging;
 
     /**
      * Creates a new DeviceConfigServiceImpl.
      *
-     * @param repository The device config repository
-     * @param mapper The device config mapper
+     * @param repository              The device config repository
+     * @param mapper                  The device config mapper
      * @param internalMessagingConfig The internal messaging config
-     * @param internalMessaging The internal messaging interface
+     * @param internalMessaging       The internal messaging interface
      */
     public DeviceConfigServiceImpl(final DeviceConfigRepository repository,
             final DeviceConfigMapper mapper,
@@ -81,8 +80,8 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract
      * Create and publish new device configs.
      *
      * @param deviceConfig The device configs
-     * @param deviceId The device id
-     * @param tenantId The tenant id
+     * @param deviceId     The device id
+     * @param tenantId     The tenant id
      * @return Future of device config
      */
     public Future<DeviceConfig> modifyCloudToDeviceConfig(final DeviceConfigRequest deviceConfig, final String deviceId,
@@ -112,7 +111,7 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract
      *
      * @param deviceId The device id
      * @param tenantId The tenant id
-     * @param limit The limit max=10
+     * @param limit    The limit max=10
      * @return Future of ListDeviceConfigVersionsResponse
      */
     public Future<ListDeviceConfigVersionsResponse> listAll(final String deviceId, final String tenantId,
@@ -130,7 +129,7 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract
      * Update field deviceAckTime when ack received from the device.
      *
      * @param configAckResponse Device config to ack
-     * @param deviceAckTime Time of ack
+     * @param deviceAckTime     Time of ack
      */
     @Override
     public void updateDeviceAckTime(final DeviceConfigAckResponse configAckResponse, final String deviceAckTime) {

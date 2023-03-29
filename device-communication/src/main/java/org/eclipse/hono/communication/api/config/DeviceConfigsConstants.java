@@ -40,6 +40,5 @@ public final class DeviceConfigsConstants {
     public static final String POST_MODIFY_DEVICE_CONFIG_OP_ID = "modifyCloudToDeviceConfig";
 
     private DeviceConfigsConstants() {
-        // avoid instantiation
     }
 }

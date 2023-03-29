@@ -49,28 +49,27 @@ import io.vertx.sqlclient.templates.SqlTemplate;
  */
 @ApplicationScoped
 public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
-    private final String SQL_INSERT = "INSERT INTO device_configs (version, tenant_id, device_id, cloud_update_time, device_ack_time, binary_data) " +
-            "VALUES (#{version}, #{tenantId}, #{deviceId}, #{cloudUpdateTime}, #{deviceAckTime}, #{binaryData}) RETURNING version";
-    private final String SQL_LIST = "SELECT version, cloud_update_time, device_ack_time, binary_data " +
+
+    private static final String SQL_LIST = "SELECT version, cloud_update_time, device_ack_time, binary_data " +
             "FROM device_configs WHERE device_id = #{deviceId} and tenant_id =  #{tenantId} ORDER BY version DESC LIMIT #{limit}";
-    private final String SQL_DELETE_MIN_VERSION = "DELETE FROM device_configs WHERE device_id = #{deviceId} and tenant_id =  #{tenantId} " +
+    private static final String SQL_DELETE_MIN_VERSION = "DELETE FROM device_configs WHERE device_id = #{deviceId} and tenant_id =  #{tenantId} " +
             "and version = (SELECT MIN(version) from  device_configs WHERE device_id = #{deviceId} and tenant_id =  #{tenantId})  RETURNING version";
-    private final String SQL_FIND_TOTAL_AND_MAX_VERSION = "SELECT COALESCE(COUNT(*), 0) as total, COALESCE(MAX(version), 0) as max_version from device_configs " +
+    private static final String SQL_FIND_TOTAL_AND_MAX_VERSION = "SELECT COALESCE(COUNT(*), 0) as total, COALESCE(MAX(version), 0) as max_version from device_configs " +
             "WHERE device_id = #{deviceId} and tenant_id =  #{tenantId}";
-
-    private final String SQL_UPDATE_DEVICE_ACK_TIME = "UPDATE device_configs SET device_ack_time = #{deviceAckTime} " +
+    private static final String SQL_UPDATE_DEVICE_ACK_TIME = "UPDATE device_configs SET device_ack_time = #{deviceAckTime} " +
             "WHERE tenant_id = #{tenantId} AND device_id = #{deviceId} AND version = #{version}";
-
-    private final String SQL_UPDATE_DEVICE_ACK_TIME_FOR_MAX_VERSION = "UPDATE device_configs SET device_ack_time = #{deviceAckTime} " +
+    private static final String SQL_UPDATE_DEVICE_ACK_TIME_FOR_MAX_VERSION = "UPDATE device_configs SET device_ack_time = #{deviceAckTime} " +
             "WHERE tenant_id = #{tenantId} AND device_id = #{deviceId} AND version = " +
             "(SELECT MAX(version) FROM device_configs WHERE tenant_id = #{tenantId} AND device_id = #{deviceId})";
-    private final String SQL_FIND_DEVICE_LATEST_CONFIG = "SELECT * FROM device_configs " +
+    private static final String SQL_FIND_DEVICE_LATEST_CONFIG = "SELECT * FROM device_configs " +
             " WHERE tenant_id = #{tenantId} AND device_id = #{deviceId} AND version = #{version}";
-
-    private final String deviceIdKey = "deviceId";
-    private final String tenantIdKey = "tenantId";
-    private final String versionKey = "version";
-    private final int MAX_LIMIT = 10;
+    private static final String SQL_INSERT = "INSERT INTO device_configs (version, tenant_id, device_id, cloud_update_time, device_ack_time, binary_data) " +
+            "VALUES (#{version}, #{tenantId}, #{deviceId}, #{cloudUpdateTime}, #{deviceAckTime}, #{binaryData}) RETURNING version";
+    private static final String DEVICE_ACK_TIME_CAPTION = "deviceAckTime";
+    private static final String DEVICE_ID_CAPTION = "deviceId";
+    private static final String TENANT_ID_CAPTION = "tenantId";
+    private static final String VERSION_CAPTION = "version";
+    private static final int MAX_LIMIT = 10;
     private final Logger log = LoggerFactory.getLogger(DeviceConfigRepositoryImpl.class);
 
     private final DatabaseService db;
@@ -97,7 +96,7 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
         return SqlTemplate
                 .forQuery(sqlConnection, SQL_FIND_TOTAL_AND_MAX_VERSION)
                 .mapTo(ROW_MAPPER)
-                .execute(Map.of(deviceIdKey, deviceId, tenantIdKey, tenantId)).map(rowSet -> {
+                .execute(Map.of(DEVICE_ID_CAPTION, deviceId, TENANT_ID_CAPTION, tenantId)).map(rowSet -> {
                     final RowIterator<Pair<Integer, Integer>> iterator = rowSet.iterator();
                     return iterator.next();
                 });
@@ -120,7 +119,7 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
                                     return SqlTemplate
                                             .forQuery(sqlConnection, SQL_LIST)
                                             .mapTo(DeviceConfig.class)
-                                            .execute(Map.of(deviceIdKey, deviceId, tenantIdKey, tenantId, "limit", queryLimit))
+                                            .execute(Map.of(DEVICE_ID_CAPTION, deviceId, TENANT_ID_CAPTION, tenantId, "limit", queryLimit))
                                             .map(rowSet -> {
                                                 final List<DeviceConfig> configs = new ArrayList<>();
                                                 rowSet.forEach(configs::add);
@@ -142,24 +141,20 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
      * @return A Future of the created DeviceConfigEntity
      */
     private Future<DeviceConfigEntity> insert(final SqlConnection sqlConnection, final DeviceConfigEntity entity) {
-//        final Map<String, Object> parameters = new HashMap<>();
-//        parameters.put("deviceId", entity.getDeviceId());
-//        parameters.put("tenantId", entity.getTenantId());
-//        parameters.put("deviceAckTime", entity.getDeviceAckTime());
-
         return SqlTemplate
                 .forUpdate(sqlConnection, SQL_INSERT)
                 .mapFrom(DeviceConfigEntity.class)
                 .mapTo(DeviceConfigEntity.class)
                 .execute(entity)
                 .map(rowSet -> {
-                    final RowIterator<DeviceConfigEntity> iterator = rowSet.iterator();
-                    if (iterator.hasNext()) {
-                        entity.setVersion(iterator.next().getVersion());
-                        return entity;
-                    } else {
+                    if (rowSet.rowCount() == 0) {
                         throw new IllegalStateException(String.format("Can't create device config: %s", entity));
                     }
+
+                    final RowIterator<DeviceConfigEntity> iterator = rowSet.iterator();
+                    entity.setVersion(iterator.next().getVersion());
+                    return entity;
+
                 })
                 .onSuccess(success -> log.info("Device config created successfully: {}", success.toString()))
                 .onFailure(throwable -> log.error(throwable.getMessage()));
@@ -175,7 +170,7 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
      */
 
     private Future<Integer> deleteMinVersion(final SqlConnection sqlConnection, final DeviceConfigEntity entity) {
-        final RowMapper<Integer> ROW_MAPPER = row -> row.getInteger(versionKey);
+        final RowMapper<Integer> ROW_MAPPER = row -> row.getInteger(VERSION_CAPTION);
         return SqlTemplate
                 .forQuery(sqlConnection, SQL_DELETE_MIN_VERSION)
                 .mapFrom(DeviceConfigEntity.class)
@@ -224,14 +219,14 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
     @Override
     public Future<Void> updateDeviceAckTime(final DeviceConfigAckResponse ack, final String deviceAckTime) {
         final Map<String, Object> parameters = new HashMap<>();
-        parameters.put(deviceIdKey, ack.getDeviceId());
-        parameters.put(tenantIdKey, ack.getTenantId());
-        parameters.put("deviceAckTime", deviceAckTime);
+        parameters.put(DEVICE_ID_CAPTION, ack.getDeviceId());
+        parameters.put(TENANT_ID_CAPTION, ack.getTenantId());
+        parameters.put(DEVICE_ACK_TIME_CAPTION, deviceAckTime);
         final String sqlCommand;
         if (Strings.isNullOrEmpty(ack.getVersion())) {
             sqlCommand = SQL_UPDATE_DEVICE_ACK_TIME_FOR_MAX_VERSION;
         } else {
-            parameters.put(versionKey, Integer.parseInt(ack.getVersion()));
+            parameters.put(VERSION_CAPTION, Integer.parseInt(ack.getVersion()));
             sqlCommand = SQL_UPDATE_DEVICE_ACK_TIME;
         }
 
@@ -265,9 +260,9 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
                                         return Future.failedFuture(new NoSuchElementException("No configs are found for device %s and tenant %s".formatted(deviceId, tenantId)));
                                     }
                                     final Map<String, Object> parameters = new HashMap<>();
-                                    parameters.put(deviceIdKey, deviceId);
-                                    parameters.put(tenantIdKey, tenantId);
-                                    parameters.put(versionKey, maxVersion);
+                                    parameters.put(DEVICE_ID_CAPTION, deviceId);
+                                    parameters.put(TENANT_ID_CAPTION, tenantId);
+                                    parameters.put(VERSION_CAPTION, maxVersion);
 
                                     return SqlTemplate
                                             .forQuery(sqlConnection, SQL_FIND_DEVICE_LATEST_CONFIG)

@@ -18,6 +18,7 @@ package org.eclipse.hono.communication.core.utils;
 
 import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -32,7 +33,6 @@ public abstract class ResponseUtils {
     private static final String APPLICATION_JSON_TYPE = "application/json";
 
     private ResponseUtils() {
-        // avoid instantiation
     }
 
     /**
@@ -44,35 +44,11 @@ public abstract class ResponseUtils {
     public static void successResponse(final RoutingContext rc,
                                        final Object response) {
         rc.response()
-                .setStatusCode(200)
+                .setStatusCode(HttpResponseStatus.OK.code())
                 .putHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON_TYPE)
                 .end(Json.encodePrettily(response));
     }
 
-    /**
-     * Build success response using 201 Created as its status code and response  object as body.
-     *
-     * @param rc       Routing context
-     * @param response Response body
-     */
-    public static void createdResponse(final RoutingContext rc,
-                                       final Object response) {
-        rc.response()
-                .setStatusCode(201)
-                .putHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON_TYPE)
-                .end(Json.encodePrettily(response));
-    }
-
-    /**
-     * Build success response using 204 No Content as its status code and no response body.
-     *
-     * @param rc Routing context
-     */
-    public static void noContentResponse(final RoutingContext rc) {
-        rc.response()
-                .setStatusCode(204)
-                .end();
-    }
 
     /**
      * Build error response using 400 Bad Request, 404 Not Found or 500 Internal Server Error
@@ -92,15 +68,15 @@ public abstract class ResponseUtils {
                 || error instanceof BadRequestException) {
 
             // Bad Request
-            status = 400;
+            status = HttpResponseStatus.BAD_REQUEST.code();
             message = error.getMessage();
         } else if (error instanceof DeviceNotFoundException) {
             // Not Found
-            status = 404;
+            status = HttpResponseStatus.NOT_FOUND.code();
             message = error.getMessage();
         } else {
             // Internal Server Error
-            status = 500;
+            status = HttpResponseStatus.INTERNAL_SERVER_ERROR.code();
             if (error != null) {
                 message = String.format("Internal Server Error: %s", error.getMessage());
             } else {
