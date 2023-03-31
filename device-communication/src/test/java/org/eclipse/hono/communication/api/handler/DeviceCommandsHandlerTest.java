@@ -17,7 +17,12 @@
 package org.eclipse.hono.communication.api.handler;
 
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import org.eclipse.hono.communication.api.config.DeviceCommandConstants;
 import org.eclipse.hono.communication.api.config.DeviceConfigsConstants;
@@ -35,7 +40,6 @@ import io.vertx.ext.web.RequestBody;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.Operation;
 import io.vertx.ext.web.openapi.RouterBuilder;
-
 
 class DeviceCommandsHandlerTest {
 
