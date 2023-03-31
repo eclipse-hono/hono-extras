@@ -87,7 +87,6 @@ definitions:
     required:
       - binaryData
     type: object
-
   ListDeviceConfigVersionsResponse:
     description: A list of a device config versions
     example:
@@ -100,6 +99,39 @@ definitions:
           $ref: "#/definitions/DeviceConfig"
         type: array
     title: Root Type for ListDeviceConfigVersionsResponse
+    type: object
+  DeviceState:
+    description: The device state.
+    example:
+      binaryData: string
+      updateTime: string
+    properties:
+      binaryData:
+        description: >-
+          string (bytes format) The device state data in string
+          base64-encoded format.
+        type: string
+      updateTime:
+        description: >-
+          String (Timestamp format) [Output only] The time at which this
+          state version was updated. This timestamp is
+          set by the server. Timestamp in  RFC3339 UTC "Zulu" format, accurate
+          to nanoseconds.  Example: "2014-10-02T15:01:23.045123456Z".
+        type: string
+    title: Root Type for DeviceState
+    type: object
+  ListDeviceStatesResponse:
+    description: A list of a device states.
+    example:
+      deviceStates:
+        - object: DeviceState
+    properties:
+      deviceStates:
+        description: List of DeviceState objects.
+        items:
+          $ref: "#/definitions/DeviceState"
+        type: array
+    title: Root Type for ListDeviceStatesResponse
     type: object
 paths:
   "/commands/{tenantid}/{deviceid}":
@@ -203,3 +235,42 @@ paths:
       summary: Modify cloud to device config
       tags:
         - CONFIGS
+  "/states/{tenantid}/{deviceid}":
+    get:
+      description: >-
+        Lists the last few versions of the device state in descending
+        order (i.e.: newest first).
+      operationId: listStates
+      parameters:
+        - description: >-
+            The number of states to list. States are listed in decreasing
+            order of the state id. The maximum number of states saved in
+            Database is 10. If this value is zero, it will return all the
+            states available.
+          in: query
+          maximum: 10
+          minimum: 0
+          name: numStates
+          required: false
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Lists the device states
+          schema:
+            $ref: "#/definitions/ListDeviceStatesResponse"
+      summary: List the device states
+      tags:
+        - STATES
+    parameters:
+      - description: Unique registry id
+        in: path
+        name: tenantid
+        required: true
+        type: string
+      - description: Unique device id
+        in: path
+        name: deviceid
+        required: true
+        type: string

@@ -14,15 +14,15 @@
  *
  */
 
+package org.eclipse.hono.communication.api.service.communication;
 
-CREATE TABLE IF NOT EXISTS device_configs
-(
-    version           INT          not null,
-    tenant_id         VARCHAR(100) not null,
-    device_id         VARCHAR(100) not null,
-    cloud_update_time VARCHAR(100) not null,
-    device_ack_time   VARCHAR(100),
-    binary_data       VARCHAR      not null,
+/**
+ * Internal topic manager interface.
+ */
+public interface InternalTopicManager {
 
-    PRIMARY KEY (version, tenant_id, device_id)
-);
+    /**
+     * Initializes topics and subscriptions.
+     */
+    void initPubSubTopicsAndSubscriptions();
+}

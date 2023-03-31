@@ -14,15 +14,22 @@
  *
  */
 
+package org.eclipse.hono.communication.api.handler;
 
-CREATE TABLE IF NOT EXISTS device_configs
-(
-    version           INT          not null,
-    tenant_id         VARCHAR(100) not null,
-    device_id         VARCHAR(100) not null,
-    cloud_update_time VARCHAR(100) not null,
-    device_ack_time   VARCHAR(100),
-    binary_data       VARCHAR      not null,
 
-    PRIMARY KEY (version, tenant_id, device_id)
-);
+import com.google.cloud.pubsub.v1.AckReplyConsumer;
+import com.google.pubsub.v1.PubsubMessage;
+
+/**
+ * State topic event handler interface.
+ */
+public interface StateTopicEventHandler {
+
+    /**
+     * Handle incoming messages on state topics.
+     *
+     * @param pubsubMessage The message to handle.
+     * @param consumer The message consumer.
+     */
+    void onStateMessage(PubsubMessage pubsubMessage, AckReplyConsumer consumer);
+}

@@ -21,13 +21,11 @@ import javax.inject.Singleton;
 import org.eclipse.hono.util.EventConstants;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-
 /**
  * Configs for internal communication service.
  */
 @Singleton
 public class InternalMessagingConfig {
-
 
     @ConfigProperty(name = "app.projectId")
     String projectId;
@@ -42,11 +40,14 @@ public class InternalMessagingConfig {
     @ConfigProperty(name = "app.internalMessaging.message.attributeKeys.contentTypeKey")
     String contentTypeKey;
 
-
     //Event
     @ConfigProperty(name = "app.internalMessaging.event.topicFormat")
     String eventTopicFormat;
 
+
+    // State
+    @ConfigProperty(name = "app.internalMessaging.state.topicFormat")
+    String stateTopicFormat;
 
     // Config
     @ConfigProperty(name = "app.internalMessaging.config.ackTopic")
@@ -98,5 +99,7 @@ public class InternalMessagingConfig {
         return EventConstants.CONTENT_TYPE_EMPTY_NOTIFICATION;
     }
 
-
+    public String getStateTopicFormat() {
+        return stateTopicFormat;
+    }
 }

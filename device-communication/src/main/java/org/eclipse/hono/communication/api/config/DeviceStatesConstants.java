@@ -17,28 +17,26 @@
 package org.eclipse.hono.communication.api.config;
 
 /**
- * Device configs constant values.
+ * Device states constant values.
  */
-public final class DeviceConfigsConstants {
+public final class DeviceStatesConstants {
 
     public static ApiCommonConstants API_COMMON;
     /**
-     * OpenApi GET device configs operation id.
+     * OpenApi GET device states operation id.
      */
-    public static final String LIST_CONFIG_VERSIONS_OP_ID = "listConfigVersions";
+    public static final String LIST_STATES_OP_ID = "listStates";
     /**
-     * Path parameter name for number of versions.
+     * Path parameter name for number of states.
      */
-    public static final String NUM_VERSION_QUERY_PARAMS = "numVersions";
+
+    public static final String NUM_STATES_QUERY_PARAMS = "numStates";
     /**
      * Sql migrations script path.
      */
-    public static final String CREATE_SQL_SCRIPT_PATH = "db/v1_create_config_table.sql";
-    /**
-     * OpenApi POST device configs operation id.
-     */
-    public static final String POST_MODIFY_DEVICE_CONFIG_OP_ID = "modifyCloudToDeviceConfig";
+    public static final String CREATE_SQL_SCRIPT_PATH = "db/v1_create_state_table.sql";
 
-    private DeviceConfigsConstants() {
+    private DeviceStatesConstants() {
+        // avoid instantiation
     }
 }

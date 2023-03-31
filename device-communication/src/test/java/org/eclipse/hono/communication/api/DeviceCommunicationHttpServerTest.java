@@ -17,14 +17,22 @@
 package org.eclipse.hono.communication.api;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
-
 import org.eclipse.hono.communication.api.handler.DeviceCommandHandler;
 import org.eclipse.hono.communication.api.service.VertxHttpHandlerManagerService;
+import org.eclipse.hono.communication.api.service.communication.InternalTopicManager;
 import org.eclipse.hono.communication.api.service.database.DatabaseSchemaCreator;
 import org.eclipse.hono.communication.api.service.database.DatabaseSchemaCreatorImpl;
 import org.eclipse.hono.communication.api.service.database.DatabaseService;
@@ -36,7 +44,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.quarkus.runtime.Quarkus;
@@ -54,7 +61,6 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.ext.web.validation.BadRequestException;
 
-
 class DeviceCommunicationHttpServerTest {
 
     private ApplicationConfig appConfigsMock;
@@ -69,6 +75,7 @@ class DeviceCommunicationHttpServerTest {
     private HttpServerRequest httpServerRequestMock;
     private BadRequestException badRequestExceptionMock;
     private DatabaseSchemaCreator databaseSchemaCreatorMock;
+    private InternalTopicManager internalTopicManager;
     private Route routeMock;
     private JsonObject jsonObjMock;
 
@@ -91,12 +98,13 @@ class DeviceCommunicationHttpServerTest {
         jsonObjMock = mock(JsonObject.class);
         dbMock = mock(DatabaseServiceImpl.class);
         databaseSchemaCreatorMock = mock(DatabaseSchemaCreatorImpl.class);
+        internalTopicManager = mock(InternalTopicManager.class);
         routeMock = mock(Route.class);
         deviceCommunicationHttpServer = new DeviceCommunicationHttpServer(appConfigsMock,
                 vertxMock,
                 handlerServiceMock,
                 dbMock,
-                databaseSchemaCreatorMock);
+                databaseSchemaCreatorMock, internalTopicManager);
 
     }
 
@@ -117,7 +125,7 @@ class DeviceCommunicationHttpServerTest {
                 dbMock,
                 serverConfigMock,
                 databaseSchemaCreatorMock,
-                routeMock);
+                routeMock, internalTopicManager);
     }
 
 
@@ -182,6 +190,7 @@ class DeviceCommunicationHttpServerTest {
                     verify(routeMock, times(2)).handler(any());
                     verify(routerMock, times(1)).route(anyString());
                     verify(routeMock, times(1)).subRouter(any());
+                    verify(internalTopicManager).initPubSubTopicsAndSubscriptions();
                     quarkusMockedStatic.verify(Quarkus::waitForExit, times(1));
                     routerMockedStatic.verifyNoMoreInteractions();
                     mockedRouterBuilderStatic.verifyNoMoreInteractions();
@@ -217,6 +226,7 @@ class DeviceCommunicationHttpServerTest {
                 verify(handlerServiceMock, times(1)).getAvailableHandlerServices();
                 verify(appConfigsMock, times(1)).getServerConfig();
                 verify(serverConfigMock, times(1)).getOpenApiFilePath();
+                verify(internalTopicManager).initPubSubTopicsAndSubscriptions();
                 quarkusMockedStatic.verify(() -> Quarkus.asyncExit(-1), times(1));
                 quarkusMockedStatic.verify(Quarkus::waitForExit, times(1));
                 quarkusMockedStatic.verifyNoMoreInteractions();
@@ -282,6 +292,7 @@ class DeviceCommunicationHttpServerTest {
                     verify(routeMock, times(2)).handler(any());
                     verify(routeMock, times(1)).subRouter(any());
                     verify(routerMock, times(1)).route(anyString());
+                    verify(internalTopicManager).initPubSubTopicsAndSubscriptions();
                     routerMockedStatic.verify(() -> Router.router(vertxMock), times(1));
                     quarkusMockedStatic.verify(Quarkus::waitForExit, times(1));
                     mockedRouterBuilderStatic.verifyNoMoreInteractions();

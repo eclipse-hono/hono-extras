@@ -16,14 +16,19 @@
 
 package org.eclipse.hono.communication.api.service.command;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
-
 import org.eclipse.hono.communication.api.data.DeviceCommandRequest;
 import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
-import org.eclipse.hono.communication.api.mapper.DeviceConfigMapper;
 import org.eclipse.hono.communication.api.repository.DeviceRepository;
 import org.eclipse.hono.communication.api.service.communication.InternalMessaging;
 import org.eclipse.hono.communication.api.service.database.DatabaseService;
@@ -36,15 +41,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.vertx.core.Future;
-import io.vertx.pgclient.PgPool;
-
 
 class DeviceCommandServiceImplTest {
 
     private final DeviceRepository repositoryMock;
     private final DatabaseService dbMock;
-    private final PgPool poolMock;
-    private final DeviceConfigMapper mapperMock;
     private final DeviceCommandServiceImpl deviceCommandService;
     private final InternalMessagingConfig communicationConfig;
     private final InternalMessaging internalCommunication;
@@ -54,8 +55,6 @@ class DeviceCommandServiceImplTest {
     DeviceCommandServiceImplTest() {
         this.repositoryMock = mock(DeviceRepository.class);
         this.dbMock = mock(DatabaseServiceImpl.class);
-        this.mapperMock = mock(DeviceConfigMapper.class);
-        this.poolMock = mock(PgPool.class);
         this.communicationConfig = mock(InternalMessagingConfig.class);
         this.internalCommunication = mock(InternalMessaging.class);
         this.databaseConfig = mock(DatabaseConfig.class);
@@ -100,7 +99,7 @@ class DeviceCommandServiceImplTest {
     }
 
     @Test
-    public void postCommand_whenDeviceDoesNotExist_shouldThrowDeviceNotFoundException() throws Exception {
+    public void postCommand_whenDeviceDoesNotExist_shouldThrowDeviceNotFoundException() {
         final String deviceId = "device123";
         final String tenantId = "tenant123";
         final DeviceCommandRequest commandRequest = new DeviceCommandRequest();

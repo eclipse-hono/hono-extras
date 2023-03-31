@@ -21,6 +21,7 @@ import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 
 import org.eclipse.hono.communication.api.config.DeviceConfigsConstants;
+import org.eclipse.hono.communication.api.config.DeviceStatesConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.sqlclient.templates.SqlTemplate;
 
 /**
- * Creates all Database tables if they are not exist.
+ * Creates all Database tables if they do not exist.
  */
 
 @ApplicationScoped
@@ -56,18 +57,17 @@ public class DatabaseSchemaCreatorImpl implements DatabaseSchemaCreator {
 
     @Override
     public void createDBTables() {
-        createTables();
+        createTable(DeviceConfigsConstants.CREATE_SQL_SCRIPT_PATH, "device_config");
+        createTable(DeviceStatesConstants.CREATE_SQL_SCRIPT_PATH, "device_status");
     }
 
 
-    private void createTables() {
-        log.info("Running database migration from file {}", DeviceConfigsConstants.CREATE_SQL_SCRIPT_PATH);
+    private void createTable(final String filePath, final String tableName) {
+        log.info("Running database migration from file {}", filePath);
 
         final Promise<Buffer> loadScriptTracker = Promise.promise();
-        vertx.fileSystem().readFile(DeviceConfigsConstants.CREATE_SQL_SCRIPT_PATH, loadScriptTracker);
-        createTableIfNotExist(loadScriptTracker, "device_config");
-
-
+        vertx.fileSystem().readFile(filePath, loadScriptTracker);
+        createTableIfNotExist(loadScriptTracker, tableName);
     }
 
     private void createTableIfNotExist(final Promise<Buffer> loadScriptTracker, final String tableName) {

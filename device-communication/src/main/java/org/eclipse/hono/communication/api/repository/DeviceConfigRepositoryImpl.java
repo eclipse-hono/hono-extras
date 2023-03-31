@@ -85,7 +85,6 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
     public DeviceConfigRepositoryImpl(final DatabaseService db,
                                       final DeviceRepository deviceRepository) {
 
-
         this.db = db;
         this.deviceRepository = deviceRepository;
     }
@@ -171,7 +170,7 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
      */
 
     private Future<Integer> deleteMinVersion(final SqlConnection sqlConnection, final DeviceConfigEntity entity) {
-        final RowMapper<Integer> ROW_MAPPER = row -> row.getInteger("version");
+        final RowMapper<Integer> ROW_MAPPER = row -> row.getInteger(VERSION_CAPTION);
         return SqlTemplate
                 .forQuery(sqlConnection, SQL_DELETE_MIN_VERSION)
                 .mapFrom(DeviceConfigEntity.class)
@@ -227,7 +226,7 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
         if (Strings.isNullOrEmpty(ack.getVersion())) {
             sqlCommand = SQL_UPDATE_DEVICE_ACK_TIME_FOR_MAX_VERSION;
         } else {
-            parameters.put("version", Integer.parseInt(ack.getVersion()));
+            parameters.put(VERSION_CAPTION, Integer.parseInt(ack.getVersion()));
             sqlCommand = SQL_UPDATE_DEVICE_ACK_TIME;
         }
 

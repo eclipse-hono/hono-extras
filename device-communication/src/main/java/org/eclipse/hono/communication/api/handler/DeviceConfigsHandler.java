@@ -64,8 +64,8 @@ public class DeviceConfigsHandler implements HttpEndpointHandler {
      * @return Future of DeviceConfig
      */
     public Future<DeviceConfig> handleModifyCloudToDeviceConfig(final RoutingContext routingContext) {
-        final var tenantId = routingContext.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
-        final var deviceId = routingContext.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
+        final var tenantId = routingContext.pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS);
+        final var deviceId = routingContext.pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS);
 
         final DeviceConfigRequest deviceConfig = routingContext.body()
                 .asJsonObject()
@@ -86,8 +86,8 @@ public class DeviceConfigsHandler implements HttpEndpointHandler {
         final var numVersions = routingContext.queryParams().get(DeviceConfigsConstants.NUM_VERSION_QUERY_PARAMS);
 
         final var limit = numVersions == null ? 0 : Integer.parseInt(numVersions);
-        final var tenantId = routingContext.pathParam(DeviceConfigsConstants.TENANT_PATH_PARAMS);
-        final var deviceId = routingContext.pathParam(DeviceConfigsConstants.DEVICE_PATH_PARAMS);
+        final var tenantId = routingContext.pathParam(DeviceConfigsConstants.API_COMMON.TENANT_PATH_PARAMS);
+        final var deviceId = routingContext.pathParam(DeviceConfigsConstants.API_COMMON.DEVICE_PATH_PARAMS);
 
         return configService.listAll(deviceId, tenantId, limit)
                 .onSuccess(result -> ResponseUtils.successResponse(routingContext, result))

@@ -16,7 +16,11 @@
 
 package org.eclipse.hono.communication.api.service.database;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import org.eclipse.hono.communication.core.app.DatabaseConfig;
 import org.eclipse.hono.communication.core.utils.DbUtils;
@@ -27,7 +31,6 @@ import org.mockito.MockedStatic;
 
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgPool;
-
 
 class DatabaseServiceImplTest {
 

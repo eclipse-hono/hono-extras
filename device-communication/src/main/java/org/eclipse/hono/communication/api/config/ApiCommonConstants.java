@@ -14,15 +14,23 @@
  *
  */
 
+package org.eclipse.hono.communication.api.config;
 
-CREATE TABLE IF NOT EXISTS device_configs
-(
-    version           INT          not null,
-    tenant_id         VARCHAR(100) not null,
-    device_id         VARCHAR(100) not null,
-    cloud_update_time VARCHAR(100) not null,
-    device_ack_time   VARCHAR(100),
-    binary_data       VARCHAR      not null,
+/**
+ * Device constant values.
+ */
+public final class ApiCommonConstants {
 
-    PRIMARY KEY (version, tenant_id, device_id)
-);
+    /**
+     * Path parameter name for tenantId.
+     */
+    public static final String TENANT_PATH_PARAMS = "tenantid";
+    /**
+     * Path parameter name for deviceId.
+     */
+    public static final String DEVICE_PATH_PARAMS = "deviceid";
+
+    private ApiCommonConstants() {
+        // avoid instantiation
+    }
+}

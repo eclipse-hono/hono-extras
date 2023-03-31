@@ -29,15 +29,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-
-import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
-import org.eclipse.hono.client.pubsub.PubSubMessageHelper;
 import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigAckResponse;
 import org.eclipse.hono.communication.api.data.DeviceConfigEntity;
@@ -47,15 +43,11 @@ import org.eclipse.hono.communication.api.repository.DeviceConfigRepository;
 import org.eclipse.hono.communication.api.repository.DeviceConfigRepositoryImpl;
 import org.eclipse.hono.communication.api.service.communication.InternalMessaging;
 import org.eclipse.hono.communication.core.app.InternalMessagingConfig;
-import org.eclipse.hono.notification.deviceregistry.LifecycleChange;
-import org.eclipse.hono.notification.deviceregistry.TenantChangeNotification;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
@@ -63,7 +55,6 @@ import com.google.pubsub.v1.PubsubMessage;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-
 
 class DeviceConfigServiceImplTest {
 
@@ -77,8 +68,7 @@ class DeviceConfigServiceImplTest {
     private final Context contextMock;
     private final AckReplyConsumer ackReplyConsumerMock;
     private final ByteString byteStringMock;
-    private final Vertx vertxMock;
-    private DeviceConfigServiceImpl deviceConfigService;
+    private final DeviceConfigServiceImpl deviceConfigService;
 
     DeviceConfigServiceImplTest() {
         this.repositoryMock = mock(DeviceConfigRepositoryImpl.class);
@@ -89,36 +79,7 @@ class DeviceConfigServiceImplTest {
         this.ackReplyConsumerMock = mock(AckReplyConsumer.class);
         this.contextMock = mock(Context.class);
         this.byteStringMock = mock(ByteString.class);
-        this.vertxMock = mock(Vertx.class);
-
-
-    }
-
-    void init_with_success_subscription() {
-        try (MockedStatic<Vertx> mockedVertx = mockStatic(Vertx.class)) {
-            mockedVertx.when(Vertx::currentContext).thenReturn(contextMock);
-            mockedVertx.verifyNoMoreInteractions();
-            when(contextMock.executeBlocking(any())).thenReturn(Future.succeededFuture());
-            when(repositoryMock.listTenants()).thenReturn(Future.succeededFuture(List.of("1", "2")));
-            when(communicationConfigMock.getEventTopicFormat()).thenReturn("%s.test");
-            doNothing().when(internalCommunicationMock).subscribe(anyString(), any());
-
-            this.deviceConfigService = createServiceObj();
-
-            verify(repositoryMock).listTenants();
-            verify(contextMock).executeBlocking(any());
-            verify(internalCommunicationMock, times(1)).subscribe(anyString(), any());
-        }
-
-    }
-
-    void init_with_failed_subscription() {
-        when(repositoryMock.listTenants()).thenReturn(Future.failedFuture(new RuntimeException()));
-
         this.deviceConfigService = createServiceObj();
-
-        verify(repositoryMock).listTenants();
-        verify(internalCommunicationMock, times(1)).subscribe(anyString(), any());
 
     }
 
@@ -126,7 +87,7 @@ class DeviceConfigServiceImplTest {
         return new DeviceConfigServiceImpl(repositoryMock,
                 mapperMock,
                 communicationConfigMock,
-                internalCommunicationMock, vertxMock);
+                internalCommunicationMock);
     }
 
     @AfterEach
@@ -138,51 +99,51 @@ class DeviceConfigServiceImplTest {
                 pubsubMessageMock,
                 ackReplyConsumerMock,
                 byteStringMock,
-                contextMock,
-                vertxMock);
+                contextMock);
     }
 
     @Test
     void modifyCloudToDeviceConfig_success() throws Exception {
-        init_with_success_subscription();
-        final var deviceConfigRequest = new DeviceConfigRequest();
-        final var deviceConfigEntity = new DeviceConfigEntity();
-        deviceConfigEntity.setDeviceId("id");
-        deviceConfigEntity.setTenantId("id");
-        final var deviceConfigEntityResponse = new DeviceConfig();
-        deviceConfigEntityResponse.setVersion("1");
+        try (MockedStatic<Vertx> vertxMockedStatic = mockStatic(Vertx.class)) {
+            final var deviceConfigRequest = new DeviceConfigRequest();
+            final var deviceConfigEntity = new DeviceConfigEntity();
+            deviceConfigEntity.setDeviceId("id");
+            deviceConfigEntity.setTenantId("id");
+            final var deviceConfigEntityResponse = new DeviceConfig();
+            deviceConfigEntityResponse.setVersion("1");
 
-        when(repositoryMock.createNew(any())).thenReturn(Future.succeededFuture(deviceConfigEntity));
-        when(mapperMock.configRequestToDeviceConfigEntity(deviceConfigRequest)).thenReturn(deviceConfigEntity);
-        when(mapperMock.deviceConfigEntityToConfig(deviceConfigEntity)).thenReturn(deviceConfigEntityResponse);
-        when(mapperMock.configRequestToDeviceConfigEntity(any())).thenReturn(deviceConfigEntity);
-        when(communicationConfigMock.getConfigTopicFormat()).thenReturn("%s.config");
-        when(communicationConfigMock.getConfigAckTopicFormat()).thenReturn("%s.ack");
-        when(communicationConfigMock.getDeviceIdKey()).thenReturn("device");
-        when(communicationConfigMock.getTenantIdKey()).thenReturn("tenant");
-        when(communicationConfigMock.getConfigVersionIdKey()).thenReturn("version");
-        when(communicationConfigMock.getConfigTopicFormat()).thenReturn("version");
+            when(repositoryMock.createNew(any())).thenReturn(Future.succeededFuture(deviceConfigEntity));
+            when(mapperMock.configRequestToDeviceConfigEntity(deviceConfigRequest)).thenReturn(deviceConfigEntity);
+            when(mapperMock.deviceConfigEntityToConfig(deviceConfigEntity)).thenReturn(deviceConfigEntityResponse);
+            when(mapperMock.configRequestToDeviceConfigEntity(any())).thenReturn(deviceConfigEntity);
+            when(communicationConfigMock.getConfigTopicFormat()).thenReturn("%s.config");
+            when(communicationConfigMock.getConfigAckTopicFormat()).thenReturn("%s.ack");
+            when(communicationConfigMock.getDeviceIdKey()).thenReturn("device");
+            when(communicationConfigMock.getTenantIdKey()).thenReturn("tenant");
+            when(communicationConfigMock.getConfigVersionIdKey()).thenReturn("version");
+            when(communicationConfigMock.getConfigTopicFormat()).thenReturn("version");
+            vertxMockedStatic.when(Vertx::currentContext).thenReturn(contextMock);
+            doNothing().when(internalCommunicationMock).publish(anyString(), anyString(), any());
 
-        doNothing().when(internalCommunicationMock).publish(anyString(), anyString(), any());
+            final var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
 
-        final var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
-
-        verify(repositoryMock).createNew(any());
-        verify(communicationConfigMock).getConfigVersionIdKey();
-        verify(communicationConfigMock).getTenantIdKey();
-        verify(communicationConfigMock).getDeviceIdKey();
-        verify(internalCommunicationMock, times(1)).publish(anyString(), anyString(), any());
-        verify(internalCommunicationMock, times(2)).subscribe(anyString(), any());
-        verify(mapperMock, times(1)).configRequestToDeviceConfigEntity(deviceConfigRequest);
-        verify(mapperMock, times(1)).deviceConfigEntityToConfig(deviceConfigEntity);
-        verify(communicationConfigMock).getConfigTopicFormat();
-        verify(communicationConfigMock).getConfigAckTopicFormat();
-        Assertions.assertTrue(results.succeeded());
+            verify(repositoryMock).createNew(any());
+            verify(communicationConfigMock).getConfigVersionIdKey();
+            verify(communicationConfigMock).getTenantIdKey();
+            verify(communicationConfigMock).getDeviceIdKey();
+            verify(mapperMock, times(1)).configRequestToDeviceConfigEntity(deviceConfigRequest);
+            verify(mapperMock, times(1)).deviceConfigEntityToConfig(deviceConfigEntity);
+            verify(communicationConfigMock).getConfigTopicFormat();
+            verify(communicationConfigMock).getConfigAckTopicFormat();
+            verify(contextMock).executeBlocking(any());
+            vertxMockedStatic.verify(Vertx::currentContext);
+            vertxMockedStatic.verifyNoMoreInteractions();
+            Assertions.assertTrue(results.succeeded());
+        }
     }
 
     @Test
     void modifyCloudToDeviceConfig_failure() {
-        init_with_failed_subscription();
         final var deviceConfigRequest = new DeviceConfigRequest();
         final var deviceConfigEntity = new DeviceConfigEntity();
 
@@ -198,57 +159,58 @@ class DeviceConfigServiceImplTest {
 
     @Test
     void modifyCloudToDeviceConfig_publish_failure() {
-        init_with_success_subscription();
-        final var deviceConfigRequest = new DeviceConfigRequest();
-        final var deviceConfigEntity = new DeviceConfigEntity();
-        deviceConfigEntity.setDeviceId("id");
-        deviceConfigEntity.setTenantId("id");
-        final var deviceConfigEntityResponse = new DeviceConfig();
-        deviceConfigEntityResponse.setVersion("1");
+        try (MockedStatic<Vertx> vertxMockedStatic = mockStatic(Vertx.class)) {
+            final var deviceConfigRequest = new DeviceConfigRequest();
+            final var deviceConfigEntity = new DeviceConfigEntity();
+            deviceConfigEntity.setDeviceId("id");
+            deviceConfigEntity.setTenantId("id");
+            final var deviceConfigEntityResponse = new DeviceConfig();
+            deviceConfigEntityResponse.setVersion("1");
 
-        when(repositoryMock.createNew(any())).thenReturn(Future.succeededFuture(deviceConfigEntity));
-        when(mapperMock.configRequestToDeviceConfigEntity(deviceConfigRequest)).thenReturn(deviceConfigEntity);
-        when(mapperMock.deviceConfigEntityToConfig(deviceConfigEntity)).thenReturn(deviceConfigEntityResponse);
-        when(mapperMock.configRequestToDeviceConfigEntity(any())).thenReturn(deviceConfigEntity);
-        when(communicationConfigMock.getConfigTopicFormat()).thenReturn("%s.config");
-        when(communicationConfigMock.getConfigAckTopicFormat()).thenReturn("%s.ack");
-        when(communicationConfigMock.getDeviceIdKey()).thenReturn("device");
-        when(communicationConfigMock.getTenantIdKey()).thenReturn("tenant");
-        when(communicationConfigMock.getConfigVersionIdKey()).thenReturn("version");
-        when(communicationConfigMock.getConfigTopicFormat()).thenReturn("version");
-        doThrow(new RuntimeException()).when(internalCommunicationMock).subscribe(anyString(), any());
+            when(repositoryMock.createNew(any())).thenReturn(Future.succeededFuture(deviceConfigEntity));
+            when(mapperMock.configRequestToDeviceConfigEntity(deviceConfigRequest)).thenReturn(deviceConfigEntity);
+            when(mapperMock.deviceConfigEntityToConfig(deviceConfigEntity)).thenReturn(deviceConfigEntityResponse);
+            when(mapperMock.configRequestToDeviceConfigEntity(any())).thenReturn(deviceConfigEntity);
+            when(communicationConfigMock.getConfigTopicFormat()).thenReturn("%s.config");
+            when(communicationConfigMock.getConfigAckTopicFormat()).thenReturn("%s.ack");
+            when(communicationConfigMock.getDeviceIdKey()).thenReturn("device");
+            when(communicationConfigMock.getTenantIdKey()).thenReturn("tenant");
+            when(communicationConfigMock.getConfigVersionIdKey()).thenReturn("version");
+            when(communicationConfigMock.getConfigTopicFormat()).thenReturn("version");
+            vertxMockedStatic.when(Vertx::currentContext).thenReturn(contextMock);
+            doThrow(new RuntimeException()).when(internalCommunicationMock).subscribe(anyString(), any());
 
-        final var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
+            final var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
 
-        verify(repositoryMock).createNew(any());
-        verify(communicationConfigMock).getConfigVersionIdKey();
-        verify(communicationConfigMock).getTenantIdKey();
-        verify(communicationConfigMock).getDeviceIdKey();
-        verify(internalCommunicationMock, times(2)).subscribe(anyString(), any());
-        verify(mapperMock, times(1)).configRequestToDeviceConfigEntity(deviceConfigRequest);
-        verify(mapperMock, times(1)).deviceConfigEntityToConfig(deviceConfigEntity);
-        verify(communicationConfigMock).getConfigTopicFormat();
-        verify(communicationConfigMock).getConfigAckTopicFormat();
-        Assertions.assertTrue(results.succeeded());
+            verify(repositoryMock).createNew(any());
+            verify(communicationConfigMock).getConfigVersionIdKey();
+            verify(communicationConfigMock).getTenantIdKey();
+            verify(communicationConfigMock).getDeviceIdKey();
+            verify(mapperMock, times(1)).configRequestToDeviceConfigEntity(deviceConfigRequest);
+            verify(mapperMock, times(1)).deviceConfigEntityToConfig(deviceConfigEntity);
+            verify(communicationConfigMock).getConfigTopicFormat();
+            verify(communicationConfigMock).getConfigAckTopicFormat();
+            verify(contextMock).executeBlocking(any());
+            vertxMockedStatic.verify(Vertx::currentContext);
+            vertxMockedStatic.verifyNoMoreInteractions();
+            Assertions.assertTrue(results.succeeded());
+        }
     }
 
     @Test
     void listAll_success() {
-        init_with_success_subscription();
-        when(repositoryMock.listAll(deviceId, tenantId, 10)).thenReturn(Future.succeededFuture(List.of(new DeviceConfig())));
+        when(repositoryMock.listAll(deviceId, tenantId, 10))
+                .thenReturn(Future.succeededFuture(List.of(new DeviceConfig())));
 
         final var results = deviceConfigService.listAll(deviceId, tenantId, 10);
 
         verify(repositoryMock).listAll(deviceId, tenantId, 10);
         Assertions.assertTrue(results.succeeded());
 
-
     }
-
 
     @Test
     void listAll_failed() {
-        init_with_success_subscription();
         when(repositoryMock.listAll(deviceId, tenantId, 10)).thenReturn(Future.failedFuture(new RuntimeException()));
 
         final var results = deviceConfigService.listAll(deviceId, tenantId, 10);
@@ -256,31 +218,26 @@ class DeviceConfigServiceImplTest {
         verify(repositoryMock).listAll(deviceId, tenantId, 10);
         Assertions.assertTrue(results.failed());
 
-
     }
 
     @Test
     void updateDeviceAckTime() {
-        init_with_success_subscription();
         doReturn(Future.succeededFuture()).when(repositoryMock).updateDeviceAckTime(any(), anyString());
 
         deviceConfigService.updateDeviceAckTime(new DeviceConfigAckResponse(), Instant.now().toString());
 
         verify(repositoryMock).updateDeviceAckTime(any(), anyString());
 
-
     }
 
     @Test
     void onDeviceConfigAck() {
-        init_with_success_subscription();
         final var deviceConfigSpy = spy(this.deviceConfigService);
         when(pubsubMessageMock.getAttributesMap())
                 .thenReturn(Map.of(
                         "deviceId", "device-123",
                         "tenantId", "tenant-123",
-                        "configVersion", "12"
-                ));
+                        "configVersion", "12"));
         when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
         when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
         when(communicationConfigMock.getConfigVersionIdKey()).thenReturn("configVersion");
@@ -299,19 +256,16 @@ class DeviceConfigServiceImplTest {
 
     @Test
     public void onDeviceConnectEvent_SkipsIfDeviceIdOrTenantIdIsEmpty() {
-        init_with_success_subscription();
         when(pubsubMessageMock.getAttributesMap())
                 .thenReturn(Map.of(
                         "deviceId", "",
-                        "tenantId", "tenant-123"
-                ));
+                        "tenantId", "tenant-123"));
         when(pubsubMessageMock.getData()).thenReturn(ByteString.copyFromUtf8("{\"cause\": \"connected\"}"));
         when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
         when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
         when(communicationConfigMock.getContentTypeKey()).thenReturn("content-type");
 
         deviceConfigService.onDeviceConnectEvent(pubsubMessageMock, ackReplyConsumerMock);
-
 
         verify(pubsubMessageMock).getAttributesMap();
         verify(communicationConfigMock).getDeviceIdKey();
@@ -322,19 +276,16 @@ class DeviceConfigServiceImplTest {
 
     @Test
     public void onDeviceConnectEvent_SkipsEvent() {
-        init_with_success_subscription();
         when(pubsubMessageMock.getAttributesMap())
                 .thenReturn(Map.of(
                         "deviceId", "device-123",
                         "tenantId", "tenant-123",
-                        "content-type", "test"
-                ));
+                        "content-type", "test"));
 
         when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
         when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
         when(communicationConfigMock.getContentTypeKey()).thenReturn("content-type");
         when(communicationConfigMock.getEmptyNotificationEventContentType()).thenReturn("skip-content");
-
 
         deviceConfigService.onDeviceConnectEvent(pubsubMessageMock, ackReplyConsumerMock);
 
@@ -347,22 +298,18 @@ class DeviceConfigServiceImplTest {
         verify(ackReplyConsumerMock).ack();
     }
 
-
     @Test
     public void onDeviceConnectEvent_SkipsContentTypeFalse() {
-        init_with_success_subscription();
         when(pubsubMessageMock.getAttributesMap())
                 .thenReturn(Map.of(
                         "deviceId", "device-123",
                         "tenantId", "tenant-123",
-                        "content", "no-event"
-                ));
+                        "content", "no-event"));
 
         when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
         when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
         when(communicationConfigMock.getContentTypeKey()).thenReturn("content");
         when(communicationConfigMock.getEmptyNotificationEventContentType()).thenReturn("event");
-
 
         deviceConfigService.onDeviceConnectEvent(pubsubMessageMock, ackReplyConsumerMock);
 
@@ -376,65 +323,66 @@ class DeviceConfigServiceImplTest {
 
     @Test
     public void onDeviceConnectEvent_PublishesDeviceConfig() throws Exception {
-        init_with_failed_subscription();
-        final String deviceId = "device-123";
-        final String tenantId = "tenant-123";
+        try (MockedStatic<Vertx> vertxMockedStatic = mockStatic(Vertx.class)) {
+            final String deviceId = "device-123";
+            final String tenantId = "tenant-123";
 
-        final String topic = "tenant-123-config";
-        final String message = "{}";
-        final Map<String, String> messageAttributes = Map.of(
-                "deviceId", deviceId,
-                "tenantId", tenantId,
-                "content", "event"
-        );
-        final var deviceConfigEntity = new DeviceConfigEntity();
-        final var deviceConfigEntityResponse = new DeviceConfig();
+            final String topic = "tenant-123-config";
+            final String message = "{}";
+            final Map<String, String> messageAttributes = Map.of(
+                    "deviceId", deviceId,
+                    "tenantId", tenantId,
+                    "content", "event");
+            final var deviceConfigEntity = new DeviceConfigEntity();
+            final var deviceConfigEntityResponse = new DeviceConfig();
 
-        when(pubsubMessageMock.getAttributesMap()).thenReturn(messageAttributes);
-        when(repositoryMock.getDeviceLatestConfig(deviceId, tenantId)).thenReturn(Future.succeededFuture(deviceConfigEntity));
-        when(mapperMock.deviceConfigEntityToConfig(deviceConfigEntity)).thenReturn(deviceConfigEntityResponse);
-        when(communicationConfigMock.getConfigTopicFormat()).thenReturn("%s-config");
-        when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
-        when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
-        when(communicationConfigMock.getContentTypeKey()).thenReturn("content");
-        when(communicationConfigMock.getEmptyNotificationEventContentType()).thenReturn("event");
-        when(communicationConfigMock.getConfigAckTopicFormat()).thenReturn("%s.ack");
-        doNothing().when(internalCommunicationMock).publish(topic, message, messageAttributes);
-        doNothing().when(internalCommunicationMock).subscribe(anyString(), any());
+            when(pubsubMessageMock.getAttributesMap()).thenReturn(messageAttributes);
+            when(repositoryMock.getDeviceLatestConfig(deviceId, tenantId))
+                    .thenReturn(Future.succeededFuture(deviceConfigEntity));
+            when(mapperMock.deviceConfigEntityToConfig(deviceConfigEntity)).thenReturn(deviceConfigEntityResponse);
+            when(communicationConfigMock.getConfigTopicFormat()).thenReturn("%s-config");
+            when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
+            when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
+            when(communicationConfigMock.getContentTypeKey()).thenReturn("content");
+            when(communicationConfigMock.getEmptyNotificationEventContentType()).thenReturn("event");
+            when(communicationConfigMock.getConfigAckTopicFormat()).thenReturn("%s.ack");
+            doNothing().when(internalCommunicationMock).publish(topic, message, messageAttributes);
+            doNothing().when(internalCommunicationMock).subscribe(anyString(), any());
+            vertxMockedStatic.when(Vertx::currentContext).thenReturn(contextMock);
 
-        deviceConfigService.onDeviceConnectEvent(pubsubMessageMock, ackReplyConsumerMock);
+            deviceConfigService.onDeviceConnectEvent(pubsubMessageMock, ackReplyConsumerMock);
 
-        verify(pubsubMessageMock).getAttributesMap();
-        verify(repositoryMock).getDeviceLatestConfig(deviceId, tenantId);
-        verify(mapperMock).deviceConfigEntityToConfig(deviceConfigEntity);
-        verify(communicationConfigMock).getConfigTopicFormat();
-        verify(communicationConfigMock).getContentTypeKey();
-        verify(communicationConfigMock).getEmptyNotificationEventContentType();
-        verify(communicationConfigMock).getDeviceIdKey();
-        verify(communicationConfigMock).getConfigVersionIdKey();
-        verify(communicationConfigMock).getTenantIdKey();
-        verify(communicationConfigMock).getConfigAckTopicFormat();
-        verify(internalCommunicationMock).publish(anyString(), anyString(), any());
-        verify(internalCommunicationMock, times(2)).subscribe(anyString(), any());
+            verify(pubsubMessageMock).getAttributesMap();
+            verify(repositoryMock).getDeviceLatestConfig(deviceId, tenantId);
+            verify(mapperMock).deviceConfigEntityToConfig(deviceConfigEntity);
+            verify(communicationConfigMock).getConfigTopicFormat();
+            verify(communicationConfigMock).getContentTypeKey();
+            verify(communicationConfigMock).getEmptyNotificationEventContentType();
+            verify(communicationConfigMock).getDeviceIdKey();
+            verify(communicationConfigMock).getConfigVersionIdKey();
+            verify(communicationConfigMock).getTenantIdKey();
+            verify(communicationConfigMock).getConfigAckTopicFormat();
+            verify(contextMock).executeBlocking(any());
 
-        verify(ackReplyConsumerMock).ack();
+            verify(ackReplyConsumerMock).ack();
+            vertxMockedStatic.verify(Vertx::currentContext);
+            vertxMockedStatic.verifyNoMoreInteractions();
+        }
     }
-
 
     @Test
     public void onDeviceConnectEvent_PublishesDeviceConfig_failed() {
-        init_with_success_subscription();
         final String deviceId = "device-123";
         final String tenantId = "tenant-123";
 
         final Map<String, String> messageAttributes = Map.of(
                 "deviceId", deviceId,
                 "content", "event",
-                "tenantId", tenantId
-        );
+                "tenantId", tenantId);
 
         when(pubsubMessageMock.getAttributesMap()).thenReturn(messageAttributes);
-        when(repositoryMock.getDeviceLatestConfig(deviceId, tenantId)).thenReturn(Future.failedFuture(new RuntimeException()));
+        when(repositoryMock.getDeviceLatestConfig(deviceId, tenantId))
+                .thenReturn(Future.failedFuture(new RuntimeException()));
         when(pubsubMessageMock.getData()).thenReturn(ByteString.copyFromUtf8("{\"cause\": \"connected\"}"));
         when(communicationConfigMock.getDeviceIdKey()).thenReturn("deviceId");
         when(communicationConfigMock.getTenantIdKey()).thenReturn("tenantId");
@@ -453,62 +401,4 @@ class DeviceConfigServiceImplTest {
         verify(communicationConfigMock).getContentTypeKey();
         verify(communicationConfigMock).getEmptyNotificationEventContentType();
     }
-
-
-    @Test
-    public void testOnTenantChanges_ChangeIsUpdate() throws IOException {
-        init_with_success_subscription();
-        final TenantChangeNotification notification = new TenantChangeNotification(LifecycleChange.UPDATE, tenantId, Instant.now(), false, false);
-        when(pubsubMessageMock.getData()).thenReturn(byteStringMock);
-        when(byteStringMock.toStringUtf8()).thenReturn(new ObjectMapper().writeValueAsString(notification));
-
-        deviceConfigService.onTenantChanges(pubsubMessageMock, ackReplyConsumerMock);
-
-        verify(ackReplyConsumerMock).ack();
-        verify(pubsubMessageMock).getData();
-        verify(byteStringMock).toStringUtf8();
-
-
-    }
-
-    @Test
-    public void testOnTenantChanges_projectIdIsEmpty() throws IOException {
-        init_with_success_subscription();
-        final TenantChangeNotification notification = new TenantChangeNotification(LifecycleChange.CREATE, "", Instant.now(), false, false);
-        when(pubsubMessageMock.getData()).thenReturn(byteStringMock);
-        when(byteStringMock.toStringUtf8()).thenReturn(new ObjectMapper().writeValueAsString(notification));
-
-        deviceConfigService.onTenantChanges(pubsubMessageMock, ackReplyConsumerMock);
-
-        verify(ackReplyConsumerMock).ack();
-        verify(pubsubMessageMock).getData();
-        verify(byteStringMock).toStringUtf8();
-
-
-    }
-
-    @Test
-    public void testOnTenantChanges_success() throws IOException {
-        try (MockedStatic<PubSubMessageHelper> mockedPubSubMessageHelper = mockStatic(PubSubMessageHelper.class)) {
-            final var credMock = mock(FixedCredentialsProvider.class);
-            mockedPubSubMessageHelper.when(PubSubMessageHelper::getCredentialsProvider).thenReturn(Optional.of(credMock));
-
-            init_with_success_subscription();
-            final TenantChangeNotification notification = new TenantChangeNotification(LifecycleChange.CREATE, tenantId, Instant.now(), false, false);
-            when(pubsubMessageMock.getData()).thenReturn(byteStringMock);
-            when(byteStringMock.toStringUtf8()).thenReturn(new ObjectMapper().writeValueAsString(notification));
-
-            deviceConfigService.onTenantChanges(pubsubMessageMock, ackReplyConsumerMock);
-
-            verify(ackReplyConsumerMock).ack();
-            verify(pubsubMessageMock).getData();
-            verify(byteStringMock).toStringUtf8();
-            verify(communicationConfigMock).getProjectId();
-            verify(communicationConfigMock).getEventTopicFormat();
-            verify(internalCommunicationMock, times(2)).subscribe(anyString(), any());
-        }
-
-    }
-
-
 }

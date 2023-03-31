@@ -23,6 +23,7 @@ import java.util.Objects;
 import javax.inject.Singleton;
 
 import org.eclipse.hono.communication.api.service.VertxHttpHandlerManagerService;
+import org.eclipse.hono.communication.api.service.communication.InternalTopicManager;
 import org.eclipse.hono.communication.api.service.database.DatabaseSchemaCreator;
 import org.eclipse.hono.communication.api.service.database.DatabaseService;
 import org.eclipse.hono.communication.core.app.ApplicationConfig;
@@ -46,12 +47,12 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.ext.web.validation.BadRequestException;
 
-
 /**
  * Vertx HTTP Server for the device communication api.
  */
 @Singleton
 public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer implements HttpServer {
+
     private final Logger log = LoggerFactory.getLogger(DeviceCommunicationHttpServer.class);
     private final String serverStartedMsg = "HTTP Server is listening at http://{}:{}";
     private final String serverFailedMsg = "HTTP Server failed to start: {}";
@@ -59,8 +60,8 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
 
     private final DatabaseService db;
     private final DatabaseSchemaCreator databaseSchemaCreator;
+    private final InternalTopicManager internalTopicManager;
     private List<HttpEndpointHandler> httpEndpointHandlers;
-
 
     /**
      * Creates a new DeviceCommunicationHttpServer with all dependencies.
@@ -70,23 +71,26 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
      * @param httpHandlerManager    The http handler manager
      * @param databaseService       The database connection
      * @param databaseSchemaCreator The database migrations service
+     * @param internalTopicManager  The internal topic manager
      */
     public DeviceCommunicationHttpServer(final ApplicationConfig appConfigs,
-                                         final Vertx vertx,
-                                         final VertxHttpHandlerManagerService httpHandlerManager,
-                                         final DatabaseService databaseService,
-                                         final DatabaseSchemaCreator databaseSchemaCreator) {
+            final Vertx vertx,
+            final VertxHttpHandlerManagerService httpHandlerManager,
+            final DatabaseService databaseService,
+            final DatabaseSchemaCreator databaseSchemaCreator, final InternalTopicManager internalTopicManager) {
         super(appConfigs, vertx);
         this.httpHandlerManager = httpHandlerManager;
         this.databaseSchemaCreator = databaseSchemaCreator;
         this.httpEndpointHandlers = new ArrayList<>();
         this.db = databaseService;
+        this.internalTopicManager = internalTopicManager;
     }
-
 
     @Override
     public void start() {
         databaseSchemaCreator.createDBTables();
+
+        internalTopicManager.initPubSubTopicsAndSubscriptions();
 
         this.httpEndpointHandlers = httpHandlerManager.getAvailableHandlerServices();
         RouterBuilder.create(this.vertx, appConfigs.getServerConfig().getOpenApiFilePath())
@@ -116,7 +120,8 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
      * @param httpEndpointHandlers All available http endpoint handlers
      * @return The created Router object
      */
-    Router createRouterWithEndpoints(final RouterBuilder routerBuilder, final List<HttpEndpointHandler> httpEndpointHandlers) {
+    Router createRouterWithEndpoints(final RouterBuilder routerBuilder,
+            final List<HttpEndpointHandler> httpEndpointHandlers) {
         for (HttpEndpointHandler handlerService : httpEndpointHandlers) {
             handlerService.addRoutes(routerBuilder);
         }
@@ -167,7 +172,6 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
         router.get(readinessPath).handler(healthCheckHandler);
     }
 
-
     private void addLivenessHandlers(final Router router, final String livenessPath) {
         log.info("Adding liveness path: {}", livenessPath);
         final HealthCheckHandler healthCheckHandler = HealthCheckHandler.create(vertx);
@@ -192,8 +196,8 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
                 .listen();
 
         serverCreationFuture
-                .onSuccess(server -> log.info(this.serverStartedMsg, serverConfigs.getServerUrl()
-                        , serverConfigs.getServerPort()))
+                .onSuccess(server -> log.info(this.serverStartedMsg, serverConfigs.getServerUrl(),
+                        serverConfigs.getServerPort()))
                 .onFailure(error -> log.info(this.serverFailedMsg, error.getMessage()));
     }
 
@@ -230,7 +234,6 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
             }
         }
     }
-
 
     @Override
     public void stop() {
