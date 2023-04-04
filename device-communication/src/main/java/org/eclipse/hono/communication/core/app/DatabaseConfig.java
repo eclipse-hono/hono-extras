@@ -42,6 +42,10 @@ public class DatabaseConfig {
     int poolMaxSize;
     @ConfigProperty(name = "vertx.device-registration.table")
     String deviceRegistrationTableName;
+    @ConfigProperty(name = "vertx.tenant.table")
+    String tenantTableName;
+    @ConfigProperty(name = "vertx.tenant.tenant-id-column")
+    String tenantTableIdColumn;
     @ConfigProperty(name = "vertx.device-registration.tenant-id-column")
     String deviceRegistrationTenantIdColumn;
     @ConfigProperty(name = "vertx.device-registration.device-id-column")
@@ -49,6 +53,14 @@ public class DatabaseConfig {
 
     public String getDeviceRegistrationTableName() {
         return deviceRegistrationTableName;
+    }
+
+    public String getTenantTableName() {
+        return tenantTableName;
+    }
+
+    public String getTenantTableIdColumn() {
+        return tenantTableIdColumn;
     }
 
     public String getDeviceRegistrationTenantIdColumn() {

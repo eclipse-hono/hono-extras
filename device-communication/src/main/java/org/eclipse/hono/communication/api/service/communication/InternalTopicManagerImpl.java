@@ -80,10 +80,12 @@ public class InternalTopicManagerImpl implements InternalTopicManager {
 
     @Override
     public void initPubSubTopicsAndSubscriptions() {
+        log.debug("Initialize tenant topics and subscriptions.");
         deviceRepository.listDistinctTenants()
                 .onSuccess(this::createTopicsAndSubscribeToEvents)
                 .onFailure(err -> log.error("Error by creating and  subscribing to topics: {}", err.getMessage()));
         internalMessaging.subscribe(PubSubConstants.TENANT_NOTIFICATIONS, this::onTenantChanges);
+        log.debug("Initialization of tenant topics and subscriptions completed.");
     }
 
     private void createTopicsAndSubscribeToEvents(final List<String> tenants) {

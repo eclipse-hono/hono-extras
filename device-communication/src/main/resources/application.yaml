@@ -43,6 +43,11 @@ vertx:
     password: ${COM_DB_PASSWORD:mysecretpassword}
     db-kind: "postgresql"
 
+  # Tenant table configs. Used for listing tenants
+  tenant:
+    table: ${COM_DB_TENANT_TABLE:tenants}
+    tenant-id-column: ${COM_DB_TENANT_COL_NAME:tenant_id}
+
   # Device registration table configs. Used for validating devices
   device-registration:
     table: ${COM_DB_DEVICE_REG_TABLE:device_registrations}

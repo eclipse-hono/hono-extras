@@ -39,10 +39,10 @@ import io.vertx.sqlclient.templates.SqlTemplate;
 @ApplicationScoped
 public class DeviceRepositoryImpl implements DeviceRepository {
 
+    private static final String SQL_LIST_TENANTS = "SELECT %s FROM %s";
     private final DatabaseConfig databaseConfig;
     private final DatabaseService db;
     private final String SQL_COUNT_DEVICES_WITH_PK_FILTER;
-    private final String SQL_LIST_DISTINCT_TENANTS = "SELECT DISTINCT %s FROM %s";
 
     /**
      * Creates a new DeviceRepositoryImpl.
@@ -64,11 +64,11 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public Future<Integer> searchForDevice(final String deviceId, final String tenantId) {
-        final RowMapper<Integer> ROW_MAPPER = row -> row.getInteger("total");
+        final RowMapper<Integer> rowMapper = row -> row.getInteger("total");
         return db.getDbClient().withConnection(
                 sqlConnection -> SqlTemplate
                         .forQuery(sqlConnection, SQL_COUNT_DEVICES_WITH_PK_FILTER)
-                        .mapTo(ROW_MAPPER)
+                        .mapTo(rowMapper)
                         .execute(Map.of("deviceId", deviceId, "tenantId", tenantId)).map(rowSet -> {
                             final RowIterator<Integer> iterator = rowSet.iterator();
                             return iterator.next();
@@ -79,9 +79,9 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     @Override
     public Future<List<String>> listDistinctTenants() {
 
-        final var sqlCommand = SQL_LIST_DISTINCT_TENANTS.formatted(
-                databaseConfig.getDeviceRegistrationTenantIdColumn(),
-                databaseConfig.getDeviceRegistrationTableName());
+        final var sqlCommand = SQL_LIST_TENANTS.formatted(
+                databaseConfig.getTenantTableIdColumn(),
+                databaseConfig.getTenantTableName());
 
         return db.getDbClient().withConnection(
                 sqlConnection -> SqlTemplate
@@ -89,7 +89,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
                         .execute(Collections.emptyMap())
                         .map(rowSet -> {
                             final List<String> tenants = new ArrayList<>();
-                            rowSet.forEach(tenant -> tenants.add(tenant.getString(databaseConfig.getDeviceRegistrationTenantIdColumn())));
+                            rowSet.forEach(tenant -> tenants.add(tenant.getString(databaseConfig.getTenantTableIdColumn())));
                             return tenants;
                         }));
 
