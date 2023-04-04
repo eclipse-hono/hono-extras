@@ -59,17 +59,17 @@ public class InternalTopicManagerImpl implements InternalTopicManager {
     /**
      * Creates a new InternalTopicManagerImpl.
      *
-     * @param deviceRepository          The device repository
-     * @param configTopicEventHandler   The config topic event handler.
-     * @param stateTopicEventHandler    The state topic event handler.
-     * @param internalMessaging         The internal messaging interface.
-     * @param internalMessagingConfig   The internal messaging config.
-     * @param vertx                     The Vertx instance to use
+     * @param deviceRepository        The device repository
+     * @param configTopicEventHandler The config topic event handler.
+     * @param stateTopicEventHandler  The state topic event handler.
+     * @param internalMessaging       The internal messaging interface.
+     * @param internalMessagingConfig The internal messaging config.
+     * @param vertx                   The Vertx instance to use
      */
     public InternalTopicManagerImpl(final DeviceRepository deviceRepository,
-            final ConfigTopicEventHandler configTopicEventHandler,
-            final StateTopicEventHandler stateTopicEventHandler, final InternalMessaging internalMessaging,
-            final InternalMessagingConfig internalMessagingConfig, final Vertx vertx) {
+                                    final ConfigTopicEventHandler configTopicEventHandler,
+                                    final StateTopicEventHandler stateTopicEventHandler, final InternalMessaging internalMessaging,
+                                    final InternalMessagingConfig internalMessagingConfig, final Vertx vertx) {
         this.deviceRepository = deviceRepository;
         this.configTopicEventHandler = configTopicEventHandler;
         this.stateTopicEventHandler = stateTopicEventHandler;
@@ -92,13 +92,15 @@ public class InternalTopicManagerImpl implements InternalTopicManager {
 
         final var context = Vertx.currentContext();
         context.executeBlocking(promise -> {
-            tenants.forEach(this::createPubSubTopicsAndSubscriptions);
-            tenants.forEach(tenant -> internalMessaging.subscribe(
-                    internalMessagingConfig.getEventTopicFormat().formatted(tenant),
-                    configTopicEventHandler::onDeviceConnectEvent));
-            tenants.forEach(tenant -> internalMessaging.subscribe(
-                    internalMessagingConfig.getStateTopicFormat().formatted(tenant),
-                    stateTopicEventHandler::onStateMessage));
+            tenants.forEach(tenant -> {
+                createPubSubTopicsAndSubscriptions(tenant);
+                internalMessaging.subscribe(
+                        internalMessagingConfig.getEventTopicFormat().formatted(tenant),
+                        configTopicEventHandler::onDeviceConnectEvent);
+                internalMessaging.subscribe(
+                        internalMessagingConfig.getStateTopicFormat().formatted(tenant),
+                        stateTopicEventHandler::onStateMessage);
+            });
             promise.complete();
         });
     }
@@ -133,7 +135,7 @@ public class InternalTopicManagerImpl implements InternalTopicManager {
      * Handle incoming tenant CREATE notifications.
      *
      * @param pubsubMessage The message to handle
-     * @param consumer The message consumer
+     * @param consumer      The message consumer
      */
     public void onTenantChanges(final PubsubMessage pubsubMessage, final AckReplyConsumer consumer) {
         consumer.ack();
