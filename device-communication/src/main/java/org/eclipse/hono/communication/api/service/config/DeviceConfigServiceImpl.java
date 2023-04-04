@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import javax.inject.Singleton;
 
+import org.codehaus.plexus.util.Base64;
 import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigAckResponse;
 import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
@@ -65,9 +66,9 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract
      * @param internalMessaging       The internal messaging interface
      */
     public DeviceConfigServiceImpl(final DeviceConfigRepository repository,
-            final DeviceConfigMapper mapper,
-            final InternalMessagingConfig internalMessagingConfig,
-            final InternalMessaging internalMessaging) {
+                                   final DeviceConfigMapper mapper,
+                                   final InternalMessagingConfig internalMessagingConfig,
+                                   final InternalMessaging internalMessaging) {
 
         super(internalMessagingConfig, internalMessaging);
 
@@ -85,7 +86,12 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract
      * @return Future of device config
      */
     public Future<DeviceConfig> modifyCloudToDeviceConfig(final DeviceConfigRequest deviceConfig, final String deviceId,
-            final String tenantId) {
+                                                          final String tenantId) {
+
+        final boolean isBase64 = Base64.isArrayByteBase64(deviceConfig.getBinaryData().getBytes());
+        if (!isBase64) {
+            return Future.failedFuture(new IllegalStateException("Field binaryData type should be String base64 encoded."));
+        }
 
         final var entity = mapper.configRequestToDeviceConfigEntity(deviceConfig);
         entity.setDeviceId(deviceId);
@@ -115,7 +121,7 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract
      * @return Future of ListDeviceConfigVersionsResponse
      */
     public Future<ListDeviceConfigVersionsResponse> listAll(final String deviceId, final String tenantId,
-            final int limit) {
+                                                            final int limit) {
         return repository.listAll(deviceId, tenantId, limit)
                 .map(
                         result -> {
@@ -196,12 +202,13 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract
     }
 
     private void publishAndSubscribe(final String topicToSubscribe, final String topicToPublish,
-            final DeviceConfig config, final Map<String, String> attributes) {
+                                     final DeviceConfig config, final Map<String, String> attributes) {
         final var context = Vertx.currentContext();
         context.executeBlocking(promise -> {
             try {
+                final var configStr = new String(Base64.decodeBase64(config.getBinaryData().getBytes()));
                 internalMessaging.subscribe(topicToSubscribe, this::onDeviceConfigAck);
-                internalMessaging.publish(topicToPublish, ow.writeValueAsString(config), attributes);
+                internalMessaging.publish(topicToPublish, configStr, attributes);
                 log.debug("Publish device config {}", config);
             } catch (Exception ex) {
                 log.error("Error serialize config {}", config);

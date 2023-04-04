@@ -58,6 +58,7 @@ import io.vertx.core.Vertx;
 
 class DeviceConfigServiceImplTest {
 
+    public static final String CONFIG_BASE_64 = "QSBiYXNlNjQtZW5jb2RlZCBzdHJpbmc";
     private final DeviceConfigRepository repositoryMock;
     private final DeviceConfigMapper mapperMock;
     private final InternalMessagingConfig communicationConfigMock;
@@ -106,11 +107,13 @@ class DeviceConfigServiceImplTest {
     void modifyCloudToDeviceConfig_success() throws Exception {
         try (MockedStatic<Vertx> vertxMockedStatic = mockStatic(Vertx.class)) {
             final var deviceConfigRequest = new DeviceConfigRequest();
+            deviceConfigRequest.setBinaryData(CONFIG_BASE_64);
             final var deviceConfigEntity = new DeviceConfigEntity();
             deviceConfigEntity.setDeviceId("id");
             deviceConfigEntity.setTenantId("id");
             final var deviceConfigEntityResponse = new DeviceConfig();
             deviceConfigEntityResponse.setVersion("1");
+            deviceConfigEntityResponse.setBinaryData(CONFIG_BASE_64);
 
             when(repositoryMock.createNew(any())).thenReturn(Future.succeededFuture(deviceConfigEntity));
             when(mapperMock.configRequestToDeviceConfigEntity(deviceConfigRequest)).thenReturn(deviceConfigEntity);
@@ -145,7 +148,9 @@ class DeviceConfigServiceImplTest {
     @Test
     void modifyCloudToDeviceConfig_failure() {
         final var deviceConfigRequest = new DeviceConfigRequest();
+        deviceConfigRequest.setBinaryData(CONFIG_BASE_64);
         final var deviceConfigEntity = new DeviceConfigEntity();
+        deviceConfigEntity.setBinaryData(CONFIG_BASE_64);
 
         when(repositoryMock.createNew(any())).thenReturn(Future.failedFuture(new NoSuchElementException()));
         when(mapperMock.configRequestToDeviceConfigEntity(deviceConfigRequest)).thenReturn(deviceConfigEntity);
@@ -161,11 +166,13 @@ class DeviceConfigServiceImplTest {
     void modifyCloudToDeviceConfig_publish_failure() {
         try (MockedStatic<Vertx> vertxMockedStatic = mockStatic(Vertx.class)) {
             final var deviceConfigRequest = new DeviceConfigRequest();
+            deviceConfigRequest.setBinaryData(CONFIG_BASE_64);
             final var deviceConfigEntity = new DeviceConfigEntity();
             deviceConfigEntity.setDeviceId("id");
             deviceConfigEntity.setTenantId("id");
             final var deviceConfigEntityResponse = new DeviceConfig();
             deviceConfigEntityResponse.setVersion("1");
+            deviceConfigEntityResponse.setBinaryData(CONFIG_BASE_64);
 
             when(repositoryMock.createNew(any())).thenReturn(Future.succeededFuture(deviceConfigEntity));
             when(mapperMock.configRequestToDeviceConfigEntity(deviceConfigRequest)).thenReturn(deviceConfigEntity);

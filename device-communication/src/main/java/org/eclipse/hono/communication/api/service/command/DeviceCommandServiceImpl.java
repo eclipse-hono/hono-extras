@@ -20,6 +20,7 @@ import java.util.Map;
 
 import javax.inject.Singleton;
 
+import org.codehaus.plexus.util.Base64;
 import org.eclipse.hono.communication.api.data.DeviceCommandRequest;
 import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
 import org.eclipse.hono.communication.api.repository.DeviceRepository;
@@ -63,6 +64,13 @@ public class DeviceCommandServiceImpl extends DeviceServiceAbstract implements D
 
     @Override
     public Future<Void> postCommand(final DeviceCommandRequest commandRequest, final String tenantId, final String deviceId) {
+
+        final boolean isBase64 = Base64.isArrayByteBase64(commandRequest.getBinaryData().getBytes());
+        if (!isBase64) {
+            return Future.failedFuture(new IllegalStateException("Field binaryData type should be String base64 encoded."));
+        }
+
+
         return deviceRepository.searchForDevice(deviceId, tenantId)
                 .compose(
                         counter -> {
@@ -76,9 +84,10 @@ public class DeviceCommandServiceImpl extends DeviceServiceAbstract implements D
                             final var topic = String.format(messagingConfig.getCommandTopicFormat(), tenantId);
                             final Map<String, String> attributes = Map.of(DEVICE_ID, deviceId, TENANT_ID, tenantId, SUBJECT, subject);
                             try {
-                                final String commandJson = ow.writeValueAsString(commandRequest.getBinaryData());
-                                internalMessaging.publish(topic, commandJson, attributes);
-                                log.info("Command {} was published successfully to topic {}", commandJson, topic);
+                                final String commandStr = new String(Base64.decodeBase64(commandRequest.getBinaryData().getBytes()));
+
+                                internalMessaging.publish(topic, commandStr, attributes);
+                                log.info("Command {} was published successfully to topic {}", commandStr, topic);
                             } catch (Exception ex) {
                                 log.error("Command can't be published: {}", ex.getMessage());
                                 return Future.failedFuture(ex);
