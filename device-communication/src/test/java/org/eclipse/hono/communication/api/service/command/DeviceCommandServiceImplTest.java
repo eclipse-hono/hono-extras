@@ -84,7 +84,7 @@ class DeviceCommandServiceImplTest {
         final String deviceId = "device123";
         final String tenantId = "tenant123";
         final DeviceCommandRequest commandRequest = new DeviceCommandRequest();
-        commandRequest.setBinaryData("test");
+        commandRequest.setBinaryData("dGVzdCBjb25maWcgMjIyMjIy");
 
         when(repositoryMock.searchForDevice(deviceId, tenantId)).thenReturn(Future.succeededFuture(1));
         when(communicationConfig.getCommandTopicFormat()).thenReturn("%s.command");
@@ -118,7 +118,7 @@ class DeviceCommandServiceImplTest {
         final String deviceId = "device123";
         final String tenantId = "tenant123";
         final DeviceCommandRequest commandRequest = new DeviceCommandRequest();
-        commandRequest.setBinaryData("test");
+        commandRequest.setBinaryData("dGVzdCBjb25maWcgMjIyMjIy");
 
         when(repositoryMock.searchForDevice(deviceId, tenantId)).thenReturn(Future.succeededFuture(1));
         when(communicationConfig.getCommandTopicFormat()).thenReturn("%s.command");
@@ -131,6 +131,24 @@ class DeviceCommandServiceImplTest {
         verify(internalCommunication).publish(anyString(), anyString(), any());
         Assertions.assertTrue(result.failed());
         Assertions.assertSame(result.cause().getClass(), IOException.class);
+    }
+
+    @Test
+    public void postCommand_publish_error_shouldFailed_noBase64() throws Exception {
+        final String deviceId = "device123";
+        final String tenantId = "tenant123";
+        final DeviceCommandRequest commandRequest = new DeviceCommandRequest();
+        commandRequest.setBinaryData("test 2");
+
+        when(repositoryMock.searchForDevice(deviceId, tenantId)).thenReturn(Future.succeededFuture(1));
+        when(communicationConfig.getCommandTopicFormat()).thenReturn("%s.command");
+        doThrow(new IOException()).when(internalCommunication).publish(anyString(), anyString(), any());
+
+        final Future<Void> result = deviceCommandService.postCommand(commandRequest, tenantId, deviceId);
+
+
+        Assertions.assertTrue(result.failed());
+        Assertions.assertSame(result.cause().getClass(), IllegalStateException.class);
     }
 
 

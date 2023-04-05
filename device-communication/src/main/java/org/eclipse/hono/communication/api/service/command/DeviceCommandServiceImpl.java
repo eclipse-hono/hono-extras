@@ -20,13 +20,14 @@ import java.util.Map;
 
 import javax.inject.Singleton;
 
-import org.codehaus.plexus.util.Base64;
+import org.apache.commons.codec.binary.Base64;
 import org.eclipse.hono.communication.api.data.DeviceCommandRequest;
 import org.eclipse.hono.communication.api.exception.DeviceNotFoundException;
 import org.eclipse.hono.communication.api.repository.DeviceRepository;
 import org.eclipse.hono.communication.api.service.DeviceServiceAbstract;
 import org.eclipse.hono.communication.api.service.communication.InternalMessaging;
 import org.eclipse.hono.communication.core.app.InternalMessagingConfig;
+import org.eclipse.hono.communication.core.utils.StringValidateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,8 +66,7 @@ public class DeviceCommandServiceImpl extends DeviceServiceAbstract implements D
     @Override
     public Future<Void> postCommand(final DeviceCommandRequest commandRequest, final String tenantId, final String deviceId) {
 
-        final boolean isBase64 = Base64.isArrayByteBase64(commandRequest.getBinaryData().getBytes());
-        if (!isBase64) {
+        if (!StringValidateUtils.isBase64(commandRequest.getBinaryData())) {
             return Future.failedFuture(new IllegalStateException("Field binaryData type should be String base64 encoded."));
         }
 

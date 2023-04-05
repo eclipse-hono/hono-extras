@@ -23,7 +23,7 @@ import java.util.Objects;
 
 import javax.inject.Singleton;
 
-import org.codehaus.plexus.util.Base64;
+import org.apache.commons.codec.binary.Base64;
 import org.eclipse.hono.communication.api.data.DeviceConfig;
 import org.eclipse.hono.communication.api.data.DeviceConfigAckResponse;
 import org.eclipse.hono.communication.api.data.DeviceConfigRequest;
@@ -34,6 +34,7 @@ import org.eclipse.hono.communication.api.repository.DeviceConfigRepository;
 import org.eclipse.hono.communication.api.service.DeviceServiceAbstract;
 import org.eclipse.hono.communication.api.service.communication.InternalMessaging;
 import org.eclipse.hono.communication.core.app.InternalMessagingConfig;
+import org.eclipse.hono.communication.core.utils.StringValidateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,8 +89,7 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract
     public Future<DeviceConfig> modifyCloudToDeviceConfig(final DeviceConfigRequest deviceConfig, final String deviceId,
                                                           final String tenantId) {
 
-        final boolean isBase64 = Base64.isArrayByteBase64(deviceConfig.getBinaryData().getBytes());
-        if (!isBase64) {
+        if (!StringValidateUtils.isBase64(deviceConfig.getBinaryData())) {
             return Future.failedFuture(new IllegalStateException("Field binaryData type should be String base64 encoded."));
         }
 

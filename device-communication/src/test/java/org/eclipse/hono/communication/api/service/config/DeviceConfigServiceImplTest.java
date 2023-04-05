@@ -58,7 +58,7 @@ import io.vertx.core.Vertx;
 
 class DeviceConfigServiceImplTest {
 
-    public static final String CONFIG_BASE_64 = "QSBiYXNlNjQtZW5jb2RlZCBzdHJpbmc";
+    public static final String CONFIG_BASE_64 = "dGVzdCBjb25maWcgMjIyMjIy";
     private final DeviceConfigRepository repositoryMock;
     private final DeviceConfigMapper mapperMock;
     private final InternalMessagingConfig communicationConfigMock;
@@ -159,6 +159,23 @@ class DeviceConfigServiceImplTest {
 
         verify(mapperMock).configRequestToDeviceConfigEntity(any());
         verify(repositoryMock).createNew(any());
+        Assertions.assertTrue(results.failed());
+    }
+
+
+    @Test
+    void modifyCloudToDeviceConfig_failure_noBase64() {
+        final var deviceConfigRequest = new DeviceConfigRequest();
+        deviceConfigRequest.setBinaryData("test 2");
+        final var deviceConfigEntity = new DeviceConfigEntity();
+        deviceConfigEntity.setBinaryData("");
+
+        when(repositoryMock.createNew(any())).thenReturn(Future.failedFuture(new NoSuchElementException()));
+        when(mapperMock.configRequestToDeviceConfigEntity(deviceConfigRequest)).thenReturn(deviceConfigEntity);
+
+        final var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
+
+
         Assertions.assertTrue(results.failed());
     }
 
