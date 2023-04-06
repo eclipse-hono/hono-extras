@@ -103,7 +103,7 @@ class DeviceCommandServiceImplTest {
         final String deviceId = "device123";
         final String tenantId = "tenant123";
         final DeviceCommandRequest commandRequest = new DeviceCommandRequest();
-        commandRequest.setBinaryData("test");
+        commandRequest.setBinaryData("dGVzdCBjb25maWcgMjIyMjIy");
 
         when(repositoryMock.searchForDevice(deviceId, tenantId)).thenReturn(Future.succeededFuture(0));
 
