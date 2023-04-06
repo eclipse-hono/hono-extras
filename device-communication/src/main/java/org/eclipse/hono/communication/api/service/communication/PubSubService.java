@@ -60,7 +60,6 @@ public class PubSubService implements InternalMessaging {
     private final Map<String, Subscriber> activeSubscriptions = new HashMap<>();
 
     private final String projectId;
-    private TopicName topicName;
 
 
     /**
@@ -123,7 +122,7 @@ public class PubSubService implements InternalMessaging {
         if (activeSubscriptions.containsKey(topic)) {
             return;
         }
-        topicName = TopicName.of(projectId, topic);
+        final TopicName topicName = TopicName.of(projectId, topic);
         final ProjectSubscriptionName subscriptionName;
         try {
             subscriptionName = initSubscription(topic);
@@ -143,7 +142,7 @@ public class PubSubService implements InternalMessaging {
      * @return The ProjectSubscriptionName object
      * @throws IOException if subscription can't be created
      */
-    private ProjectSubscriptionName initSubscription(final String topic) throws IOException {
+    ProjectSubscriptionName initSubscription(final String topic) throws IOException {
         final var subscriptionName = ProjectSubscriptionName.of(
                 projectId,
                 String.format(COMMUNICATION_API_SUBSCRIPTION_NAME, topic)
