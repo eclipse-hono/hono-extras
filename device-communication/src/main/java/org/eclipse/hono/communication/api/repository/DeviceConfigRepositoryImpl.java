@@ -91,11 +91,11 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
 
 
     private Future<Pair<Integer, Integer>> findMaxVersionAndTotalEntries(final SqlConnection sqlConnection, final String deviceId, final String tenantId) {
-        final RowMapper<Pair<Integer, Integer>> ROW_MAPPER = row ->
+        final RowMapper<Pair<Integer, Integer>> rowMapper = row ->
                 Pair.create(row.getInteger("total"), row.getInteger("max_version"));
         return SqlTemplate
                 .forQuery(sqlConnection, SQL_FIND_TOTAL_AND_MAX_VERSION)
-                .mapTo(ROW_MAPPER)
+                .mapTo(rowMapper)
                 .execute(Map.of(DEVICE_ID_CAPTION, deviceId, TENANT_ID_CAPTION, tenantId)).map(rowSet -> {
                     final RowIterator<Pair<Integer, Integer>> iterator = rowSet.iterator();
                     return iterator.next();
@@ -170,11 +170,11 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
      */
 
     private Future<Integer> deleteMinVersion(final SqlConnection sqlConnection, final DeviceConfigEntity entity) {
-        final RowMapper<Integer> ROW_MAPPER = row -> row.getInteger(VERSION_CAPTION);
+        final RowMapper<Integer> rowMapper = row -> row.getInteger(VERSION_CAPTION);
         return SqlTemplate
                 .forQuery(sqlConnection, SQL_DELETE_MIN_VERSION)
                 .mapFrom(DeviceConfigEntity.class)
-                .mapTo(ROW_MAPPER)
+                .mapTo(rowMapper)
                 .execute(entity)
                 .map(rowSet -> {
                     final RowIterator<Integer> iterator = rowSet.iterator();
