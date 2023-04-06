@@ -134,7 +134,7 @@ class DeviceCommandServiceImplTest {
     }
 
     @Test
-    public void postCommand_publish_error_shouldFailed_noBase64() throws Exception {
+    public void postCommand_noBase64_shouldFail() throws Exception {
         final String deviceId = "device123";
         final String tenantId = "tenant123";
         final DeviceCommandRequest commandRequest = new DeviceCommandRequest();
