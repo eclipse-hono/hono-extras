@@ -113,7 +113,7 @@ class InternalTopicManagerImplTest {
     }
 
     @Test
-    public void testOnTenantChanges_projectIdIsEmpty() throws IOException {
+    public void testOnTenantChanges_tenantIdIsEmpty() throws IOException {
         final TenantChangeNotification notification = new TenantChangeNotification(LifecycleChange.CREATE, "",
                 Instant.now(), false, false);
         when(pubsubMessageMock.getData()).thenReturn(byteStringMock);
