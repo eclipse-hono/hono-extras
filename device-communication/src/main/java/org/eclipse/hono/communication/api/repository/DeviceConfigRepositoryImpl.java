@@ -278,9 +278,5 @@ public class DeviceConfigRepositoryImpl implements DeviceConfigRepository {
                         ));
     }
 
-
-    @Override
-    public Future<List<String>> listTenants() {
-        return deviceRepository.listDistinctTenants();
-    }
 }
+

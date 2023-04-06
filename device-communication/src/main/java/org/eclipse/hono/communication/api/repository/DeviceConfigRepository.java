@@ -58,12 +58,6 @@ public interface DeviceConfigRepository {
 
     Future<Void> updateDeviceAckTime(DeviceConfigAckResponse ack, String deviceAckTime);
 
-    /**
-     * List all distinct tenant ID's from device registrations table.
-     *
-     * @return Future of List with all tenants
-     */
-    Future<List<String>> listTenants();
 
     /**
      * Get device latest config max(version).
