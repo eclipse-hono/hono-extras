@@ -38,7 +38,7 @@ application sends or expects some message attributes.
 
 ### Events
 
-API will subscribe to all tenants (tenant_id from device_registrations table) event topic at startup.
+API will subscribe to all tenants' (tenant_id from device_registrations table) event topic at startup.
 
 Expected message Attributes:
 
