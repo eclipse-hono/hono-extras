@@ -39,13 +39,6 @@ public interface DeviceStateRepository {
     Future<List<DeviceState>> listAll(String deviceId, String tenantId, int limit);
 
     /**
-     * List all distinct tenant ID's from device registrations table.
-     *
-     * @return Future of List with all tenants.
-     */
-    Future<List<String>> listTenants();
-
-    /**
      * Creates a new state and deletes the oldest one if the total number of versions in the DB is bigger than the MAX_LIMIT.
      *
      * @param entity The instance to insert.

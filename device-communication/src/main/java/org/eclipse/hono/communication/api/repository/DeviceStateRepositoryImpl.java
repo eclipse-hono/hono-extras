@@ -43,19 +43,19 @@ import io.vertx.sqlclient.templates.SqlTemplate;
 public class DeviceStateRepositoryImpl implements DeviceStateRepository {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceStateRepositoryImpl.class);
-    private final String SQL_COUNT_STATES_WITH_PK_FILTER = "SELECT COUNT(*) AS total FROM device_status WHERE tenant_id = #{tenantId} AND device_id = #{deviceId}";
-    private final String SQL_INSERT = "INSERT INTO device_status (id, tenant_id, device_id, update_time, binary_data) "
+    private static final String SQL_COUNT_STATES_WITH_PK_FILTER = "SELECT COUNT(*) AS total FROM device_status WHERE tenant_id = #{tenantId} AND device_id = #{deviceId}";
+    private static final String SQL_INSERT = "INSERT INTO device_status (id, tenant_id, device_id, update_time, binary_data) "
             +
             "VALUES (#{id}, #{tenantId}, #{deviceId}, #{updateTime}, #{binaryData}) RETURNING id";
-    private final String SQL_LIST = "SELECT update_time, binary_data FROM device_status " +
+    private static final String SQL_LIST = "SELECT update_time, binary_data FROM device_status " +
             "WHERE device_id = #{deviceId} and tenant_id = #{tenantId} ORDER BY update_time DESC LIMIT #{limit}";
 
-    private final String SQL_DELETE = "DELETE FROM device_status WHERE device_id = #{deviceId} AND tenant_id = #{tenantId} AND id NOT IN "
+    private static final String SQL_DELETE = "DELETE FROM device_status WHERE device_id = #{deviceId} AND tenant_id = #{tenantId} AND id NOT IN "
             +
             "(SELECT id FROM device_status WHERE device_id = #{deviceId} AND tenant_id = #{tenantId} ORDER BY update_time DESC LIMIT 9)";
-    private final String deviceIdKey = "deviceId";
-    private final String tenantIdKey = "tenantId";
-    private final int MAX_LIMIT = 10;
+    private static final String DEVICE_ID_CAPTION = "deviceId";
+    private static final String TENANT_ID_CAPTION = "tenantId";
+    private static final int MAX_LIMIT = 10;
     private final DatabaseService db;
     private final DeviceRepository deviceRepository;
 
@@ -87,7 +87,7 @@ public class DeviceStateRepositoryImpl implements DeviceStateRepository {
                                     return SqlTemplate
                                             .forQuery(sqlConnection, SQL_LIST)
                                             .mapTo(DeviceStateEntity.class)
-                                            .execute(Map.of(deviceIdKey, deviceId, tenantIdKey, tenantId, "limit",
+                                            .execute(Map.of(DEVICE_ID_CAPTION, deviceId, TENANT_ID_CAPTION, tenantId, "limit",
                                                     queryLimit))
                                             .map(rowSet -> {
                                                 final List<DeviceState> states = new ArrayList<>();
@@ -101,11 +101,6 @@ public class DeviceStateRepositoryImpl implements DeviceStateRepository {
                                                             deviceId, tenantId)))
                                             .onFailure(throwable -> log.error("Error: {}", throwable.getMessage()));
                                 }));
-    }
-
-    @Override
-    public Future<List<String>> listTenants() {
-        return deviceRepository.listDistinctTenants();
     }
 
     @Override
@@ -138,7 +133,7 @@ public class DeviceStateRepositoryImpl implements DeviceStateRepository {
                 sqlConnection -> SqlTemplate
                         .forQuery(sqlConnection, SQL_COUNT_STATES_WITH_PK_FILTER)
                         .mapTo(rowMapper)
-                        .execute(Map.of(deviceIdKey, deviceId, tenantIdKey, tenantId)).map(rowSet -> {
+                        .execute(Map.of(DEVICE_ID_CAPTION, deviceId, TENANT_ID_CAPTION, tenantId)).map(rowSet -> {
                             final RowIterator<Integer> iterator = rowSet.iterator();
                             return iterator.next();
                         }));
@@ -146,7 +141,7 @@ public class DeviceStateRepositoryImpl implements DeviceStateRepository {
 
     private void deleteStates(final SqlConnection sqlConnection, final DeviceStateEntity entity) {
         SqlTemplate.forQuery(sqlConnection, SQL_DELETE)
-                .execute(Map.of(deviceIdKey, entity.getDeviceId(), tenantIdKey, entity.getTenantId()));
+                .execute(Map.of(DEVICE_ID_CAPTION, entity.getDeviceId(), TENANT_ID_CAPTION, entity.getTenantId()));
     }
 
     /**

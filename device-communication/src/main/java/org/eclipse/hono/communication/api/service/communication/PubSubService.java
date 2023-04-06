@@ -40,7 +40,6 @@ import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.cloud.pubsub.v1.SubscriptionAdminSettings;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.util.Durations;
 import com.google.pubsub.v1.ProjectName;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PubsubMessage;
@@ -55,11 +54,11 @@ import com.google.pubsub.v1.TopicName;
 public class PubSubService implements InternalMessaging {
 
     public static final String COMMUNICATION_API_SUBSCRIPTION_NAME = "%s-communication-api";
-    private static final long MESSAGE_RETENTION = 600000;
     private final Logger log = LoggerFactory.getLogger(PubSubService.class);
     private final Map<String, Subscriber> activeSubscriptions = new HashMap<>();
 
     private final String projectId;
+    private TopicName topicName;
 
 
     /**
@@ -122,7 +121,7 @@ public class PubSubService implements InternalMessaging {
         if (activeSubscriptions.containsKey(topic)) {
             return;
         }
-        final TopicName topicName = TopicName.of(projectId, topic);
+        topicName = TopicName.of(projectId, topic);
         final ProjectSubscriptionName subscriptionName;
         try {
             subscriptionName = initSubscription(topic);
@@ -159,14 +158,12 @@ public class PubSubService implements InternalMessaging {
 
             if (existing.isEmpty()) {
 
-                final Subscription request = Subscription.newBuilder()
-                        .setName(subscriptionName.toString())
-                        .setTopic(topic)
-                        .setPushConfig(PushConfig.getDefaultInstance())
-                        .setAckDeadlineSeconds(0)
-                        .setMessageRetentionDuration(Durations.fromMillis(MESSAGE_RETENTION))
-                        .build();
-                final Subscription createdSubscription = subscriptionAdminClient.createSubscription(request);
+                subscriptionAdminClient.createSubscription(
+                        subscriptionName.toString(),
+                        topicName,
+                        PushConfig.getDefaultInstance(),
+                        50
+                );
             }
         }
         return subscriptionName;

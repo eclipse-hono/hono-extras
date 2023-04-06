@@ -22,6 +22,10 @@ router.
 
 <p>
 
+#### states/{tenantId}/{deviceId}?numStates=(int 0 - 10)
+
+- GET : list of device states
+
 #### configs/{tenantId}/{deviceId}?numVersion=(int 0 - 10)
 
 - GET : list of device config versions
@@ -38,7 +42,7 @@ application sends or expects some message attributes.
 
 ### Events
 
-API will subscribe to all tenants' (tenant_id from device_registrations table) event topic at startup.
+API will subscribe to all tenants' event topic at startup.
 
 Expected message Attributes:
 
@@ -48,6 +52,17 @@ Expected message Attributes:
 
 Application will <b>proceed only empty Notifications events (content-type is
 application/vnd.eclipse-hono-empty-notification)</b>.
+
+### States
+
+API will subscribe to all tenants' state topic at startup.
+
+Expected message Attributes:
+
+- deviceId
+- tenantId
+
+States are read only.
 
 ### Configs
 
@@ -101,6 +116,8 @@ Application uses PostgresSQL database. All the database configurations can be fo
   Is used for saving device config versions
 - device_registrations <br>
   Is used for validating if a device exist
+- device_status <br>
+  Is used for saving device states
 
 ### Migrations
 
@@ -171,7 +188,8 @@ Application subscribes and uses to the following topics:
 3. TENANT_ID.config
 4. TENANT_ID.config_response
 5. TENANT_ID.event
-6. registry-tenant.notification
+6. TENANT_ID.event.state
+7. registry-tenant.notification
 
 ## Automatically create PubSub topics and subscriptions
 
