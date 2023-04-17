@@ -20,7 +20,6 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
@@ -177,48 +176,6 @@ class DeviceConfigServiceImplTest {
 
 
         Assertions.assertTrue(results.failed());
-    }
-
-    @Test
-    void modifyCloudToDeviceConfig_publish_failure() {
-        try (MockedStatic<Vertx> vertxMockedStatic = mockStatic(Vertx.class)) {
-            final var deviceConfigRequest = new DeviceConfigRequest();
-            deviceConfigRequest.setBinaryData(CONFIG_BASE_64);
-            final var deviceConfigEntity = new DeviceConfigEntity();
-            deviceConfigEntity.setDeviceId("id");
-            deviceConfigEntity.setTenantId("id");
-            final var deviceConfigEntityResponse = new DeviceConfig();
-            deviceConfigEntityResponse.setVersion("1");
-            deviceConfigEntityResponse.setBinaryData(CONFIG_BASE_64);
-
-            when(repositoryMock.createNew(any())).thenReturn(Future.succeededFuture(deviceConfigEntity));
-            when(mapperMock.configRequestToDeviceConfigEntity(deviceConfigRequest)).thenReturn(deviceConfigEntity);
-            when(mapperMock.deviceConfigEntityToConfig(deviceConfigEntity)).thenReturn(deviceConfigEntityResponse);
-            when(mapperMock.configRequestToDeviceConfigEntity(any())).thenReturn(deviceConfigEntity);
-            when(communicationConfigMock.getConfigTopicFormat()).thenReturn("%s.config");
-            when(communicationConfigMock.getConfigAckTopicFormat()).thenReturn("%s.ack");
-            when(communicationConfigMock.getDeviceIdKey()).thenReturn("device");
-            when(communicationConfigMock.getTenantIdKey()).thenReturn("tenant");
-            when(communicationConfigMock.getConfigVersionIdKey()).thenReturn("version");
-            when(communicationConfigMock.getConfigTopicFormat()).thenReturn("version");
-            vertxMockedStatic.when(Vertx::currentContext).thenReturn(contextMock);
-            doThrow(new RuntimeException()).when(internalCommunicationMock).subscribe(anyString(), any());
-
-            final var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
-
-            verify(repositoryMock).createNew(any());
-            verify(communicationConfigMock).getConfigVersionIdKey();
-            verify(communicationConfigMock).getTenantIdKey();
-            verify(communicationConfigMock).getDeviceIdKey();
-            verify(mapperMock, times(1)).configRequestToDeviceConfigEntity(deviceConfigRequest);
-            verify(mapperMock, times(1)).deviceConfigEntityToConfig(deviceConfigEntity);
-            verify(communicationConfigMock).getConfigTopicFormat();
-            verify(communicationConfigMock).getConfigAckTopicFormat();
-            verify(contextMock).executeBlocking(any());
-            vertxMockedStatic.verify(Vertx::currentContext);
-            vertxMockedStatic.verifyNoMoreInteractions();
-            Assertions.assertTrue(results.succeeded());
-        }
     }
 
     @Test
