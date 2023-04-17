@@ -16,13 +16,16 @@
 
 package org.eclipse.hono.communication.core.utils;
 
-import java.util.regex.Pattern;
+import java.util.Base64;
 
 /**
  * String validation utils.
  */
 public abstract class StringValidateUtils {
 
+    private StringValidateUtils() {
+        throw new IllegalStateException("Utility class");
+    }
 
     /**
      * Checks if a given string is base64 encoded.
@@ -31,12 +34,11 @@ public abstract class StringValidateUtils {
      * @return True if string is base64 else False
      */
     public static boolean isBase64(final String stringBase64) {
-        final String regex =
-                "([A-Za-z0-9+/]{4})*" +
-                        "([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)";
-
-        final Pattern patron = Pattern.compile(regex);
-
-        return patron.matcher(stringBase64).matches();
+        try{
+            Base64.getDecoder().decode(stringBase64);
+            return true;
+        } catch (IllegalArgumentException e){
+            return false;
+        }
     }
 }
