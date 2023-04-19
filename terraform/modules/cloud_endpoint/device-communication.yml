@@ -1,0 +1,2357 @@
+info:
+  contact:
+    name: Contact details
+    url: 'https://www.eclipse.org/hono/community/get-in-touch/'
+  description: |
+    This API defines all the endpoints for Device registry & communication APIs.
+  title: Eclipse Hono Device Registry & Communication API
+  version: '1.12.2'
+swagger: '2.0'
+host: "hono-device-apis-gce.endpoints.${project_id}.cloud.goog"
+basePath: /v1
+
+paths:
+  '/credentials/{tenantId}/{deviceId}':
+    parameters:
+      - description: The ID of the tenant
+        in: path
+        name: tenantId
+        required: true
+        type: string
+        x-example: DEFAULT_TENANT
+      - description: The ID of the device
+        in: path
+        name: deviceId
+        required: true
+        type: string
+    get:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+
+      description: |
+        Clients use this operation to retrieve the set of credentials registered
+        for an existing device.
+
+        Hono's protocol adapters use the credentials registered for a device in
+        order to
+
+        authenticate the device when it connects to an adapter.
+
+        Implementors may return all of the credentials' data including all
+
+        details of its secrets like password hash and/or hash algorithm used.
+
+        This mode of operation is called *replace mode*. However, this behavior
+        is
+
+        discouraged because it might disclose confidential information in plain
+        text.
+
+
+        Instead, implementors should remove all confidential information from
+        the secrets
+
+        and include a (unique) identifier with each secret. Clients can then
+        refer to
+
+        this identifier in order to update particular secrets. This mode of
+        operation
+
+        is called *patch mode*.
+      operationId: getAllCredentials
+      parameters: [ ]
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Operation successful
+          headers:
+            ETag:
+              description: Version of the resource
+              type: string
+          schema:
+            $ref: '#/definitions/CredentialsSet'
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '404':
+          description: |
+            The referenced device could not be found.
+
+            This may also be returned for some operations
+            if the user lacks authorization to read the device.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Gets a device's set of credentials.
+      tags:
+        - credentials
+
+    put:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      consumes:
+        - application/json
+      description: |
+        A client uses this operation to update a device's existing set of
+        credentials
+
+        with the credentials contained in the request body.
+
+
+        A registry may run in one of two modes for updating credentials,
+        *replace mode*
+
+        or *patch mode*. A client can determine the mode of operation by means
+        of inspecting
+
+        any of the secrets returned by the *getAllCredentials* operation. If the
+        secrets
+
+        do not contain an `id` property, then the registry uses *replace mode*,
+        otherwise
+
+        it operates in *patch mode*.
+
+
+        In replace mode the registry simply replaces a device's existing set of
+        credentials
+
+        with the credentials provided in the request body.
+
+
+        In patch mode the registry processes the set of updated credentials
+        provided in the
+
+        request body as follows.
+
+        1. Start with an empty set `N` of new credentials.
+
+        1. For each updated credentials object `c-U` contained in the request
+        body,
+           the registry looks up an existing credentials object `c-E` of the same device ID, type
+           and authentication identifier.
+           1. If no matching credentials object exists, `c-U` is added to the set of new
+              credentials `N`.
+           1. Otherwise, `c-E` is patched over with `c-U` as follows. For each of `c-U`'s
+              secrets `s-U` the registry does the following
+              1. If `s-U` has no `id` property, the registry assigns a unique identifier to `s-U`.
+              1. Otherwise, the registry tries to find a secret `s-E` with the same identifier as `s-U`
+                 among the secrets of `c-E`.
+                 1. If no matching secret exists, updating the credentials has failed and the registry
+                    returns a response with status 400 (Bad Request).
+                 1. Otherwise the confidential properties of `s-E` are merged into `s-U`
+                    with the property values of `s-U` taking precedence.
+           1. `c-U` is added to `N`.
+        1. The registry replaces the device's existing set of credentials with
+        `N` and returns an
+           empty response with status code 204 (No Content) to indicate the successful outcome of the
+           operation.
+
+           Note that `N` does not contain any of the existing credentials objects `c-E` for which
+           no corresponding credentials object `c-U` with the same device ID, type and authentication
+           identifier exists. This way, existing credentials can be deleted.
+      operationId: setAllCredentials
+      parameters:
+
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      produces:
+        - application/json
+      responses:
+        '204':
+          description: Object updated.
+          headers:
+            ETag:
+              description: The new version of the resource
+              type: string
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '403':
+          description: |
+            Operation not allowed. If the user does not have read access
+            for this object, then `404` will be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: |
+            The referenced device could not be found.
+
+            This may also be returned for some operations
+            if the user lacks authorization to read the device.
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: |
+            Object already exists. If the user has no read access for
+            the existing object, then `403` should be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '412':
+          description: |
+            Expected resource version does not match current.
+            This can only happen when the request header `If-Match`
+            was set.
+          schema:
+            $ref: '#/definitions/Error'
+        '413':
+          description: |
+            The size of the payload in the request body exceeds the registry's
+            configured limit.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Updates a device's credentials.
+      tags:
+        - credentials
+  '/devices/{tenantId}':
+    parameters:
+      - description: The ID of the tenant
+        in: path
+        name: tenantId
+        required: true
+        type: string
+        x-example: DEFAULT_TENANT
+    delete:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      description: |
+        Clients use this operation to remove all devices of a tenant from the
+        registry.
+
+
+        When the operation succeeds, none of the registration information and
+        credentials of devices
+
+        belonging to the tenant must be accessible anymore. These entities
+        should be reported as *not found*.
+      operationId: deleteDevicesOfTenant
+      parameters: [ ]
+      produces:
+        - application/json
+      responses:
+        '204':
+          description: All devices of the tenant have been deleted
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+      summary: Delete all devices of a tenant.
+      tags:
+        - devices
+    get:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      operationId: searchDevicesForTenant
+      parameters:
+        - description: |
+            The maximum number of objects to include in a response.
+          in: query
+          maximum: 200
+          minimum: 0
+          name: pageSize
+          required: false
+          type: integer
+        - description: |
+            The offset into the result set from which to include objects in the
+            response. This allows to retrieve the whole result set page by page.
+          in: query
+          minimum: 0
+          name: pageOffset
+          required: false
+          type: integer
+
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: operation successful
+          schema:
+            $ref: '#/definitions/SearchDevicesResult'
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '404':
+          description: |
+            Object not found. This may also be returned for some operations
+
+            if the user lacks authorization to read the subject of the
+            operation.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: >-
+        Search devices for a tenant with optional filters, paging and sorting
+        options.
+      tags:
+        - devices
+
+    post:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      consumes:
+        - application/json
+      description: |
+        Clients use this operation to register a new device for an existing
+        tenant with
+        an identifier that is generated by the registry.
+      operationId: createDeviceRegistration
+      parameters:
+        - description: The configuration properties to register for the device.
+          in: body
+          name: body
+          required: false
+          schema:
+            type: object
+      produces:
+        - application/json
+      responses:
+        '201':
+          description: Object created.
+          headers:
+            ETag:
+              description: The new version of the resource
+              type: string
+            Location:
+              description: URL to the resource
+              format: uri
+              type: string
+          schema:
+            additionalProperties: false
+            properties:
+              id:
+                description: The ID of the created object
+                type: string
+            required:
+              - id
+            type: object
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '403':
+          description: |
+            Operation not allowed. If the user does not have read access
+            for this object, then `404` will be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: |
+            The referenced tenant could not be found.
+
+            This may also be returned for some operations
+            if the user lacks authorization to read the tenant.
+          schema:
+            $ref: '#/definitions/Error'
+        '413':
+          description: |
+            The size of the payload in the request body exceeds the registry's
+            configured limit.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Create a new device registration with auto-generated ID
+      tags:
+        - devices
+  '/devices/{tenantId}/{deviceId}':
+    parameters:
+      - description: The ID of the tenant
+        in: path
+        name: tenantId
+        required: true
+        type: string
+        x-example: DEFAULT_TENANT
+      - description: The ID of the device
+        in: path
+        name: deviceId
+        required: true
+        type: string
+        x-example: 4711
+    delete:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      description: |
+        Clients use this operation to remove an existing device from the
+        registry.
+
+
+        When the operation succeeds, the data owned by this device (including
+        its credentials)
+
+        must no longer be accessible. These entities should be reported as *not
+        found*.
+      operationId: deleteRegistration
+      parameters:
+        - description: The expected resource version
+          in: header
+          name: If-Match
+          required: false
+          type: string
+      produces:
+        - application/json
+      responses:
+        '204':
+          description: Object deleted.
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '403':
+          description: |
+            Operation not allowed. If the user does not have read access
+            for this object, then `404` will be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: |
+            Object not found. This may also be returned for some operations
+
+            if the user lacks authorization to read the subject of the
+            operation.
+          schema:
+            $ref: '#/definitions/Error'
+        '412':
+          description: |
+            Expected resource version does not match current.
+            This can only happen when the request header `If-Match`
+            was set.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Delete an existing device registration
+      tags:
+        - devices
+    get:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      description: |
+        Clients use this operation to retrieve the configuration properties of
+        an existing device.
+      operationId: getRegistration
+      parameters: [ ]
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: operation successful
+          headers:
+            ETag:
+              description: Version of the resource
+              type: string
+          schema:
+            $ref: '#/definitions/Device'
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '404':
+          description: |
+            Object not found. This may also be returned for some operations
+
+            if the user lacks authorization to read the subject of the
+            operation.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Get device registration information
+      tags:
+        - devices
+
+    post:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      consumes:
+        - application/json
+      description: |
+        Clients use this operation to register a new device for an existing
+        tenant with
+
+        a given identifier
+      operationId: createDeviceRegistrationWithId
+      parameters:
+        - description: The configuration properties to register for the device.
+          in: body
+          name: body
+          required: false
+          schema:
+            type: object
+      produces:
+        - application/json
+      responses:
+        '201':
+          description: Object created.
+          headers:
+            ETag:
+              description: The new version of the resource
+              type: string
+            Location:
+              description: URL to the resource
+              format: uri
+              type: string
+          schema:
+            additionalProperties: false
+            properties:
+              id:
+                description: The ID of the created object
+                type: string
+            required:
+              - id
+            type: object
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '403':
+          description: |
+            Operation not allowed. If the user does not have read access
+            for this object, then `404` will be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: |
+            The referenced tenant could not be found.
+
+            This may also be returned for some operations
+            if the user lacks authorization to read the tenant.
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: |
+            Object already exists. If the user has no read access for
+            the existing object, then `403` should be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '413':
+          description: |
+            The size of the payload in the request body exceeds the registry's
+            configured limit.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Create a new device registration
+      tags:
+        - devices
+    put:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      consumes:
+        - application/json
+      description: |
+        Clients use this operation to replace an existing device's registration
+        information
+
+        with the information contained in the request body.
+      operationId: updateRegistration
+      parameters:
+        - description: The expected resource version
+          in: header
+          name: If-Match
+          required: false
+          type: string
+        - description: |
+            The configuration properties to replace the device's existing
+            configuration with.
+          in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      produces:
+        - application/json
+      responses:
+        '204':
+          description: Object updated.
+          headers:
+            ETag:
+              description: The new version of the resource
+              type: string
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '403':
+          description: |
+            Operation not allowed. If the user does not have read access
+            for this object, then `404` will be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: |
+            Object not found. This may also be returned for some operations
+
+            if the user lacks authorization to read the subject of the
+            operation.
+          schema:
+            $ref: '#/definitions/Error'
+        '412':
+          description: |
+            Expected resource version does not match current.
+            This can only happen when the request header `If-Match`
+            was set.
+          schema:
+            $ref: '#/definitions/Error'
+        '413':
+          description: |
+            The size of the payload in the request body exceeds the registry's
+            configured limit.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Update an existing device registration
+      tags:
+        - devices
+  /tenants:
+    get:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      operationId: searchTenants
+      parameters:
+        - default: 30
+          description: |
+            The maximum number of objects to include in a response.
+          in: query
+          maximum: 200
+          minimum: 0
+          name: pageSize
+          required: false
+          type: integer
+        - default: 0
+          description: |
+            The offset into the result set from which to include objects in the
+            response. This allows to retrieve the whole result set page by page.
+          in: query
+          minimum: 0
+          name: pageOffset
+          required: false
+          type: integer
+        - description: |
+            A predicate that objects in the result set must match. If this
+            parameter is specified multiple
+
+            times, objects in the result set must match all predicates.
+
+            The predicate is specified as a string representing a JSON object
+            complying with the following schema
+          in: query
+          name: filterJson
+          required: false
+          type: string
+        - description: |
+            Specifies a property to sort the result set by. If this parameter is
+            specified multiple
+
+            times, the sort options are applied in the order they are specified
+            in the query string.
+
+            The sort option is specified as a string representing a JSON object
+            complying with the following schema
+          in: query
+          name: sortJson
+          required: false
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: operation successful
+          schema:
+            $ref: '#/definitions/SearchTenantsResult'
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '404':
+          description: |
+            Object not found. This may also be returned for some operations
+
+            if the user lacks authorization to read the subject of the
+            operation.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: 'Search tenants with optional filters, paging and sorting options.'
+      tags:
+        - tenants
+    post:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      consumes:
+        - application/json
+      description: |
+        Clients use this operation to register a new tenant with an identifier
+        that
+
+        is generated by the registry.
+      operationId: createTenant
+      parameters:
+        - description: The configuration properties to register for the tenant.
+          in: body
+          name: body
+          required: false
+          schema:
+            type: object
+      produces:
+        - application/json
+      responses:
+        '201':
+          description: Object created.
+          headers:
+            ETag:
+              description: The new version of the resource
+              type: string
+            Location:
+              description: URL to the resource
+              format: uri
+              type: string
+          schema:
+            additionalProperties: false
+            properties:
+              id:
+                description: The ID of the created object
+                type: string
+            required:
+              - id
+            type: object
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '403':
+          description: |
+            Operation not allowed. If the user does not have read access
+            for this object, then `404` will be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: |
+            Indicates that an existing tenant uses a certificate authority with
+            the same Subject DN.
+
+            If the client has no read access to the conflicting tenant then
+            `403` should be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '413':
+          description: |
+            The size of the payload in the request body exceeds the registry's
+            configured limit.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Create a new tenant with an auto-generated ID
+      tags:
+        - tenants
+  '/tenants/{tenantId}':
+    parameters:
+      - description: The ID of the tenant
+        in: path
+        name: tenantId
+        required: true
+        type: string
+
+    delete:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      description: |
+        Clients use this operation to remove an existing tenant from the
+        registry.
+
+
+        When the operation succeeds, the data owned by this tenant (including
+        devices and their
+
+        credentials) must no longer be accessible. These entities should be
+        reported as *not found*.
+      operationId: deleteTenant
+      parameters:
+        - description: The expected resource version
+          in: header
+          name: If-Match
+          required: false
+          type: string
+      produces:
+        - application/json
+      responses:
+        '204':
+          description: Object deleted.
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '403':
+          description: |
+            Operation not allowed. If the user does not have read access
+            for this object, then `404` will be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: |
+            Object not found. This may also be returned for some operations
+
+            if the user lacks authorization to read the subject of the
+            operation.
+          schema:
+            $ref: '#/definitions/Error'
+        '412':
+          description: |
+            Expected resource version does not match current.
+            This can only happen when the request header `If-Match`
+            was set.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Delete tenant
+      tags:
+        - tenants
+    get:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      description: |
+        Clients use this operation to retrieve the configuration properties of
+        an existing tenant.
+      operationId: getTenant
+      parameters: [ ]
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: operation successful
+          headers:
+            ETag:
+              description: Version of the resource
+              type: string
+          schema:
+            $ref: '#/definitions/Tenant'
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '404':
+          description: |
+            Object not found. This may also be returned for some operations
+
+            if the user lacks authorization to read the subject of the
+            operation.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Get tenant information
+      tags:
+        - tenants
+    post:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      consumes:
+        - application/json
+      description: |
+        Clients use this operation to register a new tenant with a given
+        identifier.
+      operationId: createTenantWithId
+      parameters:
+        - description: The configuration properties to register for the tenant.
+          in: body
+          name: body
+          required: false
+          schema:
+            type: object
+      produces:
+        - application/json
+      responses:
+        '201':
+          description: Object created.
+          headers:
+            ETag:
+              description: The new version of the resource
+              type: string
+            Location:
+              description: URL to the resource
+              format: uri
+              type: string
+          schema:
+            additionalProperties: false
+            properties:
+              id:
+                description: The ID of the created object
+                type: string
+            required:
+              - id
+            type: object
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '403':
+          description: |
+            Operation not allowed. If the user does not have read access
+            for this object, then `404` will be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: |
+            Indicates that a tenant with the given identifier already exists or
+            that an existing tenant uses
+
+            a certificate authority with the same Subject DN.
+
+            If the client has no read access to the conflicting tenant then
+            `403` should be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '413':
+          description: |
+            The size of the payload in the request body exceeds the registry's
+            configured limit.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Create a new tenant with a given ID
+      tags:
+        - tenants
+    put:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-registry:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      consumes:
+        - application/json
+      description: |
+        Clients use this operation to replace an existing tenant's registration
+        information
+
+        with the information contained in the request body.
+      operationId: updateTenant
+      parameters:
+        - description: The expected resource version
+          in: header
+          name: If-Match
+          required: false
+          type: string
+        - description: |
+            The configuration properties to replace the tenant's existing
+            configuration with.
+          in: body
+          name: body
+          required: true
+          schema:
+            type: object
+      produces:
+        - application/json
+      responses:
+        '204':
+          description: Object updated.
+          headers:
+            ETag:
+              description: The new version of the resource
+              type: string
+        '400':
+          description: Malformed request
+          schema:
+            $ref: '#/definitions/Error'
+        '401':
+          description: 'Authentication credentials are required, but missing.'
+          headers:
+            WWW-Authenticate:
+              type: string
+        '403':
+          description: |
+            Operation not allowed. If the user does not have read access
+            for this object, then `404` will be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: |
+            Object not found. This may also be returned for some operations
+
+            if the user lacks authorization to read the subject of the
+            operation.
+          schema:
+            $ref: '#/definitions/Error'
+        '409':
+          description: |
+            Indicates that an existing tenant uses a certificate authority with
+            the same Subject DN.
+
+            If the client has no read access to the conflicting tenant then
+            `403` should be returned instead.
+          schema:
+            $ref: '#/definitions/Error'
+        '412':
+          description: |
+            Expected resource version does not match current.
+            This can only happen when the request header `If-Match`
+            was set.
+          schema:
+            $ref: '#/definitions/Error'
+        '413':
+          description: |
+            The size of the payload in the request body exceeds the registry's
+            configured limit.
+          schema:
+            $ref: '#/definitions/Error'
+      summary: Update tenant information
+      tags:
+        - tenants
+  "/commands/{tenantid}/{deviceid}":
+    parameters:
+      - description: Unique registry ID
+        in: path
+        name: tenantid
+        required: true
+        type: string
+      - description: Unique device ID
+        in: path
+        name: deviceid
+        required: true
+        type: string
+    post:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-communication:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      consumes:
+        - application/json
+      operationId: postCommand
+      parameters:
+        - description: CommandRequest object as JSON
+          in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/DeviceCommandRequest"
+      responses:
+        "200":
+          description: Command was sent successfully
+        "400":
+          description: Command can not be send to device
+      summary: Send a command to device.
+      tags:
+        - COMMANDS
+  "/configs/{tenantid}/{deviceid}":
+    get:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-communication:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      description: >-
+        Lists the last few versions of the device configuration in descending
+        order (i.e.: newest first).
+      operationId: listConfigVersions
+      parameters:
+        - description: >-
+            The number of versions to list. Versions are listed in decreasing
+            order of the version number. The maximum number of versions saved in
+            Database is 10. If this value is zero, it will return all the
+            versions available.
+          in: query
+          maximum: 10
+          minimum: 0
+          name: numVersions
+          required: false
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Lists the device config versions
+          schema:
+            $ref: "#/definitions/ListDeviceConfigVersionsResponse"
+      summary: List a device config versions
+      tags:
+        - CONFIGS
+    parameters:
+      - description: Unique registry id
+        in: path
+        name: tenantid
+        required: true
+        type: string
+      - description: Unique device id
+        in: path
+        name: deviceid
+        required: true
+        type: string
+    post:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-communication:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      consumes:
+        - application/json
+      description: >-
+        Creates an device config version and Returns the the new configuration
+        version and its metadata.
+      operationId: modifyCloudToDeviceConfig
+      parameters:
+        - description: DeviceConfigRequest object as JSON
+          in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/DeviceConfigRequest"
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Device config updated successfully
+          schema:
+            $ref: "#/definitions/DeviceConfig"
+        "400":
+          description: Validation error or Bad request
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server error
+      summary: Modify cloud to device config
+      tags:
+        - CONFIGS
+  "/states/{tenantid}/{deviceid}":
+    get:
+      x-google-backend:
+        address: http://eclipse-hono-service-device-communication:8080
+        path_translation: [ APPEND_PATH_TO_ADDRESS ]
+      description: >-
+        Lists the last few versions of the device state in descending
+        order (i.e.: newest first).
+      operationId: listStates
+      parameters:
+        - description: >-
+            The number of states to list. States are listed in decreasing
+            order of the state id. The maximum number of states saved in
+            Database is 10. If this value is zero, it will return all the
+            states available.
+          in: query
+          maximum: 10
+          minimum: 0
+          name: numStates
+          required: false
+          type: integer
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Lists the device states
+          schema:
+            $ref: "#/definitions/ListDeviceStatesResponse"
+      summary: List the device states
+      tags:
+        - STATES
+    parameters:
+      - description: Unique registry id
+        in: path
+        name: tenantid
+        required: true
+        type: string
+      - description: Unique device id
+        in: path
+        name: deviceid
+        required: true
+        type: string
+
+schemes:
+  - https
+definitions:
+  DeviceState:
+    description: The device state.
+    example:
+      binaryData: string
+      updateTime: string
+    properties:
+      binaryData:
+        description: >-
+          string (bytes format) The device state data in string
+          base64-encoded format.
+        type: string
+      updateTime:
+        description: >-
+          String (Timestamp format) [Output only] The time at which this
+          state version was updated. This timestamp is
+          set by the server. Timestamp in  RFC3339 UTC "Zulu" format, accurate
+          to nanoseconds.  Example: "2014-10-02T15:01:23.045123456Z".
+        type: string
+    title: Root Type for DeviceState
+    type: object
+  ListDeviceStatesResponse:
+    description: A list of a device states.
+    example:
+      deviceStates:
+        - object: DeviceState
+    properties:
+      deviceStates:
+        description: List of DeviceState objects.
+        items:
+          $ref: "#/definitions/DeviceState"
+        type: array
+    title: Root Type for ListDeviceStatesResponse
+    type: object
+  DeviceCommandRequest:
+    description: Command json object structure
+    example:
+      binaryData: A base64-encoded string
+      subfolder: Optional subfolder for the command
+    properties:
+      binaryData:
+        description: "The command data to send to the device in base64-encoded string format.\r\n\r\n"
+        type: string
+      subfolder:
+        description: >-
+          Optional subfolder for the command. If empty, the command will be
+          delivered to the /devices/{device-id}/commands topic, otherwise it
+          will be delivered to the /devices/{device-id}/commands/{subfolder}
+          topic. Multi-level subfolders are allowed. This field must not have
+          more than 256 characters, and must not contain any MQTT wildcards 
+          ("+" or "#") or null characters.
+        type: string
+    required:
+      - binaryData
+    title: Root Type for Command
+    type: object
+  DeviceConfig:
+    description: The device configuration.
+    example:
+      binaryData: string
+      cloudUpdateTime: string
+      deviceAckTime: string
+      version: string
+    properties:
+      binaryData:
+        description: >-
+          string (bytes format) The device configuration data in string
+          base64-encoded format.
+        type: string
+      cloudUpdateTime:
+        description: >-
+          String (Timestamp format) [Output only] The time at which this
+          configuration version was updated in Cloud IoT Core. This timestamp is
+          set by the server. Timestamp in  RFC3339 UTC "Zulu" format, accurate
+          to nanoseconds.  Example: "2014-10-02T15:01:23.045123456Z".
+        type: string
+      deviceAckTime:
+        description: >-
+          string (Timestamp format) [Output only] The time at which Cloud IoT
+          Core received the acknowledgment from the device, indicating that the
+          device has received this configuration version. If this field is not
+          present, the device has not yet acknowledged that it received this
+          version. Note that when the config was sent to the device, many config
+          versions may have been available in Cloud IoT Core while the device
+          was disconnected, and on connection, only the latest version is sent
+          to the device. Some versions may never be sent to the device, and
+          therefore are never acknowledged. This timestamp is set by Cloud IoT
+          Core. Timestamp in RFC3339 UTC "Zulu" format, accurate to nanoseconds.
+          Example: "2014-10-02T15:01:23.045123456Z".
+        type: string
+      version:
+        description: >-
+          String (int64 format) [Output only] The version of this update. The
+          version number is assigned by the server, and is always greater than 0
+          after device creation. The version must be 0 on the devices.create
+          request if a config is specified; the response of devices.create will
+          always have a value of 1.
+        type: string
+    title: Root Type for DeviceConfig
+    type: object
+  DeviceConfigRequest:
+    description: Request body for modifying device configs
+    properties:
+      binaryData:
+        description: "string (bytes format) The configuration data for the device in string base64-encoded format.\r\n"
+        type: string
+      versionToUpdate:
+        description: "string (int64 format) The Config version number."
+        type: string
+    required:
+      - binaryData
+    type: object
+
+  ListDeviceConfigVersionsResponse:
+    description: A list of a device config versions
+    example:
+      deviceConfigs:
+        - object: DeviceConfig
+    properties:
+      deviceConfigs:
+        description: List of DeviceConfig objects
+        items:
+          $ref: "#/definitions/DeviceConfig"
+        type: array
+    title: Root Type for ListDeviceConfigVersionsResponse
+    type: object
+
+  Adapter:
+    additionalProperties: true
+    properties:
+      device-authentication-required:
+        default: true
+        type: boolean
+      enabled:
+        default: false
+        type: boolean
+      ext:
+        $ref: '#/definitions/Extensions'
+      type:
+        type: string
+    required:
+      - type
+    type: object
+  CommonCredentials:
+    additionalProperties: false
+    properties:
+      auth-id:
+        type: string
+      enabled:
+        default: true
+        type: boolean
+      ext:
+        $ref: '#/definitions/Extensions'
+      type:
+        type: string
+    type: object
+  CommonSecret:
+    additionalProperties: false
+    properties:
+      comment:
+        type: string
+      enabled:
+        default: true
+        description: Indicates if this secret can be used for authentication.
+        type: boolean
+      id:
+        description: |-
+          The device registry can assign an identity to the secret. This value
+          can be used to update secrets based on their metadata.
+        type: string
+      not-after:
+        description: |
+          The point in time after which this secret will no longer be accepted
+          for authentication.
+
+          NB: The value MUST be a string that complies with the format defined
+          in
+
+          [RFC 3339](https://tools.ietf.org/html/rfc3339#section-5.6) as
+          indicated
+
+          by the
+          [date-time](https://spec.openapis.org/oas/v3.0.1#dataTypeFormat)
+
+          format in the OpenAPI specification.
+        format: date-time
+        type: string
+      not-before:
+        description: |
+          The point in time from which on this secret will be accepted for
+          authentication.
+
+          NB: The value MUST be a string that complies with the format defined
+          in
+
+          [RFC 3339](https://tools.ietf.org/html/rfc3339#section-5.6) as
+          indicated
+
+          by the
+          [date-time](https://spec.openapis.org/oas/v3.0.1#dataTypeFormat)
+
+          format in the OpenAPI specification.
+        format: date-time
+        type: string
+    type: object
+  ConnectionDuration:
+    additionalProperties: false
+    properties:
+      effective-since:
+        description: |
+          The point in time at which the connection duration limit came into
+          effect.
+
+          NB: The value MUST be a string that complies with the format defined
+          in
+
+          [RFC 3339](https://tools.ietf.org/html/rfc3339#section-5.6) as
+          indicated
+
+          by the
+          [date-time](https://spec.openapis.org/oas/v3.0.1#dataTypeFormat)
+
+          format in the OpenAPI specification.
+        format: date-time
+        type: string
+      max-minutes:
+        default: -1
+        description: |
+          The maximum amount of time (in minutes) that all of the tenant's
+          devices together may
+
+          be connected to a protocol adapter during each accounting period.
+
+          A value of `-1` (the default) indicates that no limit is set.
+        type: integer
+      period:
+        $ref: '#/definitions/Period'
+    required:
+      - effective-since
+    type: object
+  CredentialsSet:
+    description: |-
+      A set of credentials. The entries in this list must be unique by the
+      composite key of `auth-id` and `type`.
+    items:
+      $ref: '#/definitions/TypedCredentials'
+    type: array
+  DataVolume:
+    additionalProperties: false
+    properties:
+      effective-since:
+        description: |
+          The point in time at which the data volume limit came into effect.
+
+          NB: The value MUST be a string that complies with the format defined
+          in
+
+          [RFC 3339](https://tools.ietf.org/html/rfc3339#section-5.6) as
+          indicated
+
+          by the
+          [date-time](https://spec.openapis.org/oas/v3.0.1#dataTypeFormat)
+
+          format in the OpenAPI specification.
+        format: date-time
+        type: string
+      max-bytes:
+        default: -1
+        description: |-
+          The maximum amount of data (in bytes) that all of the tenant's devices
+          together may transfer to and/or receive from protocol adapters during
+          each accounting period. A value of `-1` (the default) indicates that
+          no limit is set.
+        type: integer
+      period:
+        $ref: '#/definitions/Period'
+    required:
+      - effective-since
+    type: object
+  DefaultProperties:
+    additionalProperties: true
+    description: Defaults for properties defined on the tenant and device level.
+    type: object
+  Device:
+    additionalProperties: false
+    properties:
+      authorities:
+        description: |
+          The authorities granted to a device. Applies to gateways only
+          currently: the authority
+
+          `auto-provisioning-enabled` entitles a gateway device to perform
+          auto-provisioning for its
+
+          edge devices.
+        items:
+          type: string
+        type: array
+      command-endpoint:
+        additionalProperties: false
+        description: |
+          The endpoint of the device that command messages should be sent to.
+          Only relevant for devices
+
+          that connect to a type of protocol adapter that actively connects to
+          the device for sending commands,
+
+          instead of using a connection initiated by the device.
+        properties:
+          headers:
+            additionalProperties: true
+            description: Allows arbitrary headers which will be added to the command.
+            type: object
+          payload-properties:
+            additionalProperties: true
+            description: |-
+              Allows arbitrary properties which will be added to the command
+              payload.
+            type: object
+          uri:
+            description: |
+              Configures the URI to which the command should be sent. The
+              placeholder `{{deviceId}}` is
+
+              supported and will be replaced with the id of the device to which
+              the command was initially
+
+              sent.
+            type: string
+        required:
+          - uri
+        type: object
+      defaults:
+        $ref: '#/definitions/DefaultProperties'
+      downstream-message-mapper:
+        description: |
+          The name of a service that can be used by protocol adapters to
+          transform downstream messages
+
+          uploaded by devices before sending them to downstream consumers.
+
+          The protocol adapter needs to map this name to the particular service
+          to invoke.
+
+          NB: This is an experimental feature and thus this property is subject
+          to change without
+
+          notice.
+        type: string
+      enabled:
+        default: true
+        type: boolean
+      ext:
+        $ref: '#/definitions/Extensions'
+      memberOf:
+        description: |
+          The IDs of the gateway groups that this device is a member of.
+
+          Note that neither "via" nor "viaGroups" must be set if "memberOf" is
+          set.
+        items:
+          type: string
+        type: array
+      status:
+        $ref: '#/definitions/Status'
+      upstream-message-mapper:
+        description: |
+          The name of a service that can be used by protocol adapters to
+          transform upstream commands to be sent to devices.
+
+          The protocol adapter needs to map this name to the particular service
+          to invoke.
+
+          NB: This is an experimental feature and thus this property is subject
+          to change without
+
+          notice.
+        type: string
+      via:
+        description: |
+          The device IDs of the gateways that are registered to act on behalf of
+          this device.
+
+          Note that "via" and "memberOf" must not be set at the same time.
+        items:
+          type: string
+        type: array
+      viaGroups:
+        description: |
+          The IDs of the gateway groups that are registered to act on behalf of
+          this device.
+
+          Note that "viaGroups" and "memberOf" must not be set at the same time.
+        items:
+          type: string
+        type: array
+    type: object
+  DeviceWithId:
+    additionalProperties: false
+    allOf:
+      - properties:
+          id:
+            description: The identifier of the device.
+            readOnly: true
+            type: string
+        type: object
+      - $ref: '#/definitions/Device'
+    type: object
+  Error:
+    additionalProperties: true
+    properties:
+      error:
+        description: A human readable error message of what went wrong.
+        type: string
+    required:
+      - error
+    type: object
+  Extensions:
+    additionalProperties: true
+    description: |-
+      Allows arbitrary properties as extension to the ones specified by the Hono
+      API.
+    type: object
+  FilterJson:
+    additionalProperties: false
+    description: Filters to be applied to bulk queries.
+    properties:
+      field:
+        description: |
+          A [Json Pointer](https://tools.ietf.org/html/rfc6901) identifying the
+          field to use for filtering.
+        type: string
+      op:
+        default: eq
+        description: The operator to use when applying the filter.
+        enum:
+          - eq
+        type: string
+      value:
+        allOf:
+          - description: object value
+            type: object
+    required:
+      - field
+      - value
+  PSKCredentials:
+    additionalProperties: false
+    allOf:
+      - $ref: '#/definitions/CommonCredentials'
+      - additionalProperties: false
+        properties:
+          auth-id:
+            description: The *PSK identity* provided by the device in the TLS handshake.
+            type: string
+          secrets:
+            items:
+              $ref: '#/definitions/PSKSecret'
+            minItems: 1
+            type: array
+          type:
+            pattern: psk
+            type: string
+        required:
+          - type
+          - auth-id
+          - secrets
+        type: object
+  PSKSecret:
+    additionalProperties: false
+    allOf:
+      - $ref: '#/definitions/CommonSecret'
+      - additionalProperties: false
+        properties:
+          key:
+            description: The secret key shared between device and Hono.
+            format: byte
+            type: string
+        required:
+          - key
+        type: object
+  PasswordCredentials:
+    additionalProperties: false
+    allOf:
+      - $ref: '#/definitions/CommonCredentials'
+      - additionalProperties: false
+        properties:
+          auth-id:
+            description: |
+              The authentication identifier provided by the device as part of
+              the *user name*.
+
+              Example: For user name `sensor1@DEFAULT_TENANT` the authentication
+              identifier to be registered
+
+              is `sensor1`.
+            type: string
+          secrets:
+            items:
+              $ref: '#/definitions/PasswordSecret'
+            minItems: 1
+            type: array
+          type:
+            pattern: hashed-password
+            type: string
+        required:
+          - type
+          - auth-id
+          - secrets
+        type: object
+  PasswordSecret:
+    additionalProperties: false
+    allOf:
+      - $ref: '#/definitions/CommonSecret'
+      - additionalProperties: false
+        properties:
+          hash-function:
+            description: |-
+              The name of the hash function used to create the password hash
+              (defined in `pwd-hash` property). If the password is defined using
+              a `pwd-plain` property, this value will be ignored by the device
+              registry. This property should be empty when returning passwords
+              from the device registry using only secret metadata. In this case
+              the id field must be set instead.
+            example: bcrypt
+            type: string
+          pwd-hash:
+            description: |-
+              The password hash as a string, either the output of applying the
+              Bcrypt hash function to the clear text password if the
+              `hash-function` is `bcrypt`, or otherwise the Base64 encoding of
+              the bytes resulting from applying the hash function to the byte
+              array consisting of the salt bytes (if a salt is used) and the
+              UTF-8 encoding of the clear text password. For detail regarding
+              different hash functions and the required encoding refer to the
+              [Credentials
+              API](https://www.eclipse.org/hono/docs/api/credentials/#hashed-password).
+              If the password is defined using a `pwd-plain` property, this
+              value will be ignored by the device registry. This property should
+              be empty when returning passwords from the device registry using
+              only secret metadata. In this case the id field must be set
+              instead.
+            type: string
+          pwd-plain:
+            description: |-
+              The clear text value of the password to be hashed by the device
+              registry. If this property is specified, the device registry will
+              ignore user-provided hash properties (`hash-function`, `pwd-hash`
+              and `salt`). This property must never be included in a response
+              from the device registry. A device registry implementation must
+              never write plain text passwords to a persistent store.
+            type: string
+          salt:
+            description: |-
+              The Base64 encoding of the salt used in the password hash (defined
+              in the `pwd-hash` property). If the password is defined using a
+              `pwd-plain` property, this value will be ignored by the device
+              registry. This property should be empty when returning passwords
+              from the device registry using only secret metadata. In this case
+              the id field must be set instead.
+            format: byte
+            type: string
+        type: object
+  Period:
+    additionalProperties: false
+    properties:
+      mode:
+        description: |
+          The accounting period's mode of recurrence. The following modes are
+          defined:
+
+          * `monthly`: Accounting periods start at midnight (start of day) UTC
+          on the 1st day of each month.
+
+          * `days`: Accounting periods start at the time of the initial
+          accounting period every *N* days where
+                    *N* is the value of the *no-of-days* property.
+
+          The initial accounting period always starts at the point in time that
+          the plan was put in effect at.
+
+          Implementations MUST support the *monthly* and *days* modes and MAY
+          support additional custom modes.
+        type: string
+      no-of-days:
+        description: |-
+          The accounting period length in days. This property is only used if
+          *mode* is set to value `days`. Otherwise, this property is ignored.
+        minimum: 1
+        type: integer
+    required:
+      - mode
+    type: object
+  RegistrationLimits:
+    additionalProperties: false
+    properties:
+      max-credentials-per-device:
+        default: -1
+        description: |
+          The maximum number of credentials that can be registered for a device.
+          A value of `-1` (the default) indicates that no limit is set.
+        type: integer
+      max-devices:
+        default: -1
+        description: |
+          The maximum number of devices that can be registered for a tenant.
+          A value of `-1` (the default) indicates that no limit is set.
+        type: integer
+    type: object
+  ResourceLimit:
+    additionalProperties: false
+    properties:
+      connection-duration:
+        $ref: '#/definitions/ConnectionDuration'
+      data-volume:
+        $ref: '#/definitions/DataVolume'
+      ext:
+        $ref: '#/definitions/Extensions'
+      max-connections:
+        default: -1
+        description: |
+          The maximum number of concurrent connections allowed from devices of
+          this tenant.
+
+          A value of `-1` (the default) indicates that no limit is set.
+        type: integer
+      max-ttl:
+        default: -1
+        description: |
+          The maximum time-to-live (in seconds) to use for events published by
+          devices of this tenant. Any default TTL value specified
+          at either the tenant or device level will be limited to
+          the max value specified here.
+          If this property is set to a value greater than `-1` and no
+          default TTL is specified for a device, the max value will
+          be used for events published by the device.
+          A value of `-1` (the default) indicates that no limit is set.
+          Note that this property contains the TTL in seconds whereas
+          the AMQP 1.0 specification defines a message's ttl header
+          to use milliseconds.
+        type: integer
+      max-ttl-command-response:
+        default: -1
+        description: |
+          The maximum time-to-live (in seconds) to use for command response
+          messages
+
+          published by devices of this tenant.
+
+          If this property is set to a value greater than `-1` then this value
+          will
+
+          be used for all command response messages published by the tenant's
+          devices.
+
+          A value of `-1` (the default) indicates that no limit is set.
+
+          Note that this property contains the TTL in seconds whereas
+
+          the AMQP 1.0 specification defines a message's ttl header
+
+          to use milliseconds.
+        type: integer
+      max-ttl-telemetry-qos0:
+        default: -1
+        description: |
+          The maximum time-to-live (in seconds) to use for telemetry messages
+          that
+
+          are published by devices of this tenant using QoS 0.
+
+          If this property is set to a value greater than `-1` then this value
+          will
+
+          be used for all QoS 0 telemetry messages published by the tenant's
+          devices.
+
+          A value of `-1` (the default) indicates that no limit is set.
+
+          Note that this property contains the TTL in seconds whereas
+
+          the AMQP 1.0 specification defines a message's ttl header
+
+          to use milliseconds.
+        type: integer
+      max-ttl-telemetry-qos1:
+        default: -1
+        description: |
+          The maximum time-to-live (in seconds) to use for telemetry messages
+          that
+
+          are published by devices of this tenant using QoS 1.
+
+          If this property is set to a value greater than `-1` then this value
+          will
+
+          be used for all QoS 1 telemetry messages published by the tenant's
+          devices.
+
+          A value of `-1` (the default) indicates that no limit is set.
+
+          Note that this property contains the TTL in seconds whereas
+
+          the AMQP 1.0 specification defines a message's ttl header
+
+          to use milliseconds.
+        type: integer
+    type: object
+  SearchDevicesResult:
+    additionalProperties: false
+    description: The result of a search request for devices.
+    properties:
+      result:
+        items:
+          $ref: '#/definitions/DeviceWithId'
+        type: array
+      total:
+        description: |-
+          The total number of objects in the result set, regardless of the
+          *pageSize* set in query.
+        minimum: 0
+        type: integer
+    type: object
+  SearchTenantsResult:
+    additionalProperties: false
+    description: The result of a search request for tenants.
+    properties:
+      result:
+        items:
+          $ref: '#/definitions/TenantWithId'
+        type: array
+      total:
+        description: |-
+          The total number of objects in the result set, regardless of the
+          *pageSize* set in query.
+        minimum: 0
+        type: integer
+    type: object
+  Status:
+    additionalProperties: false
+    description: |
+      Additional meta data describing the entity.
+    properties:
+      auto-provisioned:
+        default: false
+        description: Indicates if the entity was created via auto-provisioning.
+        readOnly: true
+        type: boolean
+      auto-provisioning-notification-sent:
+        default: false
+        description: |-
+          Indicates if downstream consumers have been notified about the newly
+          auto-provisioned entity by means of a corresponding event.
+        readOnly: true
+        type: boolean
+      created:
+        description: The point in time when the entity was originally created.
+        format: date-time
+        readOnly: true
+        type: string
+      last-user:
+        description: The user who made the last edit on this entity.
+        readOnly: true
+        type: string
+      updated:
+        description: The point in time when the entity was last updated.
+        format: date-time
+        readOnly: true
+        type: string
+    type: object
+  Tenant:
+    additionalProperties: false
+    properties:
+      adapters:
+        description: |
+          A list of configuration options for certain types of protocol
+          adapters.
+
+          If set then the array must not be empty.
+
+          Multiple entries for the same type are considered an error.
+
+          If not set, then all adapters are enabled using their respective
+
+          default configuration.
+        items:
+          $ref: '#/definitions/Adapter'
+        type: array
+      alias:
+        description: |
+          An alternative identifier that this tenant may be looked up by.
+          Registry implementations MAY
+
+          choose to ignore this property. Otherwise, the alias MUST consist of
+          only lower case letters,
+
+          digits and hyphens and thus be a valid LDH-label as defined by
+
+          [RFC
+          5890](https://datatracker.ietf.org/doc/html/rfc5890#section-2.3.1).
+
+          If set, the alias MUST be unique among all tenants. Implementations of
+          Hono's Tenant service
+
+          MAY consider this property when looking up a tenant by its identifier
+          as defined by the
+
+          [get Tenant
+          operation](https://www.eclipse.org/hono/docs/api/tenant/#get-tenant-information).
+        pattern: '[a-z0-9-]+'
+        type: string
+      defaults:
+        $ref: '#/definitions/DefaultProperties'
+      enabled:
+        default: true
+        type: boolean
+      ext:
+        $ref: '#/definitions/Extensions'
+      minimum-message-size:
+        default: 0
+        description: |
+          The minimum message size in bytes. If set, then reported size of
+
+          telemetry, event and command messages is calculated as the minimum
+          multiple
+
+          of the configured value that is greater than or equal to the messages
+
+          payload size.
+        type: integer
+      registration-limits:
+        $ref: '#/definitions/RegistrationLimits'
+      resource-limits:
+        $ref: '#/definitions/ResourceLimit'
+      tracing:
+        $ref: '#/definitions/TracingConfig'
+      trust-anchor-group:
+        description: |
+          A logical identifier used for implicitly grouping together tenants
+          that may use trusted CAs having
+
+          the same subject DN.
+        type: string
+      trusted-ca:
+        description: |
+          The set of root certificate authorities which are used for verifying
+          the signature of
+
+          client certificates that devices use for authentication.
+        items:
+          $ref: '#/definitions/TrustedCA'
+        type: array
+    type: object
+  TenantWithId:
+    additionalProperties: false
+    allOf:
+      - properties:
+          id:
+            description: The identifier of the tenant.
+            type: string
+        type: object
+      - $ref: '#/definitions/Tenant'
+    type: object
+  TracingConfig:
+    additionalProperties: false
+    properties:
+      sampling-mode:
+        default: default
+        description: |
+          Defines if and how often OpenTracing spans are being
+          sampled when processing messages for this tenant.
+          The value `default` indicates that the underlying tracing
+          system's default sampling mode should be used.
+          The value `all` indicates that every span created for
+          messages of the tenant will be sampled.
+          The value `none` indicates that no spans should be sampled
+          at all for the tenant.
+          The mode defined here may be overridden for specific
+          devices by means of the `sampling-mode-per-auth-id`
+          property.
+        enum:
+          - default
+          - all
+          - none
+        type: string
+      sampling-mode-per-auth-id:
+        additionalProperties:
+          default: default
+          description: |
+            The property name is the device's 'authentication identifier.
+          enum:
+            - default
+            - all
+            - none
+          type: string
+        description: |
+          Defines if and how often OpenTracing spans are being
+          sampled when processing messages for specific devices
+          of this tenant.
+          This object contains a property for each device for which
+          specific behavior should be defined, using the device's
+          authentication identifier as the property name and
+          the device specific sampling mode as its value.
+          The value `default` indicates that the underlying tracing
+          system's default sampling mode should be used.
+          The value `all` indicates that every span created for
+          messages of the tenant will be sampled.
+          The value `none` indicates that no spans should be sampled
+          at all for the tenant.
+          The mode defined for a particular device has precedence
+          over the value defined by the `sampling-mode` property.
+        type: object
+    type: object
+  TrustedCA:
+    additionalProperties: false
+    example:
+      algorithm: EC
+      auto-provision-as-gateway: false
+      auto-provisioning-device-id-template: 'device-{{subject-dn}}'
+      auto-provisioning-enabled: true
+      not-after: '2021-10-03T00:00:00Z'
+      not-before: '2019-10-03T13:45:16+02:00'
+      public-key: Tk9UIEEgUFVCTElDIEtFWQ==
+      subject-dn: 'CN=devices,OU=iot,O=ACME'
+    properties:
+      algorithm:
+        default: RSA
+        description: |
+          The algorithm used for the public key of the CA.
+          If the `cert` property is used to provide an
+          X.509 certificate then the algorithm is determined
+          from the certificate and this property is ignored.
+          Otherwise, if the `public-key` property is
+          used, this property must be set to the algorithm
+          used, if other than the default.
+        example: EC
+        type: string
+      auth-id-template:
+        description: |
+          Specifies the template to generate the `auth-id` to use for
+          authentication and also
+
+          auto-provisioning of devices and gateways based on the client
+          certificate. The placeholders
+
+          `{{subject-cn}}`, `{{subject-dn}}`, `{{subject-ou}}` and
+          `{{subject-o}}` are currently supported.
+
+          The template MUST contain at least one of these placeholders. The
+          `auth-id` is generated by
+
+          replacing all the placeholders in the template string with their
+          corresponding *Common Name (CN)*,
+
+          *Organizational Unit Name (OU)* and *Organization Name (O)* from the
+          client certificate's subject DN.
+
+          If the template is not specified, the client certificate's subject DN
+          is used as the `auth-id`.
+
+          The *Subject DN* is formatted according to the rules defined in 
+
+          [RFC 2253](https://tools.ietf.org/html/rfc2253#section-2).
+        type: string
+      auto-provision-as-gateway:
+        default: false
+        description: |
+          Indicates whether this trusted certificate authority may be used for
+          automatically provisioning 
+
+          gateways. If it is *true* and the *auto-provisioning-enabled* is also
+          *true*, then the unregistered
+
+          devices that authenticate with a client certificate issued by this CA
+          are provisioned as gateways
+
+          provided that the device registry implementation being used supports
+          this feature.
+        type: boolean
+      auto-provisioning-device-id-template:
+        description: |
+          Specifies the template to use by the device registry to generate the
+          `device-id` during 
+
+          auto-provisioning of devices and gateways. The placeholders
+          `{{subject-cn}}`, `{{subject-dn}}`,
+
+          `{{subject-ou}}` and `{{subject-o}}` are currently supported. The
+          template MUST contain at least
+
+          one of these placeholders. The `device-id` is generated by replacing
+          any placeholders in the
+
+          template string with their corresponding *Common Name (CN)*,
+          *Organizational Unit Name (OU)* and
+
+          *Organization Name (O)* from the client certificate's subject DN. The
+          *Subject DN* is formatted
+
+          according to the rules defined in [RFC
+          2253](https://tools.ietf.org/html/rfc2253#section-2).
+        type: string
+      auto-provisioning-enabled:
+        default: false
+        description: |
+          Indicates whether this trusted certificate may be used for
+          automatically provisioning devices.
+
+          If it is *true* and the feature is supported by the device registry,
+          the device registry
+
+          automatically provisions unregistered devices that authenticate with a
+          client certificate
+
+          issued by this CA (that is, creates registration and credentials).
+        type: boolean
+      cert:
+        description: |
+          The Base64 encoded binary DER encoding of the trusted X.509 root
+          certificate.
+
+          This property can be used as a convenient alternative to
+
+          specifying the `public-key`, `not-before`, `not-after` and
+
+          `algorithm` properties explicitly. Implementors of this
+
+          API may choose to support this property only for uploading
+
+          a certificate but then extract all relevant data and store
+
+          it in the properties described above.
+
+          Either this property or `public-key` must be set.
+        format: byte
+        type: string
+      id:
+        description: |
+          An (optional) identifier for the trust anchor. This identifier must be
+          unique
+
+          among a tenant's trust anchors. If this property is not provided,
+
+          then the device registry assigns a unique identifier.
+        example: >-
+          A user provided identifier could look like
+          "DEFAULT_TENANT_CA_2021_2022".
+        type: string
+      not-after:
+        description: |
+          The point in time until which the certificate authority
+
+          may be used for authenticating devices.
+
+          If the `cert` property is used to provide an
+
+          X.509 certificate then the point in time is
+
+          determined from the certificate and this property is ignored.
+
+          Otherwise, if the `public-key` property is
+
+          used, this property is mandatory.
+
+          NB: The value MUST be a string that complies with the format defined
+          in
+
+          [RFC 3339](https://tools.ietf.org/html/rfc3339#section-5.6) as
+          indicated
+
+          by the
+          [date-time](https://spec.openapis.org/oas/v3.0.1#dataTypeFormat)
+
+          format in the OpenAPI specification.
+        format: date-time
+        type: string
+      not-before:
+        description: |
+          The point in time from which on the certificate authority
+
+          may be used for authenticating devices.
+
+          If the `cert` property is used to provide an
+
+          X.509 certificate then the point in time is
+
+          determined from the certificate and this property is ignored.
+
+          Otherwise, if the `public-key` property is
+
+          used, this property is mandatory.
+
+          NB: The value MUST be a string that complies with the format defined
+          in
+
+          [RFC 3339](https://tools.ietf.org/html/rfc3339#section-5.6) as
+          indicated
+
+          by the
+          [date-time](https://spec.openapis.org/oas/v3.0.1#dataTypeFormat)
+
+          format in the OpenAPI specification.
+        format: date-time
+        type: string
+      public-key:
+        description: |
+          The Base64 encoded binary DER encoding of the
+          trusted root certificate's public key.
+          If the `cert` property is used to provide an
+          X.509 certificate then the public key is extracted
+          from the certificate and this property is ignored.
+          Either this property or `cert` must be set.
+        format: byte
+        type: string
+      subject-dn:
+        description: |
+          The subject DN of the trusted root certificate in
+
+          the format defined by [RFC
+          2253](https://tools.ietf.org/html/rfc2253#section-2).
+
+          CAs of the *same* tenant may share the same subject DN, for example
+
+          allowing for the definition of overlapping validity periods.
+
+          However, CAs of *different* tenants must not share the same
+
+          subject DN in order to allow for the unique look up of a tenant by
+
+          the subject DN of one of its trusted CAs.
+
+          If the `cert` property is used to provide an X.509 certificate
+
+          then the subject DN is determined from the certificate and this
+
+          property is ignored.
+
+          Otherwise, if the `public-key` property is
+
+          used, this property is mandatory.
+        type: string
+    type: object
