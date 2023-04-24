@@ -1,0 +1,14 @@
+.accordion-item {
+    .accordion-header {
+        button.accordion-button {
+            &:not(.collapsed) {
+                background-color: var(--theme-light)!important;
+                color: var(--font)!important;
+            }
+            &:focus {
+                border: none!important;
+                box-shadow: none!important;
+            }
+        }
+    }
+}

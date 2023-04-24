@@ -1,0 +1,113 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a routerLink="/tenant-list">
+        <img class="logo" src="../../../../assets/images/logo_300px276px.png">
+      </a>
+    </li>
+    <li class="breadcrumb-item">
+      <a (click)="navigateBack()" class="link">
+        <span [innerHTML]="this.tenant.id"></span>
+      </a>
+    </li>
+    <li class="breadcrumb-item"><span [innerHTML]="this.device.id"></span></li>
+  </ol>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-title d-flex align-items-center">
+    <span [innerHTML]="deviceDetail" [title]="deviceDetail" class="h3"></span>
+  </div>
+
+  <div class="page-functions small-buttons col-auto ml-auto">
+    <div class="function-element">
+      <button (click)="updateConfig()" [ngbTooltip]="updateLabel" class="btn btn-sm btn-primary" type="button">
+        <fa-icon [icon]="['fas', 'gears']"></fa-icon>
+      </button>
+    </div>
+    <div class="function-element">
+      <button (click)="sendCommand()" [ngbTooltip]="sendLabel" class="btn btn-sm btn-primary" type="button">
+        <fa-icon [icon]="['fas', 'share']"></fa-icon>
+      </button>
+    </div>
+    <div class="function-element">
+      <button (click)="addAuthentication()" [ngbTooltip]="addAuthenticationLabel" class="btn btn-sm btn-primary"
+              type="button">
+          <fa-icon [icon]="['fas', 'key']"></fa-icon>
+      </button>
+    </div>
+    <div class="function-element">
+      <button (click)="deleteDevice()" [ngbTooltip]="deleteLabel" class="btn btn-sm btn-secondary" type="button">
+        <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<hr>
+
+<div class="details">
+  <div>
+    <div class="d-inline-flex p-2 detail-label">
+      <span [innerHTML]="idLabel"></span>
+    </div>
+    <div class="d-inline-flex p-2 detail-value">
+      <span [innerHTML]="device.id"></span>
+    </div>
+  </div>
+
+  <div>
+    <div class="d-inline-flex p-2 detail-label">
+      <span [innerHTML]="tenantIdLabel"></span>
+    </div>
+    <div class="d-inline-flex p-2 detail-value">
+      <span [innerHTML]="tenant.id"></span>
+    </div>
+  </div>
+
+  <div>
+    <div class="d-inline-flex p-2 detail-label">
+      <span [innerHTML]="creationTimeLabel"></span>
+    </div>
+    <div class="d-inline-flex p-2 detail-value">
+      <span [innerHTML]="getCreationTime(device.status)"></span>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<div class="detail-tabs">
+  <nav #nav="ngbNav" class="nav-tabs" ngbNav>
+    <ng-container ngbNavItem>
+      <a [innerHTML]="configLabel" ngbNavLink></a>
+      <ng-template ngbNavContent>
+        <app-list-config
+          [configs]="configs">
+        </app-list-config>
+      </ng-template>
+    </ng-container>
+    <ng-container ngbNavItem>
+      <a [innerHTML]="stateLabel" ngbNavLink></a>
+      <ng-template ngbNavContent>
+        <app-list-state
+          [deviceId]="device.id"
+          [tenantId]="tenant.id">
+        </app-list-state>
+      </ng-template>
+    </ng-container>
+    <ng-container ngbNavItem>
+      <a [innerHTML]="authenticationLabel" ngbNavLink></a>
+      <ng-template ngbNavContent>
+        <app-list-authentication
+          [deviceId]="device.id"
+          [tenantId]="tenant.id"
+          [credentials]="credentials">
+        </app-list-authentication>
+      </ng-template>
+    </ng-container>
+  </nav>
+</div>
+
+<div [ngbNavOutlet]="nav" class="mt-2"></div>

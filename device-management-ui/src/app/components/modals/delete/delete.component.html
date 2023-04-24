@@ -1,0 +1,21 @@
+<div class="modal-component">
+  <app-modal-head
+      [modalTitle]="modalTitle"
+      (closeModal)="onCancel()">
+    </app-modal-head>
+
+  <div class="modal-body">
+    <p class="mb-0">
+      <span [innerHTML]="body"></span>
+    </p>
+  </div>
+
+  <div class="modal-buttons">
+    <app-modal-footer
+      [confirmButtonLabel]="deleteButtonLabel"
+      [showRequiredFieldInfo]="false"
+      (confirmButtonPressed)="onConfirm()"
+      (cancelButtonPressed)="onCancel()">
+    </app-modal-footer>
+  </div>
+</div>

@@ -1,0 +1,50 @@
+/* Overwrite toast styling */
+.toast {
+  color: grey !important;
+  width: 320px;
+  position: relative;
+
+  .toast-header {
+    color: grey;
+  }
+
+  .close {
+    text-shadow: none;
+    opacity: 1;
+  }
+
+  &.bg-success,
+  &.bg-warning,
+  &.bg-danger,
+  &.bg-info {
+    background-color: white !important;
+  }
+
+  &.text-light {
+    color: grey !important;
+  }
+
+  &.bg-success {
+    border-left: 4px solid var(--success);
+
+    .toast-header {
+      color: var(--success);
+    }
+  }
+
+  &.bg-warning {
+    border-left: 4px solid var(--warning);
+
+    .toast-header {
+      color: var(--warning);
+    }
+  }
+
+  &.bg-danger {
+    border-left: 4px solid var(--danger);
+
+    .toast-header {
+      color: var(--danger);
+    }
+  }
+}

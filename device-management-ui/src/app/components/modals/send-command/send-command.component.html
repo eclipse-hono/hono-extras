@@ -1,0 +1,44 @@
+<div class="modal-component">
+  <app-modal-head
+    (closeModal)="onClose()"
+    [modalTitle]="modalTitle">
+  </app-modal-head>
+
+  <div class="modal-body">
+    <p class="mb-0">
+      <span [innerHTML]="body"></span>
+    </p>
+
+    <div class="form-group">
+      <label [innerHTML]="formatLabel"></label>
+      <div class="form-check">
+        <input checked class="form-check-input" id="radioButtonText" name="flexRadioDefault" type="radio" value="text" (change)="onChange($event)">
+        <label class="form-check-label" for="radioButtonText"></label>
+        <span [innerHTML]="textLabel"></span>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" id="radioButtonBase64" name="flexRadioDefault" type="radio" value="base64" (change)="onChange($event)">
+        <label class="form-check-label" for="radioButtonBase64"></label>
+        <span [innerHTML]="base64Label"></span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label [innerHTML]="binaryDataLabel" for="binaryData"></label>
+      <span class="ml-1 label-required">*</span>
+      <textarea [(ngModel)]="command.binaryData" class="form-control" id="binaryData" rows="4"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label [innerHTML]="subfolderLabel" for="subfolder"></label>
+      <input [(ngModel)]="command.subfolder" class="form-control" id="subfolder" type="text">
+    </div>
+  </div>
+
+  <div class="modal-buttons">
+    <app-modal-footer
+      (cancelButtonPressed)="onClose()"
+      (confirmButtonPressed)="onConfirm()"
+      [confirmButtonLabel]="deleteButtonLabel">
+    </app-modal-footer>
+  </div>
+</div>

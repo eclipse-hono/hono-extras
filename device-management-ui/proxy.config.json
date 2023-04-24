@@ -1,0 +1,9 @@
+{
+  "/v1/*": {
+    "target": "https://hono.eclipseprojects.io:28443",
+    "secure": false,
+    "logLevel": "debug",
+    "changeOrigin": true
+  }
+}
+

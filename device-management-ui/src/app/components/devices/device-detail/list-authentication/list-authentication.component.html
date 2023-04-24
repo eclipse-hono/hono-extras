@@ -1,0 +1,49 @@
+<table class="table">
+  <thead>
+  <tr>
+    <th class="p-2 col-2">
+      <span [innerHTML]="authenticationTypeLabel"></span>
+    </th>
+    <th class="p-2 col-2">
+      <span [innerHTML]="authIdLabel"></span>
+    </th>
+    <th class="p-2 col-4">
+      <span [innerHTML]="secretIdLabel"></span>
+    </th>
+    <th class="p-2 col-3">
+      <span [innerHTML]="expiryDateLabel"></span>
+    </th>
+    <th class="p-2 col-1 ml-auto last-column">
+      <span [innerHTML]="actionsLabel"></span>
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr *ngFor="let authenticationValue of authenticationValues" class="list-item">
+    <td class="p-2 col-2">
+      <span [innerHTML]="getAuthenticationType(authenticationValue.type)"></span>
+    </td>
+    <td class="p-2 col-2">
+      <span [innerHTML]="authenticationValue['auth-id']"></span>
+    </td>
+    <td class="p-2 col-4">
+      <span [innerHTML]="authenticationValue.id"></span>
+    </td>
+    <td class="p-2 col-3">
+      <span [innerHTML]="authenticationValue['not-after']  | date:'medium': 'UTC'"></span>
+    </td>
+    <td class="p-2 col-1 ml-auto last-column">
+      <div [ngbTooltip]="isEditable(authenticationValue) ? editLabel : editDisabledLabel" class="auth-btn-wrapper">
+        <button (click)="edit(authenticationValue)" [disabled]="!isEditable(authenticationValue)"
+          class="btn-auth btn btn-sm btn-primary" type="button">
+          <fa-icon [icon]="['fas', 'pen-to-square']"></fa-icon>
+        </button>
+      </div>
+      <button (click)="delete(authenticationValue)" [ngbTooltip]="deleteLabel" class="btn btn-sm btn-secondary"
+              type="button">
+        <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+      </button>
+    </td>
+  </tr>
+  </tbody>
+</table>

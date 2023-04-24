@@ -1,0 +1,36 @@
+<table class="table">
+  <thead>
+  <tr>
+    <th class="p-2 col-1">
+      <span [innerHTML]="versionLabel"></span>
+    </th>
+    <th class="p-2 col-1 centered">
+      <span [innerHTML]="acknowledgementLabel"></span>
+    </th>
+    <th class="p-2 col-4 centered">
+      <span [innerHTML]="updateLabel"></span>
+    </th>
+    <th class="p-2 col-6 ml-auto last-column">
+      <span [innerHTML]="dataLabel"></span>
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr *ngFor="let config of configs; let i = index" class="list-item">
+    <td class="p-2 col-1">
+      <span [innerHTML]="config.version"></span>
+    </td>
+    <td class="p-2 col-1 centered">
+      <fa-icon [icon]="getDeviceAckTime(config)" [style]="iconColor(config)"></fa-icon>
+    </td>
+    <td class="p-2 col-4 centered">
+      <span [innerHTML]="config.cloudUpdateTime  | date:'medium': 'UTC'"></span>
+    </td>
+    <td class="p-2 col-6 ml-auto last-column">
+      <app-config-accordion
+        [config]="config">
+      </app-config-accordion>
+    </td>
+  </tr>
+  </tbody>
+</table>

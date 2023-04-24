@@ -1,0 +1,42 @@
+<div class="modal-component">
+  <app-modal-head
+    (closeModal)="onClose()"
+    [modalTitle]="modalTitle">
+  </app-modal-head>
+
+  <div class="modal-body">
+    <div class="form-group">
+      <label [innerHTML]="tenantIdLabel" for="newTenant"></label>
+      <span class="ml-1 label-required">*</span>
+      <input
+        [disabled]="!isNewTenant"
+        [(ngModel)]="tenant.id"
+        [placeholder]="tenantIdLabel"
+        class="form-control"
+        id="newTenant"
+        type="text">
+    </div>
+    <div class="form-group">
+      <label [innerHTML]="tenantMessagingTypeLabel" for="messagingTypeDropdown"></label>
+      <span class="ml-1 label-required">*</span>
+      <ng-select
+        [(ngModel)]="tenant.ext['messaging-type']"
+        [clearable]="false"
+        [items]="messagingTypes"
+        [searchable]="false"
+        bindLabel="value"
+        bindValue="key"
+        id="messagingTypeDropdown">
+      </ng-select>
+    </div>
+
+    <div class="modal-buttons">
+      <app-modal-footer
+        (cancelButtonPressed)="onClose()"
+        (confirmButtonPressed)="onConfirm()"
+        [buttonDisabled]="isInvalid()"
+        [confirmButtonLabel]="confirmButtonLabel">
+      </app-modal-footer>
+    </div>
+  </div>
+</div>

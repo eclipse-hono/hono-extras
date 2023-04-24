@@ -1,0 +1,16 @@
+.pagination {
+    padding-top: 1em;
+    .page-item {
+        &.disabled {
+            > .page-link {
+                background-color: transparent;
+            }
+        }
+
+        .page-link {
+            > .visually-hidden {
+                display:none;
+            }
+        }
+    }
+}

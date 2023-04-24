@@ -1,0 +1,20 @@
+<div class="modal-footer">
+  <div class="modal-footer-inner">
+    <div class="row align-items-center flex-fill">
+      <div class="col">
+        <small class="text-muted" *ngIf="showRequiredFieldInfo">* Indicates required field</small>
+      </div>
+      <div class="col-auto">
+        <button type="button" class="btn btn-sm btn-secondary" (click)="cancel()">
+          <fa-icon [icon]="['fas', 'xmark']"></fa-icon>
+          <span [innerHTML]="cancelButtonLabel"></span>
+        </button>
+
+        <button type="button" class="btn btn-sm btn-primary" (click)="confirm()" [disabled]="buttonDisabled">
+          <fa-icon [icon]="['fas', 'check']"></fa-icon>
+          <span [innerHTML]="confirmButtonLabel"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
