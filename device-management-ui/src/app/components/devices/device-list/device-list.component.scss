@@ -1,0 +1,29 @@
+.list-head, .list-item {    
+    .ml-auto {
+        margin-left: auto!important;
+    }
+}
+
+.list {
+    .list-head {
+        font-weight: bold;
+        font-size: 12px;
+    }
+    
+    .list-item {
+        border-top: 1px solid #ccc;
+        font-size: 14px;
+        .selectDevice {            
+            cursor: pointer;
+            a {
+                text-decoration: underline;
+            }
+        }
+    }
+}
+
+
+.card-table-view {
+    max-height: calc(100vh - 465px);
+    overflow-y: auto;  
+}

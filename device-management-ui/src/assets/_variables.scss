@@ -1,0 +1,17 @@
+$primary: #f08712 !default;
+$secondary: #2b2b2b !default;
+
+:root {
+  --theme: #f08712;
+  --theme-light: #f087124d;
+  --secondary: #2b2b2b;
+  --danger: #D1423F;
+  --warning: #EF8600;
+  --success: #51B551;
+  --backgroundlight: #f3f4f6;
+  --font: #212529
+}
+
+$font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !default;
+
+$navbar-nav-link-padding-x: 1rem !default;

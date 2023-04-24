@@ -1,0 +1,61 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a routerLink="/tenant-list">
+        <img class="logo" src="../../../../assets/images/logo_300px276px.png">
+      </a>
+    </li>
+    <li class="breadcrumb-item">
+      <span [innerHTML]="this.tenant.id"></span>
+    </li>
+  </ol>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-title">
+    <span class="h3" [title]="tenantDetail" [innerHTML]="tenantDetail"></span>
+  </div>
+
+  <div class="page-functions small-buttons col-auto ml-auto">
+    <div class="function-element">
+      <button type="button" class="btn btn-sm btn-primary" [ngbTooltip]="editLabel" (click)="editTenant()">
+        <fa-icon [icon]="['fas', 'pen-to-square']"></fa-icon>
+      </button>
+    </div>
+    <div class="function-element">
+      <button type="button" class="btn btn-sm btn-secondary" [ngbTooltip]="deleteLabel" (click)="deleteTenant()">
+        <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<hr>
+
+<div class="details">
+  <div>
+    <div class="d-inline-flex p-2 detail-label col-2">
+      <span [innerHTML]="id"></span>
+    </div>
+    <div class="d-inline-flex p-2 detail-value">
+      <span [innerHTML]="tenant.id"></span>
+    </div>
+  </div>
+
+  <div>
+    <div class="d-inline-flex p-2 detail-label col-2">
+      <span [innerHTML]="messagingTypeLabel"></span>
+    </div>
+    <div class="d-inline-flex p-2 detail-value">
+      <span [innerHTML]="messagingType"></span>
+    </div>
+  </div>
+
+</div>
+
+<hr>
+
+<app-device-list
+  [tenant]="tenant">
+</app-device-list>

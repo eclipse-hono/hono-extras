@@ -1,0 +1,12 @@
+.detail-label {
+    min-width: 100px;
+    
+    > span {
+        font-weight: bold;
+    }
+}
+
+// Tab nav
+.nav-link.nav-item.active {
+    border-bottom: 2px solid var(--theme);
+}

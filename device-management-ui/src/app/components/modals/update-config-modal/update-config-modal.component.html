@@ -1,0 +1,39 @@
+<div class="modal-component">
+  <app-modal-head
+    (closeModal)="onClose()"
+    [modalTitle]="modalTitle">
+  </app-modal-head>
+
+  <div class="modal-body">
+    <p class="mb-0">
+      <span [innerHTML]="body"></span>
+    </p>
+
+    <div class="form-group">
+      <label [innerHTML]="formatLabel"></label>
+      <div class="form-check">
+        <input checked class="form-check-input" id="radioButtonText" name="flexRadioDefault" type="radio" value="text" (change)="onChange($event)">
+        <label class="form-check-label" for="radioButtonText"></label>
+        <span [innerHTML]="textLabel"></span>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" id="radioButtonBase64" name="flexRadioDefault" type="radio" value="base64" (change)="onChange($event)">
+        <label class="form-check-label" for="radioButtonBase64"></label>
+        <span [innerHTML]="base64Label"></span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label [innerHTML]="configLabel" for="config"></label>
+      <span class="ml-1 label-required">*</span>
+      <textarea [(ngModel)]="config.binaryData" class="form-control" id="config" rows="4"></textarea>
+    </div>
+  </div>
+
+  <div class="modal-buttons">
+    <app-modal-footer
+      (cancelButtonPressed)="onClose()"
+      (confirmButtonPressed)="onConfirm()"
+      [confirmButtonLabel]="confirmButtonLabel">
+    </app-modal-footer>
+  </div>
+</div>

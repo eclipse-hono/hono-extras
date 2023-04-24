@@ -1,0 +1,19 @@
+<ngb-accordion #acc="ngbAccordion">
+  <ngb-panel>
+    <ng-template ngbPanelTitle>
+      <span [innerHTML]="config.binaryData | truncate"></span>
+    </ng-template>
+    <ng-template ngbPanelContent>
+      <div class="form-check form-switch">
+        <input
+          (change)="showTextData(showText)"
+          [(ngModel)]="showText"
+          [checked]="showText === true"
+          class="form-check-input"
+          id="notAfterSwitch" type="checkbox">
+        <label [innerHTML]="showTextLabel" class="form-check-label" for="notAfterSwitch"></label>
+      </div>
+      <span class="fullConfig" [innerHTML]="fullConfig"></span>
+    </ng-template>
+  </ngb-panel>
+</ngb-accordion>

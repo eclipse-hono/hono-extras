@@ -1,0 +1,95 @@
+button.btn {
+  color: white;
+
+  &.btn-outline-primary {
+    color: var(--themedarker);
+  }
+  &.btn-outline-secondary {
+    color: var(--secondary);
+  }
+  &.btn-toggle {
+    color: white;
+  }
+  &:focus, &:focus-visible, &:focus-within {
+    box-shadow: none;
+  }
+  &.btn-close {
+    &:focus {
+      opacity: var(--bs-btn-close-opacity);
+    }
+  }
+  &.btn-primary {
+    background-color: var(--theme);
+    border-color: transparent;
+
+    &:hover,&:focus-visible {
+      background-color:  white;
+      border-color: var(--theme);
+      color: var(--theme);
+      box-shadow: none;
+    }
+
+    &#ddDisplayedItems {
+      height:100%;
+    }
+  }
+
+  &.btn-secondary {
+    &:hover, &:focus-visible {
+      background-color:  white;
+      color: var(--secondary);
+      box-shadow: none;
+    }
+  }
+
+  &:not(:last-child) {
+    margin-right: 5px;
+  }
+
+  > :not(:last-child) {
+    margin-right: 5px;
+    position: relative;
+    top: 1px;
+  }
+
+  &.active {
+    background-color: var(--theme);
+    color: white;
+    > span.caret { 
+      left: 10px;
+      top: 36px;
+      position: absolute;     
+      width: 0;
+      height: 0;
+      display: inline-block;
+      border: 10px solid transparent;
+      border-top-color: var(--theme);
+    }
+    &:hover {
+      background-color: var(--theme);
+      color: white;
+      cursor: auto;
+    }
+  }
+  &.inactive {
+    background-color: white;
+    color: var(--theme);
+    border-color: var(--theme);
+    &:hover {
+      background-color: var(--theme);
+      color: white;
+      border-color: var(--theme);
+    }
+    span.caret {
+      display: none;
+    }
+  }
+}
+
+.page-header {
+  button {
+    &:not(last-child) {
+        margin-right: 5px;
+    }
+  }
+}

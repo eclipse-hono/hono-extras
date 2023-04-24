@@ -1,0 +1,23 @@
+ol.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+
+    li.breadcrumb-item {
+        > a {
+            &:hover {
+                color: var(--theme);
+            }
+        }
+        &:hover {
+            cursor: pointer;
+        }
+        &:last-of-type {
+            &:hover {
+                cursor: auto;
+            }
+            span {
+                color: var(--theme);
+            }
+        }        
+    } 
+}

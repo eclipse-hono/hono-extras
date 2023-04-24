@@ -1,0 +1,73 @@
+/* Datepicker component */
+ngb-datepicker.dropdown-menu {
+  .ngb-dp-weekday {
+    color: #2b2b2b;
+    font-style: normal;
+  }
+
+  .ngb-dp-navigation-select {
+    > .form-select {
+      margin: 0 3px;
+    }
+  }
+  .btn {
+    color: var(--theme);
+  }
+
+  .ngb-dp-arrow-btn:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .ngb-dp-navigation-chevron {
+    border-width: 0.15em 0.15em 0 0;
+  }
+
+  .ngb-dp-day,
+  .ngb-dp-week-number,
+  .ngb-dp-weekday {
+    margin: 4px;
+  }
+}
+/* NGB Time selector */
+.ngb-tp .ngb-tp-input-container {
+  flex: 1 1 auto;
+  position: relative;
+  min-width: 4.8em;
+
+  .btn-link {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    font-size: 9px;
+    border: 1px solid #2b2b2b;
+    position: absolute;
+    right: 0;
+    height: 50%;
+    padding: 0 10px;
+
+    &:hover {
+      background-color: #2b2b2b;
+    }
+  }
+
+  .form-control {
+    padding-left: 6px;
+    padding-right: 35px;
+  }
+
+  .btn-link:first-child {
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+    top: 0;
+  }
+
+  .btn-link:last-child {
+    border-top-right-radius: 0;
+    border-top: none;
+    bottom: 0;
+  }
+  button.btn:not(:last-child) {
+    margin-right: 0;
+  }
+}
+

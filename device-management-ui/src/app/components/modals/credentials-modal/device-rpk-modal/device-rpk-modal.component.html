@@ -1,0 +1,101 @@
+<div class="form-group">
+  <div class="btn-group btn-toggle">
+    <button [disabled]="!isNewCredentials" (click)="setUsePublicKey(true)" [ngClass]="usePublicKey ? 'btn-primary active' : 'btn-primary inactive'"
+            class="btn">
+      <span class="caret"></span>
+      <span [innerHTML]="publicKeyLabel"></span>
+    </button>
+    <button [disabled]="!isNewCredentials" (click)="setUsePublicKey(false)" [ngClass]="usePublicKey ? 'btn-primary inactive' : 'btn-primary active'"
+            class="btn">
+      <span class="caret"></span>
+      <span [innerHTML]="certificateLabel"></span>
+    </button>
+  </div>
+</div>
+<div *ngIf="usePublicKey">
+  <div class="form-group">
+    <label [innerHTML]="algorithmLabel"></label>
+    <span class="ml-1 label-required">*</span>
+    <ng-select
+      (change)="onRpkSecretChanged()"
+      [(ngModel)]="rpkSecret.algorithm"
+      [items]="algorithmTypes"
+      id="algorithm">
+    </ng-select>
+  </div>
+  <div class="form-group">
+    <label [innerHTML]="publicKeyValueLabel" for="publicKeyValue"></label>
+    <span class="ml-1 label-required">*</span>
+    <textarea
+      (change)="onRpkSecretChanged()"
+      (input)="onRpkSecretChanged()"
+      [(ngModel)]="rpkSecret.key"
+      class="form-control"
+      id="publicKeyValue"
+      rows="4">
+    </textarea>
+  </div>
+  <div>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="form-check form-switch">
+          <input
+            [(ngModel)]="notBefore"
+            [checked]="notBefore === true"
+            class="form-check-input"
+            id="notBeforeSwitch" type="checkbox">
+          <label [innerHTML]="notBeforeLabel" class="form-check-label" for="notBeforeSwitch"></label>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="form-check form-switch">
+          <input
+            [(ngModel)]="notAfter"
+            [checked]="notAfter === true"
+            class="form-check-input"
+            id="notAfterSwitch" type="checkbox">
+          <label [innerHTML]="notAfterLabel" class="form-check-label" for="notAfterSwitch"></label>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+
+        <app-date-time-picker id="notBeforePicker"
+          [secretDate]="rpkSecret['not-before']"
+          (dateTime)="setNotBeforeDateTime($event)"
+          *ngIf="notBefore">
+        </app-date-time-picker>
+
+      </div>
+      <div class="col-sm-6">
+        <app-date-time-picker id="notAfterPicker"
+          [secretDate]="rpkSecret['not-after']"
+          (dateTime)="setNotAfterDateTime($event)"
+          *ngIf="notAfter">
+        </app-date-time-picker>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+<div *ngIf="!usePublicKey">
+  <div class="form-group">
+    <label [innerHTML]="certValueLabel" for="certValue"></label>
+    <span class="ml-1 label-required">*</span>
+    <textarea
+      (change)="onRpkSecretChanged()"
+      (input)="onRpkSecretChanged()"
+      [(ngModel)]="rpkSecret.cert"
+      class="form-control"
+      id="certValue"
+      rows="4">
+    </textarea>
+  </div>
+
+  <div class="alert alert-dark text-center">
+    <span [innerHTML]="certTooltip"></span>
+  </div>
+
+</div>
