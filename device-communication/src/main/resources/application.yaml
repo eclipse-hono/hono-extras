@@ -3,7 +3,7 @@ app:
   version: ${COM_APP_VERSION:"v1"}
 vertx:
   openapi:
-    file: ${COM_OPENAPI_FILE_PATH:/api/hono-device-communication-v1.yaml}
+    file: ${COM_OPENAPI_FILE_PATH:api/hono-device-communication-v1.yaml}
 
   server:
     url: ${COM_SERVER_HOST:0.0.0.0}
