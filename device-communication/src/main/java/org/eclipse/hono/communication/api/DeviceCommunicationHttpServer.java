@@ -31,7 +31,6 @@ import org.eclipse.hono.communication.core.app.ServerConfig;
 import org.eclipse.hono.communication.core.http.AbstractVertxHttpServer;
 import org.eclipse.hono.communication.core.http.HttpEndpointHandler;
 import org.eclipse.hono.communication.core.http.HttpServer;
-import org.eclipse.hono.communication.core.utils.ResponseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,10 +73,10 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
      * @param internalTopicManager  The internal topic manager
      */
     public DeviceCommunicationHttpServer(final ApplicationConfig appConfigs,
-            final Vertx vertx,
-            final VertxHttpHandlerManagerService httpHandlerManager,
-            final DatabaseService databaseService,
-            final DatabaseSchemaCreator databaseSchemaCreator, final InternalTopicManager internalTopicManager) {
+                                         final Vertx vertx,
+                                         final VertxHttpHandlerManagerService httpHandlerManager,
+                                         final DatabaseService databaseService,
+                                         final DatabaseSchemaCreator databaseSchemaCreator, final InternalTopicManager internalTopicManager) {
         super(appConfigs, vertx);
         this.httpHandlerManager = httpHandlerManager;
         this.databaseSchemaCreator = databaseSchemaCreator;
@@ -100,7 +99,7 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
                 })
                 .onFailure(error -> {
                     if (error != null) {
-                        log.error(error.getMessage());
+                        log.error("Can not create Router {}", error.getMessage());
                     } else {
                         log.error("Can not create Router");
                     }
@@ -121,16 +120,12 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
      * @return The created Router object
      */
     Router createRouterWithEndpoints(final RouterBuilder routerBuilder,
-            final List<HttpEndpointHandler> httpEndpointHandlers) {
+                                     final List<HttpEndpointHandler> httpEndpointHandlers) {
         for (HttpEndpointHandler handlerService : httpEndpointHandlers) {
             handlerService.addRoutes(routerBuilder);
         }
         final var apiRouter = Router.router(vertx);
         final var router = routerBuilder.createRouter();
-        apiRouter.errorHandler(400, routingContext ->
-                ResponseUtils.errorResponse(routingContext, routingContext.failure()));
-        apiRouter.errorHandler(404, routingContext ->
-                ResponseUtils.errorResponse(routingContext, routingContext.failure()));
 
         final var serverConfig = appConfigs.getServerConfig();
         addHealthCheckHandlers(apiRouter, serverConfig);
