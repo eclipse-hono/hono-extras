@@ -98,7 +98,7 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
                 })
                 .onFailure(error -> {
                     if (error != null) {
-                        log.error(error.getMessage());
+                        log.error("Can not create Router {}", error.getMessage());
                     } else {
                         log.error("Can not create Router");
                     }
