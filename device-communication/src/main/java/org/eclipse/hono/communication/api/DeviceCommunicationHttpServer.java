@@ -30,7 +30,6 @@ import org.eclipse.hono.communication.core.app.ServerConfig;
 import org.eclipse.hono.communication.core.http.AbstractVertxHttpServer;
 import org.eclipse.hono.communication.core.http.HttpEndpointHandler;
 import org.eclipse.hono.communication.core.http.HttpServer;
-import org.eclipse.hono.communication.core.utils.ResponseUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,10 +124,6 @@ public class DeviceCommunicationHttpServer extends AbstractVertxHttpServer imple
         }
         final var apiRouter = Router.router(vertx);
         final var router = routerBuilder.createRouter();
-        apiRouter.errorHandler(400, routingContext ->
-                ResponseUtils.errorResponse(routingContext, routingContext.failure()));
-        apiRouter.errorHandler(404, routingContext ->
-                ResponseUtils.errorResponse(routingContext, routingContext.failure()));
 
         final var serverConfig = appConfigs.getServerConfig();
         addHealthCheckHandlers(apiRouter, serverConfig);
