@@ -1,0 +1,215 @@
+---
+openapi: 3.0.2
+info:
+  title: Hono Device Communication
+  version: 1.0.0
+  description: Device commands and configs API.
+servers:
+  - url: http://localhost:8080/api/v1
+
+paths:
+  /commands/{tenantid}/{deviceid}:
+    summary: Device commands
+    description: Commands for a specific device
+    post:
+      requestBody:
+        description: CommandRequest object as JSON
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceCommandRequest'
+        required: true
+      tags:
+        - COMMANDS
+      responses:
+        "200":
+          description: Command was sent successfully
+        "400":
+          description: Command Validation error or Bad request
+        "404":
+          description: Device not found
+        "500":
+          description: Internal server error
+      operationId: postCommand
+      summary: Send a command to device.
+    parameters:
+      - name: tenantid
+        description: Unique registry ID
+        schema:
+          type: string
+        in: path
+        required: true
+      - name: deviceid
+        description: Unique device ID
+        schema:
+          type: string
+        in: path
+        required: true
+  /configs/{tenantid}/{deviceid}:
+    summary: Device configs
+    description: Create or list Configs for a specific device
+    get:
+      tags:
+        - CONFIGS
+      parameters:
+        - name: numVersions
+          description: "The number of versions to list. Versions are listed in decreasing
+          order of the version number. The maximum number of versions saved in Database is
+          10. If this value is zero, it will return all the versions available."
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 10
+          in: query
+          required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListDeviceConfigVersionsResponse'
+          description: Lists the device config versions
+        "404":
+          description: Device not found
+        "500":
+          description: Internal server error
+      operationId: listConfigVersions
+      summary: List a device config versions
+      description: "Lists the last few versions of the device configuration in descending
+        order (i.e.: newest first)."
+    post:
+      requestBody:
+        description: DeviceConfigRequest object as JSON
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceConfigRequest'
+            examples:
+              Device-configs-example:
+                value:
+                  versionToUpdate: some text
+                  binaryData: some text
+        required: true
+      tags:
+        - CONFIGS
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceConfig'
+          description: Device config updated successfully
+        "400":
+          description: Validation error or Bad request
+        "404":
+          description: Device not found
+        "500":
+          description: Internal Server error
+      operationId: modifyCloudToDeviceConfig
+      summary: Modify cloud to device config
+      description: Creates an device config version and Returns the
+        the new configuration version and its metadata.
+    parameters:
+      - name: tenantid
+        description: Unique registry id
+        schema:
+          type: string
+        in: path
+        required: true
+      - name: deviceid
+        description: Unique device id
+        schema:
+          type: string
+        in: path
+        required: true
+components:
+  schemas:
+    DeviceCommandRequest:
+      title: Root Type for Command
+      description: Command json object structure
+      required:
+        - binaryData
+      type: object
+      properties:
+        binaryData:
+          description: "The command data to send to the device in base64-encoded string\
+            \ format.\r\n\r\n"
+          type: string
+        subfolder:
+          description: "Optional subfolder for the command. If empty, the command
+            will be delivered to the /devices/{device-id}/commands topic, otherwise
+            it will be delivered to the /devices/{device-id}/commands/{subfolder}
+            topic. Multi-level subfolders are allowed. This field must not have
+            more than 256 characters, and must not contain any MQTT wildcards 
+            (\"+\" or \"#\") or null characters."
+          type: string
+      example:
+        binaryData: A base64-encoded string
+        subfolder: Optional subfolder for the command
+    DeviceConfigRequest:
+      description: Request body for modifying device configs
+      required:
+        - binaryData
+      type: object
+      properties:
+        versionToUpdate:
+          description: "string (int64 format)\r\n\r\nThe Config version number."
+          type: string
+        binaryData:
+          description: "string (bytes format)\r\n\r\nThe configuration data for the
+            device in string base64-encoded format.\r\n"
+          type: string
+    ListDeviceConfigVersionsResponse:
+      title: Root Type for ListDeviceConfigVersionsResponse
+      description: A list of a device config versions
+      type: object
+      properties:
+        deviceConfigs:
+          description: List of DeviceConfig objects
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceConfig'
+      example:
+        deviceConfigs:
+          - object: DeviceConfig
+    DeviceConfig:
+      title: Root Type for DeviceConfig
+      description: The device configuration.
+      type: object
+      properties:
+        version:
+          description: "String (int64 format) [Output only] The version
+            of this update. The version number is assigned by the server, and is
+            always greater than 0 after device creation. The version must be 0 on
+            the devices.create request if a config is specified; the response of
+            devices.create will always have a value of 1."
+          type: string
+        cloudUpdateTime:
+          description: "String (Timestamp format) [Output only] The time at
+            which this configuration version was updated in Cloud IoT Core. This
+            timestamp is set by the server. Timestamp in 
+            RFC3339 UTC \"Zulu\" format, accurate to nanoseconds. 
+            Example: \"2014-10-02T15:01:23.045123456Z\"."
+          type: string
+        deviceAckTime:
+          description: "string (Timestamp format) [Output only] The time at
+            which Cloud IoT Core received the acknowledgment from the device, indicating
+            that the device has received this configuration version. If this field
+            is not present, the device has not yet acknowledged that it received
+            this version. Note that when the config was sent to the device, many
+            config versions may have been available in Cloud IoT Core while the
+            device was disconnected, and on connection, only the latest version
+            is sent to the device. Some versions may never be sent to the device,
+            and therefore are never acknowledged. This timestamp is set by Cloud
+            IoT Core. Timestamp in RFC3339 UTC \"Zulu\" format, accurate
+            to nanoseconds. Example: \"2014-10-02T15:01:23.045123456Z\"."
+          type: string
+        binaryData:
+          description: "string (bytes format) The device configuration data
+            in string base64-encoded format."
+          type: string
+      example:
+        version: string
+        cloudUpdateTime: string
+        deviceAckTime: string
+        binaryData: string
