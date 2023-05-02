@@ -32,7 +32,7 @@ For more information please see resources/api/openApi file.
 
 ## Database
 
-Application uses PostgresSQL database. All the database configurations can be found in application.yaml file.
+Application uses PostgreSQL database. All the database configurations can be found in application.yaml file.
 
 ### Tables
 
@@ -43,11 +43,11 @@ Application uses PostgresSQL database. All the database configurations can be fo
 
 ### Migrations
 
-When Applications starts tables will be created by the DatabaseSchemaCreator service.
+When Application starts, tables will be created by the DatabaseSchemaCreator service.
 
-### Running postgresSQL container local
+### Running PostgreSQL container locally
 
-For running the PostgresSQL Database local with docker run:
+For running the PostgreSQL Database locally with docker, run:
 
 ``````
 
@@ -58,14 +58,14 @@ docker run -p 5432:5432 --name some-postgres -e POSTGRES_PASSWORD=mysecretpasswo
 After the container is running, log in to the container and with psql create the database. Then we have
 to set the application settings.
 
-Default postgresSQl values:
+Default PostgreSQL values:
 
 - userName = postgres
 - password = mysecretpassword
 
 ## Build and Push API Docker Image
 
-Mavens auto build and push functionality ca be enabled from application.yaml settings:
+Mavens auto build and push functionality can be enabled from application.yaml settings:
 
 ````
 
@@ -74,19 +74,17 @@ quarkus:
   builder: docker
   build: true
   push: true
-  image: "gcr.io/sotec-iot-core-dev/hono-device-communication"
+  image: "<registry>/<organization>/hono-device-communication"
 
 ````
 
-By running maven package, install or deploy will automatically build the docker image and if push is enabled it will
-push the image
-to the given registry.
+By running maven package, install or deploy, this will automatically build the docker image and if push is enabled it will
+push the image to the given registry.
 
 ## OpenApi Contract-first
 
 For creating the endpoints, Vertx takes the openApi definition file and maps every endpoint operation-ID with a specific
-Handler
-function.
+Handler function.
 
 ## Handlers
 

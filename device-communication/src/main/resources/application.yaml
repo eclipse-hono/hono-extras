@@ -31,6 +31,6 @@ vertx:
 quarkus:
   container-image:
     builder: docker
-    build: true
+    build: false
     push: false
-    image: "gcr.io/sotec-iot-core-dev/hono-device-communication"
+    image: "eclipse/hono-device-communication"

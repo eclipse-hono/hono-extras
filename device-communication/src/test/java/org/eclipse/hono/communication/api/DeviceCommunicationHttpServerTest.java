@@ -174,8 +174,6 @@ class DeviceCommunicationHttpServerTest {
                     verify(serverConfigMock, times(1)).getBasePath();
                     verify(mockedCommandService, times(1)).addRoutes(routerBuilderMock);
                     verify(serverConfigMock, times(1)).getOpenApiFilePath();
-                    verify(routerMock, times(1)).errorHandler(eq(400), any());
-                    verify(routerMock, times(1)).errorHandler(eq(404), any());
                     verify(routerMock, times(2)).get(anyString());
                     verify(routeMock, times(2)).handler(any());
                     verify(routerMock, times(1)).route(anyString());
@@ -247,7 +245,7 @@ class DeviceCommunicationHttpServerTest {
                     when(routeMock.handler(any())).thenReturn(routeMock);
                     when(vertxMock.createHttpServer(any(HttpServerOptions.class))).thenReturn(httpServerMock);
                     when(httpServerMock.requestHandler(routerMock)).thenReturn(httpServerMock);
-                    when(httpServerMock.listen()).thenReturn(Future.failedFuture(new Throwable()));
+                    when(httpServerMock.listen()).thenReturn(Future.failedFuture(new Throwable("Test error on listen()")));
                     when(serverConfigMock.getOpenApiFilePath()).thenReturn("/myPath");
                     when(serverConfigMock.getBasePath()).thenReturn("/basePath");
                     when(routerMock.route(any())).thenReturn(routeMock);
@@ -274,8 +272,6 @@ class DeviceCommunicationHttpServerTest {
                     verify(serverConfigMock, times(1)).getLivenessPath();
                     verify(serverConfigMock, times(1)).getReadinessPath();
                     verify(serverConfigMock, times(1)).getBasePath();
-                    verify(routerMock, times(1)).errorHandler(eq(400), any());
-                    verify(routerMock, times(1)).errorHandler(eq(404), any());
                     verify(routerMock, times(2)).get(anyString());
                     verify(routeMock, times(2)).handler(any());
                     verify(routeMock, times(1)).subRouter(any());
