@@ -42,8 +42,8 @@ import io.vertx.core.Future;
 @Singleton
 public class DeviceCommandServiceImpl extends DeviceServiceAbstract implements DeviceCommandService {
 
-    public static final String DEVICE_ID = "deviceId";
-    public static final String TENANT_ID = "tenantId";
+    public static final String DEVICE_ID = "device_id";
+    public static final String TENANT_ID = "tenant_id";
     public static final String SUBJECT = "subject";
     private final Logger log = LoggerFactory.getLogger(DeviceCommandServiceImpl.class);
     private final DeviceRepository deviceRepository;
