@@ -84,10 +84,10 @@ public class DeviceCommandServiceImpl extends DeviceServiceAbstract implements D
                             final var topic = String.format(messagingConfig.getCommandTopicFormat(), tenantId);
                             final Map<String, String> attributes = Map.of(DEVICE_ID, deviceId, TENANT_ID, tenantId, SUBJECT, subject);
                             try {
-                                final String commandStr = new String(Base64.decodeBase64(commandRequest.getBinaryData().getBytes()));
+                                final var command = Base64.decodeBase64(commandRequest.getBinaryData().getBytes());
 
-                                internalMessaging.publish(topic, commandStr, attributes);
-                                log.info("Command {} was published successfully to topic {}", commandStr, topic);
+                                internalMessaging.publish(topic, command, attributes);
+                                log.info("Command {} was published successfully to topic {}", command, topic);
                             } catch (Exception ex) {
                                 log.error("Command can't be published: {}", ex.getMessage());
                                 return Future.failedFuture(ex);

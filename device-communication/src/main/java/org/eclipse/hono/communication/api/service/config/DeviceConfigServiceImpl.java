@@ -202,16 +202,16 @@ public class DeviceConfigServiceImpl extends DeviceServiceAbstract
     }
 
     private void publishAndSubscribe(final String topicToSubscribe, final String topicToPublish,
-                                     final DeviceConfig config, final Map<String, String> attributes) {
+                                     final DeviceConfig deviceConfig, final Map<String, String> attributes) {
         final var context = Vertx.currentContext();
         context.executeBlocking(promise -> {
             try {
-                final var configStr = new String(Base64.decodeBase64(config.getBinaryData().getBytes()));
+                final var config = Base64.decodeBase64(deviceConfig.getBinaryData().getBytes());
                 internalMessaging.subscribe(topicToSubscribe, this::onDeviceConfigAck);
-                internalMessaging.publish(topicToPublish, configStr, attributes);
-                log.debug("Publish device config {}", config);
+                internalMessaging.publish(topicToPublish, config, attributes);
+                log.debug("Publish device config {}", deviceConfig);
             } catch (Exception ex) {
-                log.error("Error serialize config {}", config);
+                log.error("Error serialize config {}", deviceConfig);
             } finally {
                 promise.complete();
             }

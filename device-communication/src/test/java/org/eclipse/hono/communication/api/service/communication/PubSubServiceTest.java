@@ -45,7 +45,7 @@ class PubSubServiceTest {
 
     private static final String PROJECT_ID = "your-project-id";
     private final String topic = "my-topic";
-    private final String message = "Hello world!";
+    private final byte[] message = "Hello world!".getBytes();
     private final Map<String, String> attributes = new HashMap<>();
     private InternalMessagingConfig configMock;
     private Publisher.Builder publisherBuilderMock;

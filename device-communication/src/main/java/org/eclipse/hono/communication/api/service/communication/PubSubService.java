@@ -85,13 +85,12 @@ public class PubSubService implements InternalMessaging {
         activeSubscriptions.clear();
     }
 
-
     @Override
-    public void publish(final String topic, final String message, final Map<String, String> attributes) throws Exception {
+    public void publish(final String topic, final byte[] message, final Map<String, String> attributes) throws Exception {
         final Publisher publisher = Publisher.newBuilder(TopicName.of(projectId, topic))
                 .build();
         try {
-            final var data = ByteString.copyFromUtf8(message);
+            final var data = ByteString.copyFrom(message);
             final var pubsubMessage = PubsubMessage
                     .newBuilder()
                     .setData(data)

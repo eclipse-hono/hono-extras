@@ -31,5 +31,5 @@ public interface InternalMessagePublisher {
      * @param attributes The message attributes
      * @throws Exception Throws Exception if subscription can't be created
      */
-    void publish(String topic, String message, Map<String, String> attributes) throws Exception;
+    void publish(String topic, byte[] message, Map<String, String> attributes) throws Exception;
 }

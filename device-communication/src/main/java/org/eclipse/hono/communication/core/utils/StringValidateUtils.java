@@ -34,10 +34,10 @@ public abstract class StringValidateUtils {
      * @return True if string is base64 else False
      */
     public static boolean isBase64(final String stringBase64) {
-        try{
+        try {
             Base64.getDecoder().decode(stringBase64);
             return true;
-        } catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return false;
         }
     }

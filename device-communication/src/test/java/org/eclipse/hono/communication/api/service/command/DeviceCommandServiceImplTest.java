@@ -88,13 +88,13 @@ class DeviceCommandServiceImplTest {
 
         when(repositoryMock.searchForDevice(deviceId, tenantId)).thenReturn(Future.succeededFuture(1));
         when(communicationConfig.getCommandTopicFormat()).thenReturn("%s.command");
-        doNothing().when(internalCommunication).publish(anyString(), anyString(), any());
+        doNothing().when(internalCommunication).publish(anyString(), any(), any());
 
         final Future<Void> result = deviceCommandService.postCommand(commandRequest, tenantId, deviceId);
 
         verify(repositoryMock).searchForDevice(deviceId, tenantId);
         verify(communicationConfig).getCommandTopicFormat();
-        verify(internalCommunication).publish(anyString(), anyString(), any());
+        verify(internalCommunication).publish(anyString(), any(), any());
         Assertions.assertTrue(result.succeeded());
     }
 
@@ -122,13 +122,13 @@ class DeviceCommandServiceImplTest {
 
         when(repositoryMock.searchForDevice(deviceId, tenantId)).thenReturn(Future.succeededFuture(1));
         when(communicationConfig.getCommandTopicFormat()).thenReturn("%s.command");
-        doThrow(new IOException()).when(internalCommunication).publish(anyString(), anyString(), any());
+        doThrow(new IOException()).when(internalCommunication).publish(anyString(), any(), any());
 
         final Future<Void> result = deviceCommandService.postCommand(commandRequest, tenantId, deviceId);
 
         verify(repositoryMock).searchForDevice(deviceId, tenantId);
         verify(communicationConfig).getCommandTopicFormat();
-        verify(internalCommunication).publish(anyString(), anyString(), any());
+        verify(internalCommunication).publish(anyString(), any(), any());
         Assertions.assertTrue(result.failed());
         Assertions.assertSame(result.cause().getClass(), IOException.class);
     }
@@ -142,7 +142,7 @@ class DeviceCommandServiceImplTest {
 
         when(repositoryMock.searchForDevice(deviceId, tenantId)).thenReturn(Future.succeededFuture(1));
         when(communicationConfig.getCommandTopicFormat()).thenReturn("%s.command");
-        doThrow(new IOException()).when(internalCommunication).publish(anyString(), anyString(), any());
+        doThrow(new IOException()).when(internalCommunication).publish(anyString(), any(), any());
 
         final Future<Void> result = deviceCommandService.postCommand(commandRequest, tenantId, deviceId);
 
