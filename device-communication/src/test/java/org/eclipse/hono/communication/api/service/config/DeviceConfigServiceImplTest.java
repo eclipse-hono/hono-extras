@@ -125,7 +125,7 @@ class DeviceConfigServiceImplTest {
             when(communicationConfigMock.getConfigVersionIdKey()).thenReturn("version");
             when(communicationConfigMock.getConfigTopicFormat()).thenReturn("version");
             vertxMockedStatic.when(Vertx::currentContext).thenReturn(contextMock);
-            doNothing().when(internalCommunicationMock).publish(anyString(), anyString(), any());
+            doNothing().when(internalCommunicationMock).publish(anyString(), any(), any());
 
             final var results = deviceConfigService.modifyCloudToDeviceConfig(deviceConfigRequest, deviceId, tenantId);
 
@@ -309,7 +309,7 @@ class DeviceConfigServiceImplTest {
             final String tenantId = "tenant-123";
 
             final String topic = "tenant-123-config";
-            final String message = "{}";
+            final byte[] message = "{}".getBytes();
             final Map<String, String> messageAttributes = Map.of(
                     "deviceId", deviceId,
                     "tenantId", tenantId,

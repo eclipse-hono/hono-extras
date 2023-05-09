@@ -60,4 +60,4 @@ quarkus:
     builder: docker
     build: true
     push: false
-    image: "gcr.io/sotec-iot-core-dev/hono-device-communication:sandbox-release-2-4-0"
+    image: "gcr.io/sotec-iot-core-dev/hono-device-communication:2.4.0-SNAPSHOT"
