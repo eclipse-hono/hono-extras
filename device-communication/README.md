@@ -18,7 +18,7 @@ router.
 
 #### commands/{tenantId}/{deviceId}
 
-- POST : post a command for a specific device (NOT IMPLEMENTED YET)
+- POST : post a command for a specific device
 
 <p>
 
