@@ -34,3 +34,6 @@ jobs:
       - name: Build Azure IoT Protocol Gateway Example
         working-directory: ./protocol-gateway/azure-mqtt-protocol-gateway
         run: mvn install -B -e -DcreateJavadoc=true
+      - name: Build Device Communication API
+        working-directory: ./device-communication
+        run: mvn install -B -e -DcreateJavadoc=true
