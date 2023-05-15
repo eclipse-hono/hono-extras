@@ -1,94 +1,89 @@
-<div class="page-header">
-  <div class="page-header-title d-flex align-items-center">
-    <span class="h3" [title]="deviceListLabel" [innerHTML]="deviceListLabel"></span>
-    <div>
-      <div class="page-header-counts">
-        <div class="count">
-          <span class="badge bg-primary" [innerHTML]="deviceListCount"></span>
-          <span class="count-label">Devices</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="page-functions">
-    <div class="function-element" *ngIf="!deviceListIsEmpty()">
-      <div class="search col-auto">
-        <input  type="search" class="search form-control" id="search"
-                [placeholder]="searchLabel" [(ngModel)]="searchTerm">
-      </div>
-    </div>
-    <div class="function-element" *ngIf="!deviceListIsEmpty()">
-      <div class="display-items col-auto">
-        <div ngbDropdown>
-          <button type="button" [innerHTML]="displayedItemsDropdownButton"
-                  class="btn btn-primary" id="ddDisplayedItems" ngbDropdownToggle>
-          </button>
-          <div ngbDropdownMenu aria-labelledby="ddDisplayedItems">
-            <button
-              *ngFor="let option of pageSizeOptions"
-              type="button"
-              ngbDropdownItem
-              (click)="setPageSize(option)"
-              [innerHTML]="option">
-            </button>
+<div>
+  <div class="page-header">
+    <div class="page-header-title d-flex align-items-center">
+      <span [innerHTML]="deviceListLabel" [title]="deviceListLabel" class="h3"></span>
+      <div>
+        <div class="page-header-counts">
+          <div class="count">
+            <span [innerHTML]="deviceListCount" class="badge bg-primary"></span>
+            <span class="count-label">Devices</span>
           </div>
         </div>
       </div>
     </div>
-    <div class="function-element">
-      <button type="button" class="btn btn-primary" [ngbTooltip]="'Create Device'" (click)="createDevice()">
-        <fa-icon [icon]="['fas', 'plus']"></fa-icon>
-        <span [innerHTML]="newDeviceLabel"></span>
-      </button>
+
+    <div class="page-functions">
+      <div *ngIf="!deviceListIsEmpty()" class="function-element">
+        <div class="search col-auto">
+          <input [(ngModel)]="searchTerm" [placeholder]="searchLabel" class="search form-control"
+                 id="search" type="search">
+        </div>
+      </div>
+      <div *ngIf="!deviceListIsEmpty() && !boundDevicesToGateway" class="function-element">
+        <div class="display-items col-auto">
+          <div ngbDropdown>
+            <button [innerHTML]="displayedItemsDropdownButton" class="btn btn-primary"
+                    id="ddDisplayedItems" ngbDropdownToggle type="button">
+            </button>
+            <div aria-labelledby="ddDisplayedItems" ngbDropdownMenu>
+              <button
+                (click)="setPageSize(option)"
+                *ngFor="let option of pageSizeOptions"
+                [innerHTML]="option"
+                ngbDropdownItem
+                type="button">
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="function-element" *ngIf="!boundDevicesToGateway">
+        <button (click)="createDevice()" [ngbTooltip]="'Create Device'" class="btn btn-primary" type="button">
+          <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+          <span [innerHTML]="newDeviceLabel"></span>
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
-<div *ngIf="deviceListIsEmpty()">
-  <div class="alert alert-dark text-center">
-    <span [innerHTML]="noDeviceText"></span>
+  <div *ngIf="deviceListIsEmpty()">
+    <div class="alert alert-dark text-center">
+      <span [innerHTML]="noDeviceText"></span>
+    </div>
+  </div>
+
+  <div *ngIf="!deviceListIsEmpty()" class="card card-table-view mb-3">
+    <table class="table">
+      <thead>
+      <tr>
+        <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="id">
+          <span [innerHTML]="deviceIdLabel"></span>
+        </th>
+        <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="status.created">
+          <span [innerHTML]="deviceCreatedLabel"></span>
+        </th>
+        <th class="p-2 ml-auto last-column">
+          <span [innerHTML]="actionsLabel"></span>
+        </th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let device of (devices | searchFilter:searchTerm)"
+          class="list-item">
+        <td (click)="selectDevice(device)" class="selectElement">
+          <span [innerHTML]="device.id" class="p-2"></span>
+        </td>
+        <td class="p-2">
+          <span [innerHTML]="getCreationTime(device.status) | date:'medium': 'UTC'"></span>
+        </td>
+        <td class="p-2 col-sm-1 ml-auto last-column">
+          <button (click)="deleteDevice(device)" [ngbTooltip]="deleteLabel" class="btn btn-sm btn-secondary"
+                  type="button">
+            <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+          </button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
   </div>
 </div>
-
-<div class="card card-table-view mb-3" *ngIf="!deviceListIsEmpty()">
-  <table class="table">
-    <thead>
-    <tr>
-      <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="id">
-        <span [innerHTML]="deviceIdLabel"></span>
-      </th>
-      <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="status.created">
-        <span [innerHTML]="deviceCreatedLabel"></span>
-      </th>
-      <th class="p-2 ml-auto last-column" >
-        <span [innerHTML]="actionsLabel"></span>
-      </th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr  *ngFor="let device of (devices | searchFilter:searchTerm)"
-        class="list-item">
-      <td (click)="selectDevice(device)" class="selectElement">
-        <span [innerHTML]="device.id" class="p-2"></span>
-      </td>
-      <td class="p-2">
-        <span [innerHTML]="getCreationTime(device.status) | date:'medium': 'UTC'"></span>
-      </td>
-      <td class="p-2 col-sm-1 ml-auto last-column">
-        <button type="button" class="btn btn-sm btn-secondary" [ngbTooltip]="deleteLabel" (click)="deleteDevice(device)">
-          <fa-icon [icon]="['fas', 'trash']"></fa-icon>
-        </button>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-</div>
-<ngb-pagination
-  (pageChange)="changePage($event)"
-  [collectionSize]="deviceListCount"
-  [pageSize]="pageSize"
-  [maxSize]="5"
-  [boundaryLinks]="true"
-  class="pagination d-flex justify-content-center">
-</ngb-pagination>

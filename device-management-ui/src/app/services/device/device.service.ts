@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
 import {ApiService} from "../api/api.service";
+import {Device} from "../../models/device";
 
 @Injectable({
   providedIn: 'root'
@@ -9,6 +10,7 @@ import {ApiService} from "../api/api.service";
 export class DeviceService {
 
   private listDeviceUrlSuffix: string = '/v1/devices/:tenantId/?pageSize=:size&pageOffset=:offset';
+  private listDeviceWithoutFilterUrlSuffix: string = '/v1/devices/:tenantId';
   private deviceUrlSuffix: string = '/v1/devices/:tenantId/:deviceId';
 
   constructor(private http: HttpClient,
@@ -24,12 +26,22 @@ export class DeviceService {
     return this.http.get(url, header);
   }
 
-  public save(deviceId: string, tenantId: string): Observable<any> {
+  public create(device: Device, tenantId: string): Observable<any> {
     const header = this.apiService.getHttpsRequestOptions();
     const url = this.deviceUrlSuffix
       .replace(':tenantId', tenantId)
-      .replace(':deviceId', deviceId);
-    return this.http.post(url, {}, header);
+      .replace(':deviceId', device.id);
+    const body = device.via ? {'via' : device.via} : {};
+    return this.http.post(url, body, header);
+  }
+
+  public update(device: Device, tenantId: string): Observable<any> {
+    const header = this.apiService.getHttpsRequestOptions();
+    const url = this.deviceUrlSuffix
+      .replace(':tenantId', tenantId)
+      .replace(':deviceId', device.id);
+    const body = device.via ? {'via': device.via} : {};
+    return this.http.put(url, body, header);
   }
 
   public delete(deviceId: string, tenantId: string): Observable<any> {
@@ -38,5 +50,12 @@ export class DeviceService {
       .replace(':tenantId', tenantId)
       .replace(':deviceId', deviceId);
     return this.http.delete(url, header);
+  }
+
+  public listAll(tenantId: string): Observable<any> {
+    const header = this.apiService.getHttpsRequestOptions();
+    const url = this.listDeviceWithoutFilterUrlSuffix
+      .replace(':tenantId', tenantId);
+    return this.http.get(url, header);
   }
 }
