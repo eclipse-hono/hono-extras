@@ -45,6 +45,7 @@ import {fas} from "@fortawesome/free-solid-svg-icons";
 import {ToastContainerComponent} from './components/toast-container/toast-container.component';
 import {ConfigAccordionComponent} from './components/devices/device-detail/list-config/config-accordion/config-accordion.component';
 import {TruncatePipe} from './shared/truncate.pipe';
+import {GatewayListComponent} from './components/gateways/gateway-list/gateway-list.component';
 
 @NgModule({
   declarations: [
@@ -72,7 +73,8 @@ import {TruncatePipe} from './shared/truncate.pipe';
     SortableTableDirective,
     ToastContainerComponent,
     ConfigAccordionComponent,
-    TruncatePipe
+    TruncatePipe,
+    GatewayListComponent
   ],
   imports: [
     BrowserModule,

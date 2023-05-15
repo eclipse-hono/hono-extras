@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {DeleteComponent} from '../../modals/delete/delete.component';
 import {Router} from "@angular/router";
@@ -7,6 +7,7 @@ import {TenantModalComponent} from '../../modals/tenant/tenant-modal.component';
 import {DeviceService} from "../../../services/device/device.service";
 import {TenantService} from "../../../services/tenant/tenant.service";
 import {NotificationService} from "../../../services/notification/notification.service";
+import {Device} from "../../../models/device";
 
 @Component({
   selector: 'app-tenant-detail',
@@ -20,6 +21,14 @@ export class TenantDetailComponent {
   protected editLabel: string = 'Edit';
   protected deleteLabel: string = 'Delete';
 
+  protected deviceListCount: number = 0;
+
+  protected pageSize: number = 50;
+
+  protected devices: Device[] = [];
+
+  private pageOffset: number = 0;
+
   constructor(private modalService: NgbModal,
               private deviceService: DeviceService,
               private tenantService: TenantService,
@@ -30,6 +39,7 @@ export class TenantDetailComponent {
       const state = navigation.extras.state
       if (state && state['tenant']) {
         this.tenant = state['tenant'];
+        this.listDevices();
       }
     }
   }
@@ -71,6 +81,21 @@ export class TenantDetailComponent {
     })
   }
 
+  protected changePage($event: number) {
+    this.pageOffset = ($event -1) * this.pageSize;
+    this.listDevices();
+  }
+
+  protected onPageSizeChanged($event: any) {
+    this.pageSize = $event;
+    this.pageOffset = 0;
+    this.listDevices();
+  }
+
+  protected onDeviceCreated() {
+    this.listDevices();
+  }
+
   private delete() {
     this.tenantService.delete(this.tenant.id).subscribe(() => {
       this.notificationService.success('Successfully deleted tenant ' + this.tenant.id.toBold());
@@ -80,4 +105,14 @@ export class TenantDetailComponent {
       this.notificationService.error('Could not delete tenant ' + this.tenant.id.toBold());
     })
   }
+
+  private listDevices() {
+    this.deviceService.listByTenant(this.tenant.id, this.pageSize, this.pageOffset).subscribe((listResult) => {
+      this.devices = listResult.result;
+      this.deviceListCount = listResult.total;
+    }, (error) => {
+      console.log(error);
+    });
+  }
+
 }

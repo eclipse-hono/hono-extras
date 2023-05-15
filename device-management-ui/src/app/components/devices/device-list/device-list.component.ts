@@ -1,4 +1,4 @@
-import {Component, Input, OnInit, QueryList, ViewChildren} from '@angular/core';
+import {Component, EventEmitter, Input, Output, QueryList, ViewChildren} from '@angular/core';
 import {Router} from '@angular/router';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {DeviceModalComponent} from '../../modals/device/device-modal.component';
@@ -15,14 +15,28 @@ import {NotificationService} from "../../../services/notification/notification.s
   templateUrl: './device-list.component.html',
   styleUrls: ['./device-list.component.scss']
 })
-export class DeviceListComponent implements OnInit {
+export class DeviceListComponent {
 
   @ViewChildren(SortableTableDirective)
   public sortableHeaders: QueryList<SortableTableDirective> = new QueryList<SortableTableDirective>();
 
-
   @Input()
   public tenant: Tenant = new Tenant();
+
+  @Input()
+  public devices: Device[] = [];
+
+  @Input()
+  public deviceListCount: number = 0;
+
+  @Input()
+  public boundDevicesToGateway: boolean = false;
+
+  @Output()
+  public pageSizeChanged: EventEmitter<number> = new EventEmitter<number>();
+
+  @Output()
+  public deviceCreated: EventEmitter<any> = new EventEmitter<any>();
 
   protected deviceListLabel: string = 'Device List';
   protected newDeviceLabel: string = 'Create New Device';
@@ -34,17 +48,12 @@ export class DeviceListComponent implements OnInit {
   protected displayedItemsDropdownButton: string = 'Displayed Devices';
   protected noDeviceText: string = 'Tenant has no devices yet. Please create a new device.'
 
-  protected deviceListCount: number = 0;
-
   protected searchTerm!: string;
 
   protected pageSize: number = 50;
 
   protected pageSizeOptions: number[] = [50, 100, 200];
 
-  private pageOffset: number = 0;
-
-  protected devices: Device[] = [];
 
   constructor(private router: Router,
               private modalService: NgbModal,
@@ -53,19 +62,8 @@ export class DeviceListComponent implements OnInit {
               private notificationService: NotificationService) {
   }
 
-  ngOnInit() {
-    this.listDevices();
-  }
-
-  protected changePage($event: number) {
-    this.pageOffset = ($event -1) * this.pageSize;
-    this.listDevices();
-  }
-
   protected setPageSize(size: number) {
-    this.pageSize = size;
-    this.pageOffset = 0;
-    this.listDevices();
+    this.pageSizeChanged.emit(size);
   }
 
   protected onSort({ column, direction }: SortEvent) {
@@ -94,7 +92,7 @@ export class DeviceListComponent implements OnInit {
     modalRef.componentInstance.tenantId = this.tenant.id;
     modalRef.result.then((device) => {
       if (device) {
-        this.listDevices();
+        this.deviceCreated.emit();
         this.notificationService.success("Successfully created device " + device.id.toBold());
       }
     });
@@ -108,15 +106,6 @@ export class DeviceListComponent implements OnInit {
       if (res) {
         this.delete(device);
       }
-    });
-  }
-
-  private listDevices() {
-    this.deviceService.listByTenant(this.tenant.id, this.pageSize, this.pageOffset).subscribe((devices) => {
-      this.devices = devices.result;
-      this.deviceListCount = devices.total;
-    }, (error) => {
-      console.log(error);
     });
   }
 

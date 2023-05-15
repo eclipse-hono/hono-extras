@@ -14,6 +14,34 @@
         id="deviceId"
         type="text">
     </div>
+    <div class="form-group">
+      <div class="form-check form-switch">
+        <input
+          [(ngModel)]="sendViaGateway"
+          [checked]="sendViaGateway === true"
+          class="form-check-input"
+          id="sendViaGatewaySwitch" type="checkbox">
+        <label [innerHTML]="sendViaGatewayLabel" class="form-check-label" for="sendViaGatewaySwitch"></label>
+      </div>
+    </div>
+    <div *ngIf="sendViaGateway" class="form-group">
+      <div class="alert alert-dark text-center">
+        <span [innerHTML]="gatewayTooltip"></span>
+      </div>
+      <label [innerHTML]="selectDevicesAsGatewayLabel" for="devicesDropdown"></label>
+      <span class="ml-1 label-required">*</span>
+      <ng-select
+        [(ngModel)]="device.via"
+        [closeOnSelect]="false"
+        [items]="devices"
+        [multiple]="true"
+        [placeholder]="selectLabel"
+        [searchable]="true"
+        bindLabel="id"
+        bindValue="id"
+        id="devicesDropdown">
+      </ng-select>
+    </div>
   </div>
 
   <app-modal-footer

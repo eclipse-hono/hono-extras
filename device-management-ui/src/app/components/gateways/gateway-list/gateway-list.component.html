@@ -1,0 +1,97 @@
+<div class="page-header">
+  <div class="page-header-title d-flex align-items-center">
+    <span [innerHTML]="gatewayListLabel" [title]="gatewayListLabel" class="h3"></span>
+    <div>
+      <div class="page-header-counts">
+        <div class="count">
+          <span [innerHTML]="gatewayListCount" class="badge bg-primary"></span>
+          <span class="count-label">Gateways</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-functions">
+    <div *ngIf="!gatewayListIsEmpty()" class="function-element">
+      <div class="search col-auto">
+        <input [(ngModel)]="searchTerm" [placeholder]="searchLabel" class="search form-control"
+               id="search" type="search">
+      </div>
+    </div>
+    <div *ngIf="!gatewayListIsEmpty()" class="function-element">
+      <div class="display-items col-auto">
+        <div ngbDropdown>
+          <button [innerHTML]="displayedItemsDropdownButton" class="btn btn-primary"
+                  id="ddDisplayedItems" ngbDropdownToggle type="button">
+          </button>
+          <div aria-labelledby="ddDisplayedItems" ngbDropdownMenu>
+            <button
+              (click)="setPageSize(option)"
+              *ngFor="let option of pageSizeOptions"
+              [innerHTML]="option"
+              ngbDropdownItem
+              type="button">
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="function-element">
+      <button (click)="createDevice()" [ngbTooltip]="'Create Device'" class="btn btn-primary" type="button">
+        <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+        <span [innerHTML]="newGatewayLabel"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="gatewayListIsEmpty()">
+  <div class="alert alert-dark text-center">
+    <span [innerHTML]="noGatewayText"></span>
+  </div>
+</div>
+
+<div *ngIf="!gatewayListIsEmpty()" class="card card-table-view mb-3">
+  <table class="table">
+    <thead>
+    <tr>
+      <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="id">
+        <span [innerHTML]="gatewayIdLabel"></span>
+      </th>
+      <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="status.created">
+        <span [innerHTML]="gatewayCreatedLabel"></span>
+      </th>
+      <th class="p-2 ml-auto last-column">
+        <span [innerHTML]="actionsLabel"></span>
+      </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let gateway of (gateways | searchFilter:searchTerm)"
+        class="list-item">
+      <td (click)="selectGateway(gateway)" class="selectElement">
+        <span [innerHTML]="gateway.id" class="p-2"></span>
+      </td>
+      <td class="p-2">
+        <span [innerHTML]="getCreationTime(gateway.status) | date:'medium': 'UTC'"></span>
+      </td>
+      <td class="p-2 col-sm-1 ml-auto last-column">
+        <button (click)="deleteGateway(gateway)" [ngbTooltip]="deleteLabel" class="btn btn-sm btn-secondary"
+                type="button">
+          <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+        </button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<ngb-pagination
+  (pageChange)="changePage($event)"
+  [boundaryLinks]="true"
+  [collectionSize]="gatewayListCount"
+  [maxSize]="5"
+  [pageSize]="pageSize"
+  class="pagination d-flex justify-content-center">
+</ngb-pagination>
+
+
