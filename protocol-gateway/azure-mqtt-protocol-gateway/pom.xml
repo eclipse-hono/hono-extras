@@ -53,7 +53,7 @@
 
         <hono.version>2.1.0</hono.version>
         <hono.mqtt-protocol-gateway.version>0.0.1-SNAPSHOT</hono.mqtt-protocol-gateway.version>
-        <spring.boot.version>2.7.3</spring.boot.version>
+        <spring.boot.version>2.7.12</spring.boot.version>
     </properties>
 
     <dependencyManagement>
