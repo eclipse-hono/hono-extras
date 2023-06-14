@@ -21,7 +21,6 @@ import {DatePipe} from "@angular/common";
   styleUrls: ['./device-detail.component.scss']
 })
 export class DeviceDetailComponent {
-  protected idLabel: string = 'Device ID: ';
   protected tenantIdLabel: string = 'Tenant ID:';
   protected creationTimeLabel: string = 'Created (UTC):';
   protected configLabel: string = 'Configuration';
@@ -33,6 +32,7 @@ export class DeviceDetailComponent {
   protected updateLabel: string = 'Update Config';
   protected sendLabel: string = 'Send Command';
   protected addAuthenticationLabel: string = 'Add Credentials';
+  protected boundDevices: string = 'Bound Devices';
 
   protected configs: Config[] = [];
   protected credentials: Credentials[] = [];
@@ -61,7 +61,19 @@ export class DeviceDetailComponent {
   }
 
   protected get deviceDetail() {
-    return 'Device: ' + this.device.id;
+    if (this.isGateway()) {
+      return 'Gateway: ' + this.device.id
+    } else {
+      return 'Device: ' + this.device.id;
+    }
+  }
+
+  protected get setIdLabel() {
+    if (this.isGateway()) {
+      return 'Gateway ID: ';
+    } else {
+      return 'Device ID: ';
+    }
   }
 
   protected getCreationTime(status: any) {
@@ -79,6 +91,8 @@ export class DeviceDetailComponent {
       if (res) {
         this.delete();
       }
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
   }
 
@@ -99,6 +113,8 @@ export class DeviceDetailComponent {
         this.notificationService.success('Successfully updated config for device ' + this.device.id.toBold());
         this.configs = [res, ...this.configs];
       }
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
   }
 
@@ -110,7 +126,9 @@ export class DeviceDetailComponent {
       if (res) {
         this.notificationService.success('Successfully sent command to device ' + this.device.id.toBold());
       }
-    })
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
+    });
   }
 
   protected addAuthentication() {
@@ -123,11 +141,13 @@ export class DeviceDetailComponent {
         this.notificationService.success('Successfully added credentials to device ' + this.device.id.toBold());
         this.getCredentials();
       }
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
   }
 
   private delete() {
-    this.deviceService.delete(this.device.id, this.tenant.id).subscribe(() => {
+    this.deviceService.delete(this.device, this.tenant.id).subscribe(() => {
       this.notificationService.success('Successfully deleted device ' + this.device.id.toBold());
       this.navigateBack();
     }, (error) => {
@@ -155,5 +175,8 @@ export class DeviceDetailComponent {
     });
   }
 
+  protected isGateway() {
+    return true;
+  }
 
 }

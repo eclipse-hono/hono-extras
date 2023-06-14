@@ -5,7 +5,7 @@
       <div>
         <div class="page-header-counts">
           <div class="count">
-            <span [innerHTML]="deviceListCount" class="badge bg-primary"></span>
+            <span [innerHTML]="!boundDevicesToGateway ? deviceListCount : boundDeviceListCount" class="badge bg-primary"></span>
             <span class="count-label">Devices</span>
           </div>
         </div>

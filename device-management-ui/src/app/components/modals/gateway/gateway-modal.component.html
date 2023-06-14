@@ -1,0 +1,42 @@
+<div class="modal-component">
+    <app-modal-head
+      (closeModal)="onClose()"
+      [modalTitle]="modalTitle">
+    </app-modal-head>
+  
+    <div class="modal-body">
+      <div class="form-group">
+        <label [innerHTML]="deviceIdLabel" for="deviceId"></label>
+        <span class="ml-1 label-required">*</span>
+        <input
+          [(ngModel)]="device.id"
+          class="form-control"
+          id="deviceId"
+          type="text">
+      </div>
+      <div class="form-group">
+        <label [innerHTML]="selectDevicesAsGatewayLabel" for="devicesDropdown"></label>
+        <span class="ml-1 label-required">*</span>
+        <ng-select
+          [(ngModel)]="device.via"
+          [items]="devices"
+          [searchable]="true"
+          [multiple]="true"
+          [closeOnSelect]="false"
+          [placeholder]="selectLabel"
+          bindLabel="id"
+          bindValue="id"
+          id="devicesDropdown">
+        </ng-select>
+      </div>
+    </div>
+  
+    <app-modal-footer
+      (cancelButtonPressed)="onClose()"
+      (confirmButtonPressed)="onConfirm()"
+      [buttonDisabled]="isInvalid()"
+      [confirmButtonLabel]="confirmButtonLabel">
+    </app-modal-footer>
+  
+  </div>
+  

@@ -44,11 +44,11 @@ export class DeviceService {
     return this.http.put(url, body, header);
   }
 
-  public delete(deviceId: string, tenantId: string): Observable<any> {
+  public delete(device: Device, tenantId: string): Observable<any> {
     const header = this.apiService.getHttpsRequestOptions();
     const url = this.deviceUrlSuffix
       .replace(':tenantId', tenantId)
-      .replace(':deviceId', deviceId);
+      .replace(':deviceId', device.id);
     return this.http.delete(url, header);
   }
 

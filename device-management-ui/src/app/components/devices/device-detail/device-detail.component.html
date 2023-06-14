@@ -36,6 +36,12 @@
           <fa-icon [icon]="['fas', 'key']"></fa-icon>
       </button>
     </div>
+    <div class="function-element">      
+      <button (click)="bindDevicesModal(true)" [ngbTooltip]="'Bind Device'" class="btn btn-sm btn-primary"
+              type="button">
+        <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+      </button>
+    </div>
     <div class="function-element">
       <button (click)="deleteDevice()" [ngbTooltip]="deleteLabel" class="btn btn-sm btn-secondary" type="button">
         <fa-icon [icon]="['fas', 'trash']"></fa-icon>
@@ -50,7 +56,7 @@
 <div class="details">
   <div>
     <div class="d-inline-flex p-2 detail-label">
-      <span [innerHTML]="idLabel"></span>
+      <span [innerHTML]="setIdLabel"></span>
     </div>
     <div class="d-inline-flex p-2 detail-value">
       <span [innerHTML]="device.id"></span>
@@ -105,6 +111,12 @@
           [tenantId]="tenant.id"
           [credentials]="credentials">
         </app-list-authentication>
+      </ng-template>
+    </ng-container>
+    <ng-container ngbNavItem *ngIf="isGateway()">
+      <a [innerHTML]="boundDevices" ngbNavLink></a>
+      <ng-template ngbNavContent>
+        List Devices of this Gateway here
       </ng-template>
     </ng-container>
   </nav>

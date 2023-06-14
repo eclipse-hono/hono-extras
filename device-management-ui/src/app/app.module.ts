@@ -46,6 +46,7 @@ import {ToastContainerComponent} from './components/toast-container/toast-contai
 import {ConfigAccordionComponent} from './components/devices/device-detail/list-config/config-accordion/config-accordion.component';
 import {TruncatePipe} from './shared/truncate.pipe';
 import {GatewayListComponent} from './components/gateways/gateway-list/gateway-list.component';
+import { GatewayModalComponent } from './components/modals/gateway/gateway-modal.component';
 
 @NgModule({
   declarations: [
@@ -74,7 +75,8 @@ import {GatewayListComponent} from './components/gateways/gateway-list/gateway-l
     ToastContainerComponent,
     ConfigAccordionComponent,
     TruncatePipe,
-    GatewayListComponent
+    GatewayListComponent,
+    GatewayModalComponent
   ],
   imports: [
     BrowserModule,

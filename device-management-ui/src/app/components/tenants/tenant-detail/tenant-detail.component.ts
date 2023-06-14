@@ -20,6 +20,8 @@ export class TenantDetailComponent {
   protected tenant: Tenant = new Tenant();
   protected editLabel: string = 'Edit';
   protected deleteLabel: string = 'Delete';
+  protected gatewayLabel: string = 'Gateways';
+  protected devicesLabel: string = 'Devices';
 
   protected deviceListCount: number = 0;
 
@@ -67,6 +69,8 @@ export class TenantDetailComponent {
       if (res) {
         this.notificationService.success('Successfully edited tenant ' + this.tenant.id.toBold());
       }
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
   }
 
@@ -78,7 +82,9 @@ export class TenantDetailComponent {
       if (res) {
         this.delete();
       }
-    })
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
+    });
   }
 
   protected changePage($event: number) {
@@ -107,12 +113,11 @@ export class TenantDetailComponent {
   }
 
   private listDevices() {
-    this.deviceService.listByTenant(this.tenant.id, this.pageSize, this.pageOffset).subscribe((listResult) => {
+    this.deviceService.listByTenant(this.tenant.id, this.pageSize, this.pageOffset, false).subscribe((listResult) => {
       this.devices = listResult.result;
       this.deviceListCount = listResult.total;
     }, (error) => {
       console.log(error);
     });
   }
-
 }

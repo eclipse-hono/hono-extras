@@ -70,6 +70,8 @@ export class ListAuthenticationComponent implements OnInit, OnChanges {
         this.notificationService.success("Successfully edited credentials of device " + this.deviceId.toBold());
       }
       this.getCredentials();
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
   }
 
@@ -87,6 +89,8 @@ export class ListAuthenticationComponent implements OnInit, OnChanges {
           }
         }
       }
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
   }
 

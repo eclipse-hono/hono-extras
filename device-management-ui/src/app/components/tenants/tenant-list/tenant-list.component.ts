@@ -88,6 +88,8 @@ export class TenantListComponent implements OnInit {
         this.tenantListCount = this.tenantListCount + 1;
         this.notificationService.success('Successfully created tenant ' + tenant.id.toBold());
       }
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
   }
 
@@ -99,6 +101,8 @@ export class TenantListComponent implements OnInit {
       if (res) {
         this.notificationService.success('Successfully edited tenant ' + tenant.id.toBold())
       }
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
   }
 
@@ -110,6 +114,8 @@ export class TenantListComponent implements OnInit {
       if (res) {
         this.delete(tenant);
       }
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
   }
 
