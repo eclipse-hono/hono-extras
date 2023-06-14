@@ -56,11 +56,25 @@
 
 <hr>
 
-<app-gateway-list
-  [tenant]="tenant">
-</app-gateway-list>
+<div class="gateway-tabs">
+  <nav #nav="ngbNav" class="nav-tabs" ngbNav>
+    <ng-container ngbNavItem>
+      <a [innerHTML]="gatewayLabel" ngbNavLink></a>
+      <ng-template ngbNavContent>
+        <app-gateway-list
+          [tenant]="tenant">
+        </app-gateway-list>
+      </ng-template>
+    </ng-container>
+    <ng-container ngbNavItem>
+      <a [innerHTML]="devicesLabel" ngbNavLink></a>
+      <ng-template ngbNavContent>
+        <app-device-list
+          [tenant]="tenant">
+        </app-device-list>
+      </ng-template>
+    </ng-container>
+  </nav>
+</div>
 
-<app-device-list
-  [tenant]="tenant">
-</app-device-list>
-
+<div [ngbNavOutlet]="nav" class="mt-2"></div>

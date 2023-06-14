@@ -95,6 +95,8 @@ export class DeviceListComponent {
         this.deviceCreated.emit();
         this.notificationService.success("Successfully created device " + device.id.toBold());
       }
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
   }
 
@@ -106,11 +108,13 @@ export class DeviceListComponent {
       if (res) {
         this.delete(device);
       }
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
   }
 
   private delete(device: Device) {
-    this.deviceService.delete(device.id, this.tenant.id).subscribe(() => {
+    this.deviceService.delete(device, this.tenant.id).subscribe(() => {
       const index = this.devices.indexOf(device);
       if (index >= 0) {
         this.devices.splice(index, 1);

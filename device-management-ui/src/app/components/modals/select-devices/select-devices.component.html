@@ -1,0 +1,42 @@
+<div *ngIf="sendViaGateway" class="form-group">
+    <div class="alert alert-dark text-center">
+      <span [innerHTML]="gatewayTooltip"></span>
+    </div>
+    <div *ngIf="!gateWayListIsEmpty()">
+        <div class="card card-table-view newGatewayList mb-3">
+            <div class="p-2 newGatewayListItem" *ngFor="let newGateway of this.device.via">
+                <fa-icon [icon]="['fas', 'close']" (click)="unmarkAsGateway(newGateway)"></fa-icon>
+                <span [innerHTML]="newGateway"></span>
+            </div>
+        </div>
+    </div>
+    <div>    
+        <label [innerHTML]="selectDevicesAsGatewayLabel"></label>
+        <span class="ml-1 label-required">*</span>
+    </div>
+    <div *ngIf="!deviceListIsEmpty()" class="function-element">
+      <div class="search col-auto">
+        <input [(ngModel)]="searchTerm" [placeholder]="searchLabel" class="search form-control"
+               id="searchDeviceList" type="search">
+      </div>
+    </div>
+    <div class="card card-table-view mb-3">      
+      <table class="table">          
+        <tbody>
+          <tr *ngFor="let device of (devices | searchFilter:searchTerm)" class="list-item">
+            <td (click)="markAsGateway(device)">
+              <span [innerHTML]="device.id" class="p-2"></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ngb-pagination
+      (pageChange)="changePage($event)"
+      [boundaryLinks]="true"
+      [collectionSize]="deviceListCount"
+      [maxSize]="5"
+      [pageSize]="pageSize"
+      class="pagination d-flex justify-content-center">
+    </ngb-pagination>
+</div>

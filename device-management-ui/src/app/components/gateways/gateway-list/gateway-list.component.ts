@@ -8,6 +8,7 @@ import {DeviceService} from "../../../services/device/device.service";
 import {SortableTableService} from "../../../services/sortable-table/sortable-table.service";
 import {NotificationService} from "../../../services/notification/notification.service";
 import {DeviceModalComponent} from "../../modals/device/device-modal.component";
+import {GatewayModalComponent} from '../../modals/gateway/gateway-modal.component';
 import {DeleteComponent} from "../../modals/delete/delete.component";
 
 @Component({
@@ -86,6 +87,17 @@ export class GatewayListComponent {
 
   protected createDevice(): void {
     const modalRef = this.modalService.open(DeviceModalComponent, {size: 'lg'});
+    modalRef.componentInstance.tenantId = this.tenant.id;
+    modalRef.result.then((device) => {
+      if (device) {
+        this.listGateways();
+        this.notificationService.success("Successfully created device " + device.id.toBold());
+      }
+    });
+  }
+
+  protected createGateway(): void {
+    const modalRef = this.modalService.open(GatewayModalComponent, {size: 'lg'});
     modalRef.componentInstance.tenantId = this.tenant.id;
     modalRef.result.then((device) => {
       if (device) {

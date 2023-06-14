@@ -22,15 +22,27 @@ export class DeviceModalComponent implements OnInit {
 
   protected devices: Device[] = [];
 
+  protected deviceListCount: number = 0;
+
   protected sendViaGateway: boolean = false;
+
+  createDevice: boolean = true;
 
   protected modalTitle: string = 'Create Device';
   protected deviceIdLabel: string = 'Device ID';
   protected confirmButtonLabel: string = 'Save';
-  protected sendViaGatewayLabel: string = 'Send via gateway';
-  protected selectDevicesAsGatewayLabel: string = 'Select devices as gateways';
-  protected selectLabel: string = 'Select Device';
-  protected gatewayTooltip: string = 'Select devices as gateways to bind to this device. This will allow the gateway(s) to exchange MQTT/HTTP messages with Eclipse Hono for this device.';
+  protected sendViaGatewayLabel: string = 'Bind to gateway(s)';
+  protected selectDevicesAsGatewayLabel: string = 'Select device(s) as gateway(s).';
+  protected selectLabel: string = 'Select devices';
+  protected gatewayTooltip: string = 
+  'Select one or more devices as gateways - <strong>the selected devices will become gateways!</strong> <br /> This will allow the gateways to exchange MQTT/HTTP messages with Eclipse Hono for this device.';
+  protected gatewayListCount: number = 0;
+  protected gateways: Device[] = [];
+  protected devicesAsGateways: Device[] = [];
+  protected pageSize: number = 50;
+  private pageOffset: number = 0;
+  protected gatewayList: string = "already existing gateways";
+  protected deviceList: string = "available devices";
 
   constructor(private activeModal: NgbActiveModal,
               private deviceService: DeviceService,
@@ -38,67 +50,34 @@ export class DeviceModalComponent implements OnInit {
 
   }
 
-  ngOnInit() {
-    this.listDevices();
-  }
+  ngOnInit() { }
 
   protected onClose() {
     this.activeModal.close();
+    this.listDevices();
   }
 
   protected onConfirm() {
     if (this.isInvalid()) {
       return;
     }
+    this.device.via = []
+    for (const dev of this.selectedDevices) {
+      this.device.via?.push(dev.id)
+    }
     this.deviceService.create(this.device, this.tenantId).subscribe((result) => {
-      if (result) {
+      if (result) {        
         this.activeModal.close(this.device);
+        this.listDevices();
       }
     }, (error) => {
       console.log('Error saving device', this.device.id, error);
       this.notificationService.error('Could not create device for id ' + this.device.id.toBold());
     });
   }
-
+  
   protected isInvalid(): boolean {
     return !this.device || !this.device.id || !this.tenantId ||
-      (this.sendViaGateway && (!this.device.via || this.device.via.length === 0));
+      (this.sendViaGateway && (!this.selectedDevices || this.selectedDevices.length === 0));
   }
-
-  private listDevices() {
-    //TODO add backend logic call
-    const listResult = {
-      result: [{
-        id: "device1",
-        status: {
-          created: "2023-03-15T16:05:19Z"
-        }
-      }, {
-        id: "device2",
-        status: {
-          created: "2023-03-15T16:05:19Z"
-        }
-      },
-        {
-          id: "device3",
-          status: {
-            created: "2023-03-15T16:05:19Z"
-          }
-        },
-        {
-          id: "device4",
-          status: {
-            created: "2023-03-15T16:05:19Z"
-          }
-        }, {
-          id: "device5",
-          status: {
-            created: "2023-03-15T16:05:19Z"
-          }
-        }],
-      total: 5,
-    }
-    this.devices = listResult.result;
-  }
-
 }
