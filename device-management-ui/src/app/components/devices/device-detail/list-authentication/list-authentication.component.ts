@@ -129,7 +129,7 @@ export class ListAuthenticationComponent implements OnInit, OnChanges {
 
   private findCredentials(authenticationValue: AuthenticationValue): Credentials {
     for (const credential of this.credentials) {
-      if (credential[this.authIdKey] === authenticationValue[this.authIdKey]) {
+      if (credential[this.authIdKey] === authenticationValue[this.authIdKey] && credential.secrets[0].id === authenticationValue.id) {
         return credential;
       }
     }

@@ -34,7 +34,7 @@ export class DeviceModalComponent implements OnInit {
   protected sendViaGatewayLabel: string = 'Bind to gateway(s)';
   protected selectDevicesAsGatewayLabel: string = 'Select device(s) as gateway(s).';
   protected selectLabel: string = 'Select devices';
-  protected gatewayTooltip: string = 
+  protected gatewayTooltip: string =
   'Select one or more devices as gateways - <strong>the selected devices will become gateways!</strong> <br /> This will allow the gateways to exchange MQTT/HTTP messages with Eclipse Hono for this device.';
   protected gatewayListCount: number = 0;
   protected gateways: Device[] = [];

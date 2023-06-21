@@ -39,7 +39,7 @@ export class TenantModalComponent implements OnInit {
 
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     if (this.isNewTenant) {
       this.modalTitle = 'Create Tenant';
     } else {

@@ -44,7 +44,7 @@ export class TenantListComponent implements OnInit {
 
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.listTenants();
   }
 

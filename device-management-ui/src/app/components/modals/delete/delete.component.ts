@@ -14,7 +14,12 @@ export class DeleteComponent {
   @Input()
   public body: string = '';
 
-  protected deleteButtonLabel = 'Delete';
+  @Input()
+  public unbind: boolean = false;
+
+  protected deleteButtonLabel: string = 'Delete';
+
+  protected unbindButtonLabel: string = 'Unbind';
 
   constructor(private activeModal: NgbActiveModal) {
   }

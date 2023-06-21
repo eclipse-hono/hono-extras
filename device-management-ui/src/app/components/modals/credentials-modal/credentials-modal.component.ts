@@ -59,7 +59,7 @@ export class CredentialsModalComponent implements OnInit {
     return this.authType === CredentialTypes.RPK;
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     if (!this.isNewCredentials && this.credential && this.credential["auth-id"] && this.credential.type) {
       this.modalTitle = 'Update Credentials';
       this.authId = this.credential["auth-id"];
@@ -98,7 +98,7 @@ export class CredentialsModalComponent implements OnInit {
           }
         }
         console.log('Error adding credentials for device', this.deviceId, error);
-        this.notificationService.error("Could not save credentials.")
+        this.notificationService.error("Could not save credentials. Please check the key and the 'Not before' and 'Not after' inputs.")
       });
     }
   }

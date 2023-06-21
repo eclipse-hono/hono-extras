@@ -1,7 +1,7 @@
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
-      <img class="logo" src="../../../../assets/images/logo_300px276px.png">
+      <img alt="hono-logo" class="logo" src="../../../../assets/images/logo_300px276px.png">
     </li>
   </ol>
 </nav>
@@ -30,9 +30,9 @@
       <div class="display-items col-auto">
         <div ngbDropdown>
           <button [innerHTML]="displayedItemsDropdownButton" class="btn btn-primary"
-                  id="ddDisplayedItems" ngbDropdownToggle type="button">
+                  id="displayedItemsDropDown" ngbDropdownToggle type="button">
           </button>
-          <div aria-labelledby="ddDisplayedItems" ngbDropdownMenu>
+          <div aria-labelledby="displayedItemsDropDown" ngbDropdownMenu>
             <button (click)="setPageSize(option)"
                     *ngFor="let option of pageSizeOptions" [innerHTML]="option"
                     ngbDropdownItem

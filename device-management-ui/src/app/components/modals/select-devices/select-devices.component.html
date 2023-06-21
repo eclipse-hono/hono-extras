@@ -1,5 +1,5 @@
 <div *ngIf="sendViaGateway" class="form-group">
-    <div class="alert alert-dark text-center">
+    <div *ngIf="!bindDevices" class="alert alert-dark text-center">
       <span [innerHTML]="gatewayTooltip"></span>
     </div>
     <div *ngIf="!gateWayListIsEmpty()">

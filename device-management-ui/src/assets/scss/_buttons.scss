@@ -29,7 +29,7 @@ button.btn {
       box-shadow: none;
     }
 
-    &#ddDisplayedItems {
+    &#displayedItemsDropDown {
       height:100%;
     }
   }
@@ -55,10 +55,10 @@ button.btn {
   &.active {
     background-color: var(--theme);
     color: white;
-    > span.caret { 
+    > span.caret {
       left: 10px;
       top: 36px;
-      position: absolute;     
+      position: absolute;
       width: 0;
       height: 0;
       display: inline-block;

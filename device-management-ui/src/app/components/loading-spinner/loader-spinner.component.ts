@@ -16,7 +16,7 @@ export class LoaderSpinnerComponent implements OnInit {
   constructor(private loaderService: LoadingSpinnerService) {
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.loaderSubject.subscribe((isLoading) => {
       setTimeout(() => {
         this.isLoading = isLoading;

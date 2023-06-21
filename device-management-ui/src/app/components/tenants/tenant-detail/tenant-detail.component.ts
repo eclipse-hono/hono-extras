@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component} from '@angular/core';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {DeleteComponent} from '../../modals/delete/delete.component';
 import {Router} from "@angular/router";
@@ -42,6 +42,7 @@ export class TenantDetailComponent {
       if (state && state['tenant']) {
         this.tenant = state['tenant'];
         this.listDevices();
+        this.setActiveTab(false);
       }
     }
   }
@@ -119,5 +120,9 @@ export class TenantDetailComponent {
     }, (error) => {
       console.log(error);
     });
+  }
+
+  public setActiveTab(isGateway : boolean){
+    this.deviceService.setActiveTab(isGateway);
   }
 }
