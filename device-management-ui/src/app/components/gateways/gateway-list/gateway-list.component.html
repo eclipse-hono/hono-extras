@@ -22,9 +22,9 @@
       <div class="display-items col-auto">
         <div ngbDropdown>
           <button [innerHTML]="displayedItemsDropdownButton" class="btn btn-primary"
-                  id="ddDisplayedItems" ngbDropdownToggle type="button">
+                  id="displayedItemsDropDown" ngbDropdownToggle type="button">
           </button>
-          <div aria-labelledby="ddDisplayedItems" ngbDropdownMenu>
+          <div aria-labelledby="displayedItemsDropDown" ngbDropdownMenu>
             <button
               (click)="setPageSize(option)"
               *ngFor="let option of pageSizeOptions"

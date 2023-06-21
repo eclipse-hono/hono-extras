@@ -34,7 +34,7 @@ describe('DeviceService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should return list of devices when listByTenant is called with filter', () => {
+  it('should return list of devices when listByTenant is called with isGateway = false', () => {
     const result: Device[] = [new Device(), new Device(), new Device()];
     apiServiceSpy.getHttpsRequestOptions.and.returnValue({
       headers: {},
@@ -43,13 +43,13 @@ describe('DeviceService', () => {
     });
     httpClientSpy.get.and.returnValue(of(result));
 
-    service.listByTenant('test-tenant', 50, 1).subscribe((success) => {
+    service.listByTenant('test-tenant', 50, 1, false).subscribe((success) => {
       expect(success).toEqual(result);
       expect(success.length).toEqual(3);
     }, (error) => {
       expect(error).toBeFalsy();
     });
-    const expectedUrl: string = '/v1/devices/test-tenant/?pageSize=50&pageOffset=1&filterJson={"field": "/gateways","value": false}';
+    const expectedUrl: string = '/v1/devices/test-tenant/?pageSize=50&pageOffset=1&isGateway=false';
     expect(httpClientSpy.get).toHaveBeenCalledWith(expectedUrl, {
       headers: {},
       withCredentials: true,
@@ -57,7 +57,7 @@ describe('DeviceService', () => {
     });
   });
 
-  it('should return list of gateways when listByTenant is called with filter', () => {
+  it('should return list of gateways when listByTenant is called with isGateway = true', () => {
     const result: Device[] = [new Device(), new Device(), new Device()];
     apiServiceSpy.getHttpsRequestOptions.and.returnValue({
       headers: {},
@@ -72,7 +72,7 @@ describe('DeviceService', () => {
     }, (error) => {
       expect(error).toBeFalsy();
     });
-    const expectedUrl: string = '/v1/devices/test-tenant/?pageSize=50&pageOffset=1&filterJson={"field": "/gateways","value": true}';
+    const expectedUrl: string = '/v1/devices/test-tenant/?pageSize=50&pageOffset=1&isGateway=true';
     expect(httpClientSpy.get).toHaveBeenCalledWith(expectedUrl, {
       headers: {},
       withCredentials: true,
@@ -134,9 +134,12 @@ describe('DeviceService', () => {
   });
 
   it('should return body of true when delete is called', () => {
+    const deviceId: string = 'test-device';
+    const device: Device = new Device();
+    device.id = deviceId;
     httpClientSpy.delete.and.returnValue(of(true));
 
-    service.delete('device-id','test-tenant').subscribe((success) => {
+    service.delete(device,'test-tenant').subscribe((success) => {
       expect(success).toEqual(true);
     }, (error) => {
       expect(error).toBeFalsy();

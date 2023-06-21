@@ -29,7 +29,7 @@ export class DateTimePickerComponent implements OnInit {
     return date.getTimezoneOffset() / 60;
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     if (this.secretDate) {
       const date = new Date(this.secretDate);
       this.date = {day: date.getUTCDate(), month: date.getUTCMonth() + 1, year: date.getUTCFullYear()};

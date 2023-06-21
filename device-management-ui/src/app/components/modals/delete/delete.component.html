@@ -12,7 +12,7 @@
 
   <div class="modal-buttons">
     <app-modal-footer
-      [confirmButtonLabel]="deleteButtonLabel"
+      [confirmButtonLabel]="unbind ? unbindButtonLabel : deleteButtonLabel"
       [showRequiredFieldInfo]="false"
       (confirmButtonPressed)="onConfirm()"
       (cancelButtonPressed)="onCancel()">

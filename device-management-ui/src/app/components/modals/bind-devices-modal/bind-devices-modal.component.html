@@ -1,8 +1,8 @@
 <div class="modal-component">
-    <app-modal-head
-      (closeModal)="onClose()"
-      [modalTitle]="modalTitle">
-    </app-modal-head>
+  <app-modal-head
+    (closeModal)="onClose()"
+    [modalTitle]="bindDevicesLabel">
+  </app-modal-head>
 
   <div  class="modal-body" >
     <div *ngIf="!bindDevices" class="form-group">
@@ -24,12 +24,17 @@
         <label [innerHTML]="sendViaGatewayLabel" class="form-check-label" for="sendViaGatewaySwitch"></label>
       </div>
     </div>
-    <app-device-as-gateway
+    <app-selected-devices
       [bindDevices] = "bindDevices"
       [sendViaGateway]="sendViaGateway || bindDevices"
       [device]="device"
-      [tenantId]="tenantId">
-    </app-device-as-gateway>
+      [tenantId]="tenantId"
+      [devices]="devices"
+      [deviceListCount]="deviceListCount"
+      [pageSize]="pageSize"
+      (pageOffsetChanged)="onPageOffsetChanged($event)"
+      (selectedDevicesChanged)="onSelectedDevicesChanged($event)">
+    </app-selected-devices>
   </div>
 
   <app-modal-footer

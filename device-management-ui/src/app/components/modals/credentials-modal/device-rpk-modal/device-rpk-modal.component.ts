@@ -34,7 +34,7 @@ export class DeviceRpkModalComponent implements OnInit {
 
   protected algorithmTypes: string[] = ['EC', 'RSA'];
 
-  ngOnInit() {
+  public ngOnInit() {
     if (!this.rpkSecret) {
       this.rpkSecret = new Secret();
     }

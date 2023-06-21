@@ -12,6 +12,7 @@ export class DeviceService {
   private listDeviceUrlSuffix: string = '/v1/devices/:tenantId/?pageSize=:size&pageOffset=:offset';
   private listDeviceWithoutFilterUrlSuffix: string = '/v1/devices/:tenantId';
   private deviceUrlSuffix: string = '/v1/devices/:tenantId/:deviceId';
+  private isGateway: boolean = false;
 
   constructor(private http: HttpClient,
               private apiService: ApiService) {
@@ -57,5 +58,12 @@ export class DeviceService {
     const url = this.listDeviceWithoutFilterUrlSuffix
       .replace(':tenantId', tenantId);
     return this.http.get(url, header);
+  }
+
+  public setActiveTab(isGateway:boolean){
+    this.isGateway = isGateway;
+  }
+  public getActiveTab() : boolean{
+    return this.isGateway;
   }
 }
