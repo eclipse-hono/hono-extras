@@ -105,6 +105,7 @@ export class GatewayListComponent {
         this.notificationService.success("Successfully created device " + device.id.toBold());
       }
     });
+    this.ngOnInit();
   }
 
   protected deleteDevice(device: Device): void {
