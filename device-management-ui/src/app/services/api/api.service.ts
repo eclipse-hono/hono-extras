@@ -15,6 +15,7 @@ export class ApiService {
     const header = new HttpHeaders()
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${idToken}`)
+      .set('Content-Type', 'application/json')
 
     return {
       headers: header,
