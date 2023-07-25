@@ -25,6 +25,7 @@ export class CredentialsModalComponent implements OnInit {
   @Input()
   public credentials: Credentials[] = [];
 
+  isSecretInvalid: boolean = false;
   protected confirmButtonLabel: string = 'Save';
   protected authIdLabel: string = 'Auth ID';
   protected authenticationTypeLabel: string = 'Authentication type';
@@ -70,7 +71,13 @@ export class CredentialsModalComponent implements OnInit {
   }
 
   protected setSecret($event: any) {
-    this.credential.secrets = [$event];
+    if ($event == undefined) {
+      this.isSecretInvalid = true;
+    } else {
+      this.credential.secrets = [$event];
+      this.isSecretInvalid = false;
+    }
+
   }
 
   protected onClose() {
@@ -119,7 +126,7 @@ export class CredentialsModalComponent implements OnInit {
   }
 
   private isAuthenticationValid(): boolean {
-    return !!this.credential.secrets[0] && !!this.authId && !!this.authType;
+    return !!this.credential.secrets[0] && !!this.authId && !!this.authType && !this.isSecretInvalid;
   }
 
 }
