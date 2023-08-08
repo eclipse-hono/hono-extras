@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, Input, OnInit, EventEmitter, Output} from '@angular/core';
 import {Device} from "../../../models/device";
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 import {DeviceService} from "../../../services/device/device.service";
@@ -15,47 +15,54 @@ export class BindDevicesModalComponent implements OnInit {
   public gateway: Device = new Device();
 
   @Input()
+  public isGateway!: boolean;
+
+  @Input()
   public device: Device = new Device();
 
   @Input()
   public tenantId: string = '';
 
   @Input()
-  public gatewayId: string = '';
+  public deviceId: string = '';
+
+  @Input()
+  public boundDevicesCount: number = 0;
 
   @Input()
   public bindDevices: boolean = false;
 
+  public deviceListCount: number = 0;
   protected sendViaGateway: boolean = false;
-  protected selectedDevices: Device[] = [];
+  public selectedDevices: Device[] = [];
   public devices: Device[] = [];
 
-  public deviceListCount: number = 0;
   private pageOffset: number = 0;
   protected pageSize: number = 50;
 
   protected modalTitle: string = 'Create Device';
-  protected deviceIdLabel: string = 'Device ID';
   protected confirmButtonLabel: string = 'Save';
-  protected sendViaGatewayLabel: string = 'Bind to gateway(s)';
   protected bindDevicesLabel: string = 'Bind devices';
+  protected gatewayTooltip: string =
+  'Select one or more devices to bind.<br/>';
+
+  @Output()
+  public devicesSelected: EventEmitter<Device[]> = new EventEmitter<Device[]>();
 
   constructor(private activeModal: NgbActiveModal,
               private deviceService: DeviceService,
               private notificationService: NotificationService) {
   }
 
-  ngOnInit(): void {
-    this.listDevices();
-    this.gateway.id = this.gatewayId;
+  public ngOnInit(): void {
+    this.listAvailableBindingDevices();
   }
 
   protected onClose() {
     this.activeModal.close();
-    this.listDevices();
   }
 
-  protected onConfirm() {
+  public onConfirm() {
     if (this.isInvalid()) {
       return;
     }
@@ -63,18 +70,20 @@ export class BindDevicesModalComponent implements OnInit {
       if (!selectedDevice.via) {
         selectedDevice.via = [];
       }
-      if (!selectedDevice.via.includes(this.gateway.id)) {
-        selectedDevice.via.push(this.gateway.id);
+      if (!selectedDevice.via.includes(this.deviceId)) {
+        selectedDevice.via.push(this.deviceId);
         this.deviceService.update(selectedDevice, this.tenantId).subscribe((result) => {
           console.log('update result: ', result);
         }, (error) => {
-        console.log('Error binding device', this.gateway.id, error);
-        this.notificationService.error('Could not bind device to gateway ' + this.gateway.id.toBold());
+        console.log('Error binding device', this.deviceId, error);
+        this.notificationService.error('Could not bind device to gateway ' + this.deviceId.toBold());
       });
       }
+      selectedDevice.checked = false;
     }
+    const selectedDevices: Device [] = this.selectedDevices;
+    this.devicesSelected.emit(selectedDevices);
     this.activeModal.close(this.gateway);
-    this.listDevices();
   }
 
   protected isInvalid(): boolean {
@@ -83,7 +92,7 @@ export class BindDevicesModalComponent implements OnInit {
 
   protected onPageOffsetChanged($event: number) {
     this.pageOffset = $event;
-    this.listDevices();
+    this.listAvailableBindingDevices();
   }
 
   protected onSelectedDevicesChanged($event: Device[]) {
@@ -93,11 +102,25 @@ export class BindDevicesModalComponent implements OnInit {
     }
   }
 
-  private listDevices() {
-    this.deviceService.listAll(this.tenantId, this.pageSize, this.pageOffset).subscribe((listResult) => { // list all devices except already bounded devices
-      this.devices = listResult.result;
-      this.deviceListCount = listResult.total;
-      console.log('devices refreshed', listResult.total);
+  private listAvailableBindingDevices() {
+    const bindingDeviceId = this.deviceId;
+    this.deviceService.listByTenant(this.tenantId, this.pageSize, this.pageOffset, false).subscribe((listResult) => {
+      if (this.isGateway) {
+        this.deviceListCount = listResult.total - this.boundDevicesCount;
+        this.devices = listResult.result.filter((element: Device) => {
+          return !element.via?.includes(bindingDeviceId);
+        });
+      }
+      else {
+        this.deviceListCount = listResult.total - 1;
+        const index = listResult.result.findIndex((object: Device) => {
+          return object.id === bindingDeviceId;
+        });
+        this.devices = listResult.result;
+        if (index !== -1) {
+          this.devices.splice(index, 1);
+        }
+      }
     }, (error) => {
       console.log(error);
     });

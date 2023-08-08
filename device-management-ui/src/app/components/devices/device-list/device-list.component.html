@@ -23,9 +23,9 @@
         <div class="display-items col-auto">
           <div ngbDropdown>
             <button [innerHTML]="displayedItemsDropdownButton" class="btn btn-primary"
-                    id="ddDisplayedItems" ngbDropdownToggle type="button">
+                    id="displayedItemsDropDown" ngbDropdownToggle type="button">
             </button>
-            <div aria-labelledby="ddDisplayedItems" ngbDropdownMenu>
+            <div aria-labelledby="displayedItemsDropDown" ngbDropdownMenu>
               <button
                 (click)="setPageSize(option)"
                 *ngFor="let option of pageSizeOptions"
@@ -43,11 +43,11 @@
           <span [innerHTML]="newDeviceLabel"></span>
         </button>
       </div>
-      <div class="bounding" *ngIf="boundDevicesToGateway && !deviceListIsEmpty()">
-        <button  [ngbTooltip]="'Bound Device'" class="btn btn-primary" type="button" (click)="bindNewDevicesToGateway(true)">
+      <div class="binding" *ngIf="boundDevicesToGateway && !deviceListIsEmpty()">
+        <button  [ngbTooltip]="'Bound Device'" class="btn btn-primary" type="button" (click)="bindNewDevicesToGateway()">
           <span [innerHTML]="bindDeviceLabel"></span>
         </button>
-        <button  [ngbTooltip]="'Unbound Device'" class="btn btn-primary" type="button" (click)="unbindDevicesFromGateway(true)" [disabled]="!devicesSelected()">
+        <button  [ngbTooltip]="'Unbind Device(s)'" class="btn btn-primary" type="button" (click)="unbindDevicesFromGateway()" [disabled]="!devicesSelectedCheck()">
           <span [innerHTML]="unBindDeviceLabel"></span>
         </button>
       </div>
@@ -105,9 +105,6 @@
         <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="status.created">
           <span [innerHTML]="deviceCreatedLabel"></span>
         </th>
-        <th class="p-2 ml-auto last-column">
-          <span [innerHTML]="actionsLabel"></span>
-        </th>
       </tr>
       </thead>
       <tbody>
@@ -119,12 +116,6 @@
         </td>
         <td class="p-2">
           <span [innerHTML]="getCreationTime(device.status) | date:'medium': 'UTC'"></span>
-        </td>
-        <td class="p-2 col-sm-1 ml-auto last-column">
-          <button (click)="deleteDevice(device)" [ngbTooltip]="deleteLabel" class="btn btn-sm btn-secondary"
-                  type="button">
-            <fa-icon [icon]="['fas', 'trash']"></fa-icon>
-          </button>
         </td>
       </tr>
       </tbody>

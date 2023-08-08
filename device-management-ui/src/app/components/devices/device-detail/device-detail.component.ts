@@ -14,6 +14,7 @@ import {Credentials} from 'src/app/models/credentials/credentials';
 import {CredentialsService} from "../../../services/credentials/credentials.service";
 import {NotificationService} from "../../../services/notification/notification.service";
 import {DatePipe} from "@angular/common";
+import { BindDevicesModalComponent } from '../../modals/bind-devices-modal/bind-devices-modal.component';
 
 @Component({
   selector: 'app-device-detail',
@@ -21,21 +22,33 @@ import {DatePipe} from "@angular/common";
   styleUrls: ['./device-detail.component.scss']
 })
 export class DeviceDetailComponent {
+
+
+  public isGateway: boolean = false;
+  public bindDevices: boolean = false;
   protected tenantIdLabel: string = 'Tenant ID:';
   protected creationTimeLabel: string = 'Created (UTC):';
   protected configLabel: string = 'Configuration';
   protected stateLabel: string = 'State'
   protected authenticationLabel: string = 'Authentication'
   protected device: Device = new Device();
+  protected gateway: Device = new Device();
   protected tenant: Tenant = new Tenant();
+  public devices: Device[] = [];
+  public boundDevicesList: Device[] = [];
   protected deleteLabel: string = 'Delete';
   protected updateLabel: string = 'Update Config';
   protected sendLabel: string = 'Send Command';
   protected addAuthenticationLabel: string = 'Add Credentials';
   protected boundDevices: string = 'Bound Devices';
-
+  protected viaLabel: string = 'Via:';
   protected configs: Config[] = [];
   protected credentials: Credentials[] = [];
+  protected deviceListCount: number = 0;
+  protected boundDeviceListCount: number = 0;
+  protected pageSize: number = 50;
+  private pageOffset: number = 0;
+  protected isBoundDevice: boolean = false;
 
   constructor(private modalService: NgbModal,
               private router: Router,
@@ -50,26 +63,37 @@ export class DeviceDetailComponent {
       if (state && state['tenant']) {
         this.tenant = state['tenant'];
       }
-
       if (state && state['device']) {
         this.device = state['device'];
+        this.setDevices();
+        const storedIsGateway = localStorage.getItem('isGateway_' + this.device.id);
+        this.isGateway = storedIsGateway ? JSON.parse(storedIsGateway) : this.deviceService.getActiveTab();
+        localStorage.setItem('isGateway_' + this.device.id, JSON.stringify(this.isGateway));
       }
 
     }
+    if(this.isGateway) {
+      this.gateway = this.device;
+    }
     this.getConfigs();
     this.getCredentials();
+    this.checkIsBoundDevice();
+  }
+
+  public ngOnDestroy(){
+    localStorage.removeItem('isGateway_' + this.device.id)
   }
 
   protected get deviceDetail() {
-    if (this.isGateway()) {
+    if (this.isGateway) {
       return 'Gateway: ' + this.device.id
     } else {
       return 'Device: ' + this.device.id;
     }
   }
 
-  protected get setIdLabel() {
-    if (this.isGateway()) {
+  protected get idLabel() {
+    if (this.isGateway) {
       return 'Gateway ID: ';
     } else {
       return 'Device ID: ';
@@ -148,6 +172,22 @@ export class DeviceDetailComponent {
 
   private delete() {
     this.deviceService.delete(this.device, this.tenant.id).subscribe(() => {
+      if(this.isGateway) {
+        this.deviceService.listBoundDevices(this.tenant.id, this.gateway.id, this.pageSize, this.pageOffset).subscribe((deviceList) => {
+          const boundDevices = deviceList.result;
+          boundDevices.forEach((boundDevice: Device) => {
+            if (boundDevice.via != null) {
+              const index = boundDevice.via.indexOf(this.gateway.id)
+              if (index >= 0) {
+                boundDevice.via.splice(index, 1);
+                this.deviceService.update(boundDevice, this.tenant.id).subscribe((result) => {
+                  console.log('update result: ', result);
+                });
+              }
+            }
+          });
+        });
+      }
       this.notificationService.success('Successfully deleted device ' + this.device.id.toBold());
       this.navigateBack();
     }, (error) => {
@@ -175,8 +215,41 @@ export class DeviceDetailComponent {
     });
   }
 
-  protected isGateway() {
-    return true;
+  protected openBindDevicesModal(){
+    const modalRef = this.modalService.open(BindDevicesModalComponent, {size: 'lg'});
+
+    modalRef.componentInstance.tenantId = this.tenant.id;
+    modalRef.componentInstance.bindDevices = true;
+    modalRef.componentInstance.deviceId = this.device.id;
+    modalRef.componentInstance.isGateway = this.isGateway;
+    modalRef.componentInstance.boundDevicesCount = this.boundDeviceListCount;
+
+    modalRef.componentInstance.devicesSelected.subscribe((selectedDevices: Device[]) => {
+      this.boundDevicesList.push(...selectedDevices);
+    });
   }
 
+  private setDevices() {
+    this.deviceService.listAll(this.tenant.id, this.pageSize, this.pageOffset).subscribe((listResult) => {
+      this.devices = listResult.result;
+      this.deviceListCount = listResult.total;
+    }, (error) => {
+      console.log(error);
+    });
+  }
+
+   protected setBoundDevices() {
+    this.deviceService.listBoundDevices(this.tenant.id, this.device.id, this.pageSize, this.pageOffset).subscribe((listResult) => {
+      this.boundDevicesList = listResult.result;
+      this.boundDeviceListCount = listResult.total;
+    }, (error) => {
+      console.log(error);
+    });
+  }
+
+  protected checkIsBoundDevice(){
+    if(this.device.via != undefined) {
+      this.isBoundDevice = true;
+    }
+  }
 }

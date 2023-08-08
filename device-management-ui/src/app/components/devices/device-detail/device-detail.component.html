@@ -2,7 +2,7 @@
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
       <a routerLink="/tenant-list">
-        <img class="logo" src="../../../../assets/images/logo_300px276px.png">
+        <img alt="hono-logo" class="logo" src="../../../../assets/images/logo_300px276px.png">
       </a>
     </li>
     <li class="breadcrumb-item">
@@ -36,8 +36,8 @@
           <fa-icon [icon]="['fas', 'key']"></fa-icon>
       </button>
     </div>
-    <div *ngIf="isBoundDevice" class="function-element">
-      <button (click)="bindDevicesModal(true)" [ngbTooltip]="'Bind Device'" class="btn btn-sm btn-primary"
+    <div *ngIf="!isBoundDevice" class="function-element">
+      <button (click)="openBindDevicesModal()" [ngbTooltip]="'Bind Device'" class="btn btn-sm btn-primary"
               type="button">
         <fa-icon [icon]="['fas', 'plus']"></fa-icon>
       </button>
@@ -56,7 +56,7 @@
 <div class="details">
   <div>
     <div class="d-inline-flex p-2 detail-label">
-      <span [innerHTML]="setIdLabel"></span>
+      <span [innerHTML]="idLabel"></span>
     </div>
     <div class="d-inline-flex p-2 detail-value">
       <span [innerHTML]="device.id"></span>
@@ -69,6 +69,15 @@
     </div>
     <div class="d-inline-flex p-2 detail-value">
       <span [innerHTML]="tenant.id"></span>
+    </div>
+  </div>
+
+  <div *ngIf="device.via">
+    <div class="d-inline-flex p-2 detail-label">
+      <span [innerHTML]="viaLabel"></span>
+    </div>
+    <div class="d-inline-flex p-2 detail-value">
+      <span [innerHTML]="device.via"></span>
     </div>
   </div>
 
@@ -113,10 +122,17 @@
         </app-list-authentication>
       </ng-template>
     </ng-container>
-    <ng-container ngbNavItem *ngIf="isGateway()">
-      <a [innerHTML]="boundDevices" ngbNavLink></a>
+    <ng-container ngbNavItem *ngIf="isGateway">
+      <a [innerHTML]="boundDevices" ngbNavLink (click)="setBoundDevices()"></a>
       <ng-template ngbNavContent>
-        List Devices of this Gateway here
+        <app-device-list
+          [boundDeviceListCount]="boundDeviceListCount"
+          [tenant]="tenant"
+          [devices]="boundDevicesList"
+          [boundDevicesToGateway]="true"
+          [deviceId]="device.id"
+          [isGateway]="isGateway">
+        </app-device-list>
       </ng-template>
     </ng-container>
   </nav>

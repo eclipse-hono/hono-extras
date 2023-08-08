@@ -1,22 +1,22 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DeviceAsGatewayComponent } from './device-as-gateway.component';
+import { SelectDevicesComponent } from './select-devices.component';
 import {HttpClientModule} from "@angular/common/http";
 import {OAuthModule} from "angular-oauth2-oidc";
 import {Device} from "../../../models/device";
 
-describe('DeviceAsGatewayComponent', () => {
-  let component: DeviceAsGatewayComponent;
-  let fixture: ComponentFixture<DeviceAsGatewayComponent>;
+describe('SelectDevicesComponent', () => {
+  let component: SelectDevicesComponent;
+  let fixture: ComponentFixture<SelectDevicesComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ DeviceAsGatewayComponent ],
+      declarations: [ SelectDevicesComponent ],
       imports: [HttpClientModule, OAuthModule.forRoot()]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(DeviceAsGatewayComponent);
+    fixture = TestBed.createComponent(SelectDevicesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

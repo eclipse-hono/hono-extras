@@ -2,7 +2,7 @@
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
       <a routerLink="/tenant-list">
-        <img class="logo" src="../../../../assets/images/logo_300px276px.png">
+        <img alt="hono-logo" class="logo" src="../../../../assets/images/logo_300px276px.png">
       </a>
     </li>
     <li class="breadcrumb-item">
@@ -13,17 +13,17 @@
 
 <div class="page-header">
   <div class="page-header-title">
-    <span class="h3" [title]="tenantDetail" [innerHTML]="tenantDetail"></span>
+    <span [innerHTML]="tenantDetail" [title]="tenantDetail" class="h3"></span>
   </div>
 
   <div class="page-functions small-buttons col-auto ml-auto">
     <div class="function-element">
-      <button type="button" class="btn btn-sm btn-primary" [ngbTooltip]="editLabel" (click)="editTenant()">
+      <button (click)="editTenant()" [ngbTooltip]="editLabel" class="btn btn-sm btn-primary" type="button">
         <fa-icon [icon]="['fas', 'pen-to-square']"></fa-icon>
       </button>
     </div>
     <div class="function-element">
-      <button type="button" class="btn btn-sm btn-secondary" [ngbTooltip]="deleteLabel" (click)="deleteTenant()">
+      <button (click)="deleteTenant()" [ngbTooltip]="deleteLabel" class="btn btn-sm btn-secondary" type="button">
         <fa-icon [icon]="['fas', 'trash']"></fa-icon>
       </button>
     </div>
@@ -55,26 +55,39 @@
 </div>
 
 <hr>
-
 <div class="gateway-tabs">
   <nav #nav="ngbNav" class="nav-tabs" ngbNav>
-    <ng-container ngbNavItem>
-      <a [innerHTML]="gatewayLabel" ngbNavLink></a>
+
+    <ng-container ngbNavItem [ngbNavItem]="0">
+      <a (click)="setActiveTab(false)" [innerHTML]="devicesLabel" ngbNavLink></a>
+      <ng-template ngbNavContent>
+        <app-device-list
+          (deviceCreated)="onDeviceCreated()"
+          (pageSizeChanged)="onPageSizeChanged($event)"
+          [deviceListCount]="deviceListCount"
+          [devices]="devices"
+          [tenant]="tenant">
+        </app-device-list>
+        <ngb-pagination
+          (pageChange)="changePage($event)"
+          [boundaryLinks]="true"
+          [collectionSize]="deviceListCount"
+          [maxSize]="5"
+          [pageSize]="pageSize"
+          class="pagination d-flex justify-content-center">
+        </ngb-pagination>
+      </ng-template>
+    </ng-container>
+
+    <ng-container  ngbNavItem [ngbNavItem]="1">
+      <a (click)="setActiveTab(true)" [innerHTML]="gatewayLabel" ngbNavLink></a>
       <ng-template ngbNavContent>
         <app-gateway-list
           [tenant]="tenant">
         </app-gateway-list>
       </ng-template>
     </ng-container>
-    <ng-container ngbNavItem>
-      <a [innerHTML]="devicesLabel" ngbNavLink></a>
-      <ng-template ngbNavContent>
-        <app-device-list
-          [tenant]="tenant">
-        </app-device-list>
-      </ng-template>
-    </ng-container>
+
   </nav>
 </div>
-
 <div [ngbNavOutlet]="nav" class="mt-2"></div>

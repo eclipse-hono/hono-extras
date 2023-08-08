@@ -5,25 +5,10 @@
   </app-modal-head>
 
   <div  class="modal-body" >
-    <div *ngIf="!bindDevices" class="form-group">
-      <label [innerHTML]="deviceIdLabel" for="deviceId"></label>
-      <span class="ml-1 label-required">*</span>
-      <input
-        [(ngModel)]="device.id"
-        class="form-control"
-        id="deviceId"
-        type="text">
-    </div>
-    <div *ngIf="!bindDevices" class="form-group">
-      <div class="form-check form-switch">
-        <input
-          [(ngModel)]="sendViaGateway"
-          [checked]="sendViaGateway === true"
-          class="form-check-input"
-          id="sendViaGatewaySwitch" type="checkbox">
-        <label [innerHTML]="sendViaGatewayLabel" class="form-check-label" for="sendViaGatewaySwitch"></label>
+      <div class="alert alert-dark text-center">
+        <span [innerHTML]="gatewayTooltip"></span>
       </div>
-    </div>
+
     <app-selected-devices
       [bindDevices] = "bindDevices"
       [sendViaGateway]="sendViaGateway || bindDevices"

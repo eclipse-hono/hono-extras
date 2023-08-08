@@ -10,8 +10,6 @@ export class DeviceRpkModalComponent implements OnInit {
 
   @Output()
   public rpkSecretChanged: EventEmitter<Secret> = new EventEmitter<Secret>();
-  // @Output()
-  // public rpkSecretValid: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   @Input()
   public rpkSecret: Secret = new Secret();
