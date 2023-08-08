@@ -31,13 +31,17 @@ export class DeviceListComponent {
   public deviceId: string = '';
 
   @Input()
+  public isGateway!: boolean;
+
+  @Input()
   public deviceListCount: number = 0;
+
+  @Input()
+  public boundDeviceListCount: number = 0;
 
   @Input()
   public boundDevicesToGateway: boolean = false;
 
-  @Input()
-  public bindNewDevices: boolean = false;
 
   @Input()
   public unbindDevices: boolean = false;
@@ -50,8 +54,8 @@ export class DeviceListComponent {
 
   protected deviceListLabel: string = 'Device List';
   protected newDeviceLabel: string = 'Create New Device';
-  protected bindDeviceLabel: string = 'Bind Device';
-  protected unBindDeviceLabel: string = 'Unbind Device';
+  protected bindDeviceLabel: string = 'Bind Device(s)';
+  protected unBindDeviceLabel: string = 'Unbind Device(s)';
   protected deviceIdLabel: string = 'Device ID';
   protected deviceCreatedLabel: string = 'Created (UTC)'
   protected actionsLabel: string = 'Actions';
@@ -63,7 +67,6 @@ export class DeviceListComponent {
   protected searchTerm!: string;
 
   protected pageSize: number = 50;
-
   protected pageSizeOptions: number[] = [50, 100, 200];
   protected selectedDevices: Device[] = [];
 
@@ -147,18 +150,8 @@ export class DeviceListComponent {
     return !this.devices || this.devices.length === 0;
   }
 
-  protected bindNewDevicesToGateway(bindNewDevices : boolean){
-    this.bindNewDevices = bindNewDevices;
-    this.deviceService.setBindNewDevices(bindNewDevices);
-
-    const modalRef = this.modalService.open(BindDevicesModalComponent, {size: 'lg'});
-    modalRef.componentInstance.tenantId = this.tenant.id;
-    modalRef.componentInstance.bindDevices = this.bindNewDevices;
-    modalRef.componentInstance.gatewayId = this.deviceId;
-  }
-
-  protected unbindDevicesFromGateway(unbindDevices : boolean){
-    this.unbindDevices = unbindDevices;
+  protected unbindDevicesFromGateway(){
+    this.unbindDevices = true;
 
     const modalRef = this.modalService.open(DeleteComponent, {ariaLabelledBy: 'modal-basic-title'});
     modalRef.componentInstance.modalTitle = 'Confirm Unbind';
@@ -174,14 +167,36 @@ export class DeviceListComponent {
     });
   }
 
+  protected bindNewDevicesToGateway(){
+    const modalRef = this.modalService.open(BindDevicesModalComponent, {size: 'lg'});
+    modalRef.componentInstance.tenantId = this.tenant.id;
+    modalRef.componentInstance.bindDevices = true;
+    modalRef.componentInstance.deviceId = this.deviceId;
+    modalRef.componentInstance.isGateway = this.isGateway;
+    modalRef.componentInstance.boundDevicesCount = this.boundDeviceListCount;
+
+    modalRef.componentInstance.devicesSelected.subscribe((selectedDevices: Device[]) => {
+      this.devices.push(...selectedDevices);
+    });
+  }
+
   private unbind() {
     for (const selectedDevice of this.selectedDevices) {
       const index= selectedDevice.via?.indexOf(this.deviceId);
       if (index !== -1) {
         selectedDevice.via?.splice(index as number, 1);
+        for (let i = 0; i < this.devices.length; i++) {
+          if (selectedDevice === this.devices[i]) {
+            this.devices.splice(i, 1);
+            break;
+          }
+        }
         this.deviceService.update(selectedDevice, this.tenant.id).subscribe(
-          (result) => {
-            console.log('Device successfully updated after unbinding : ', selectedDevice, result);
+          () => {
+            this.boundDeviceListCount = this.devices.length
+            if (this.devices.length <= 0) {
+              this.navigateBack();
+            }
           },
           (error) => {
             console.log('Error updating device after unbinding: ', selectedDevice, error);
@@ -192,7 +207,15 @@ export class DeviceListComponent {
     }
   }
 
-  devicesSelected(): boolean{
+  protected navigateBack() {
+    this.router.navigate(['tenant-detail', this.tenant.id], {
+      state: {
+        tenant: this.tenant
+      }
+    });
+  }
+
+  public devicesSelectedCheck(): boolean{
     return this.devices.some(device => device.checked);
   }
 
@@ -201,5 +224,4 @@ export class DeviceListComponent {
     this.selectedDevices = this.devices.filter(device => device.checked);
     this.selectedDevicesChanged.emit(this.selectedDevices);
   }
-
 }

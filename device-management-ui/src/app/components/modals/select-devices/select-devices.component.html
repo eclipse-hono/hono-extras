@@ -1,17 +1,14 @@
 <div *ngIf="sendViaGateway" class="form-group">
-    <div *ngIf="!bindDevices" class="alert alert-dark text-center">
-      <span [innerHTML]="gatewayTooltip"></span>
-    </div>
-    <div *ngIf="!gateWayListIsEmpty()">
-        <div class="card card-table-view newGatewayList mb-3">
-            <div class="p-2 newGatewayListItem" *ngFor="let newGateway of this.device.via">
-                <fa-icon [icon]="['fas', 'close']" (click)="unmarkAsGateway(newGateway)"></fa-icon>
-                <span [innerHTML]="newGateway"></span>
+    <div *ngIf="!selectedDevicesListEmpty()">
+        <div class="card card-table-view selectedDevicesList mb-3">
+            <div class="p-2 selectedDevicesItem" *ngFor="let selectedDevice of this.selectedDevices">
+                <fa-icon [icon]="['fas', 'close']" (click)="unselectDevice(selectedDevice)"></fa-icon>
+                <span [innerHTML]="selectedDevice.id"></span>
             </div>
         </div>
     </div>
-    <div>    
-        <label [innerHTML]="selectDevicesAsGatewayLabel"></label>
+    <div>
+        <label [innerHTML]="selectDevicesLabel"></label>
         <span class="ml-1 label-required">*</span>
     </div>
     <div *ngIf="!deviceListIsEmpty()" class="function-element">
@@ -20,11 +17,11 @@
                id="searchDeviceList" type="search">
       </div>
     </div>
-    <div class="card card-table-view mb-3">      
-      <table class="table">          
+    <div class="card card-table-view mb-3">
+      <table class="table">
         <tbody>
           <tr *ngFor="let device of (devices | searchFilter:searchTerm)" class="list-item">
-            <td (click)="markAsGateway(device)">
+            <td *ngIf="!device.checked" (click)="selectDevice(device)">
               <span [innerHTML]="device.id" class="p-2"></span>
             </td>
           </tr>

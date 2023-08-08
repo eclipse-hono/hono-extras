@@ -38,7 +38,6 @@ export class TenantDetailComponent {
               private notificationService: NotificationService) {
     const navigation = this.router.getCurrentNavigation();
     if (navigation) {
-      console.log(navigation);
       const state = navigation.extras.state
       if (state && state['tenant']) {
         this.tenant = state['tenant'];
@@ -125,5 +124,6 @@ export class TenantDetailComponent {
 
   public setActiveTab(isGateway : boolean){
     this.deviceService.setActiveTab(isGateway);
+    this.listDevices();
   }
 }

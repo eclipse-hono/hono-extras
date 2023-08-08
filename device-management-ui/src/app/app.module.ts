@@ -47,6 +47,8 @@ import {ConfigAccordionComponent} from './components/devices/device-detail/list-
 import {TruncatePipe} from './shared/truncate.pipe';
 import {GatewayListComponent} from './components/gateways/gateway-list/gateway-list.component';
 import { GatewayModalComponent } from './components/modals/gateway/gateway-modal.component';
+import { SelectDevicesComponent } from './components/modals/select-devices/select-devices.component';
+import { BindDevicesModalComponent } from './components/modals/bind-devices-modal/bind-devices-modal.component';
 
 @NgModule({
   declarations: [
@@ -76,7 +78,9 @@ import { GatewayModalComponent } from './components/modals/gateway/gateway-modal
     ConfigAccordionComponent,
     TruncatePipe,
     GatewayListComponent,
-    GatewayModalComponent
+    GatewayModalComponent,
+    SelectDevicesComponent,
+    BindDevicesModalComponent
   ],
   imports: [
     BrowserModule,

@@ -7,7 +7,6 @@ import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {DeviceService} from "../../../services/device/device.service";
 import {SortableTableService} from "../../../services/sortable-table/sortable-table.service";
 import {NotificationService} from "../../../services/notification/notification.service";
-import {DeviceModalComponent} from "../../modals/device/device-modal.component";
 import {GatewayModalComponent} from '../../modals/gateway/gateway-modal.component';
 import {DeleteComponent} from "../../modals/delete/delete.component";
 
@@ -20,7 +19,6 @@ export class GatewayListComponent {
 
   @ViewChildren(SortableTableDirective)
   public sortableHeaders: QueryList<SortableTableDirective> = new QueryList<SortableTableDirective>();
-
 
   @Input()
   public tenant: Tenant = new Tenant();
@@ -48,7 +46,7 @@ export class GatewayListComponent {
               private notificationService: NotificationService) {
   }
 
-  ngOnInit() {
+  public ngOnInit() {
     this.listGateways();
   }
 
@@ -75,47 +73,39 @@ export class GatewayListComponent {
     return '-';
   }
 
-  protected selectGateway(device: Device): void {
-    this.router.navigate(['device-detail', device.id], {
+  protected selectGateway(gateway: Device): void {
+    this.router.navigate(['device-detail', gateway.id], {
       state: {
         tenant: this.tenant,
-        device: device,
+        device: gateway,
         isGateway: true,
       },
-    });
-  }
-
-  protected createDevice(): void {
-    const modalRef = this.modalService.open(DeviceModalComponent, {size: 'lg'});
-    modalRef.componentInstance.tenantId = this.tenant.id;
-    modalRef.result.then((device) => {
-      if (device) {
-        this.listGateways();
-        this.notificationService.success("Successfully created device " + device.id.toBold());
-      }
     });
   }
 
   protected createGateway(): void {
     const modalRef = this.modalService.open(GatewayModalComponent, {size: 'lg'});
     modalRef.componentInstance.tenantId = this.tenant.id;
-    modalRef.result.then((device) => {
-      if (device) {
-        this.listGateways();
-        this.notificationService.success("Successfully created device " + device.id.toBold());
+    modalRef.result.then((gateway) => {
+      if (gateway) {
+        this.gateways = [...this.gateways,gateway]
+        this.notificationService.success("Successfully created gateway " + gateway.id.toBold());
       }
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
-    this.ngOnInit();
   }
 
-  protected deleteDevice(device: Device): void {
+  protected deleteGateway(gateway: Device): void {
     const modalRef = this.modalService.open(DeleteComponent, {ariaLabelledBy: 'modal-basic-title'});
     modalRef.componentInstance.modalTitle = 'Confirm Delete';
-    modalRef.componentInstance.body = 'Do you really want to delete the device ' + device.id.toBold() + '?';
+    modalRef.componentInstance.body = 'Do you really want to delete the gateway ' + gateway.id.toBold() + '?';
     modalRef.result.then((res) => {
       if (res) {
-        this.delete(device);
+        this.delete(gateway);
       }
+    }, (reason: any) => {
+      console.log(`Closed with reason: ${reason}`);
     });
   }
 
@@ -124,35 +114,33 @@ export class GatewayListComponent {
   }
 
   private listGateways() {
-    this.deviceService.listByTenant(this.tenant.id, this.pageSize, this.pageOffset).subscribe((listResult) => {
-      this.filterGateways(listResult);
+    this.deviceService.listByTenant(this.tenant.id, this.pageSize, this.pageOffset, true).subscribe((listResult) => {
+      this.gateways = listResult.result;
+      this.gatewayListCount = listResult.total;
     }, (error) => {
       console.log(error);
     });
   }
 
-  private filterGateways(result: any) {
-    this.gateways = [];
-    const devices: Device[] = result.result;
-    for (const device of devices) {
-      if (device.via && device.via.length > 0) {
-        // devices inside via array are gateways
-        device.via.forEach(id => this.setGateways(devices, id));
-      }
-    }
-    this.gatewayListCount = this.gateways.length;
-  }
-
-  private setGateways(devices: Device[], gatewayId: string) {
-    for (const device of devices) {
-      if (device.id === gatewayId && !this.gateways.includes(device)) {
-        this.gateways.push(device);
-      }
-    }
-  }
-
   private delete(gateway: Device) {
-    this.deviceService.delete(gateway.id, this.tenant.id).subscribe(() => {
+    this.deviceService.delete(gateway, this.tenant.id).subscribe(() => {
+
+      this.deviceService.listBoundDevices(this.tenant.id, gateway.id, this.pageSize, this.pageOffset).subscribe((deviceList) => {
+        const boundDevices = deviceList.result;
+        boundDevices.forEach((boundDevice: Device) => {
+          if (boundDevice.via != null) {
+            const index = boundDevice.via.indexOf(gateway.id)
+            if (index >= 0) {
+              boundDevice.via.splice(index, 1);
+
+              this.deviceService.update(boundDevice, this.tenant.id).subscribe((result) => {
+                console.log('update result: ', result);
+              });
+            }
+          }
+        });
+      });
+
       const index = this.gateways.indexOf(gateway);
       if (index >= 0) {
         this.gateways.splice(index, 1);

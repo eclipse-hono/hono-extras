@@ -1,6 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
-import {Credentials} from "../../../models/credentials/credentials";
 import {Device} from "../../../models/device";
 import {DeviceService} from "../../../services/device/device.service";
 import {NotificationService} from "../../../services/notification/notification.service";
@@ -13,25 +12,23 @@ import {NotificationService} from "../../../services/notification/notification.s
 export class GatewayModalComponent implements OnInit {
 
   @Input()
+  public gateway: Device = new Device();
+
+  @Input()
   public device: Device = new Device();
 
   @Input()
   public tenantId: string = '';
 
-  @Input()
-  public allDevices: Device[] = [];
-
-  protected credentials: Credentials = new Credentials();
-
-  protected devices: Device[] = [];
-
-  protected sendViaGateway: boolean = false;
-
+  public devices: Device[] = [];
+  public selectedDevices: Device[] = [];
+  protected createDevice: boolean = false;
+  public deviceListCount: number = 0;
+  private pageOffset: number = 0;
+  protected pageSize: number = 50;
   protected modalTitle: string = 'Create Gateway';
-  protected deviceIdLabel: string = 'Gateway ID';
+  protected gatewayIdLabel: string = 'Gateway ID';
   protected confirmButtonLabel: string = 'Save';
-  protected selectDevicesAsGatewayLabel: string = 'Select devices';
-  protected selectLabel: string = 'Select Device';
 
   constructor(private activeModal: NgbActiveModal,
               private deviceService: DeviceService,
@@ -39,40 +36,63 @@ export class GatewayModalComponent implements OnInit {
 
   }
 
-  ngOnInit() {
-    this.getDevicesToSendVia(this.allDevices);
+  public ngOnInit() {
+    this.listDevices();
   }
 
   protected onClose() {
     this.activeModal.close();
   }
 
-  protected onConfirm() {
+  public onConfirm() {
     if (this.isInvalid()) {
       return;
     }
-    this.deviceService.save(this.device, this.tenantId).subscribe((result) => {
+    this.deviceService.create(this.gateway, this.tenantId).subscribe((result) => {
       if (result) {
-        this.activeModal.close(this.device);
+        for (const selectedDevice of this.selectedDevices) {
+          if (!selectedDevice.via) {
+            selectedDevice.via = [];
+          }
+          if (!selectedDevice.via.includes(this.gateway.id)) {
+            selectedDevice.via.push(this.gateway.id);
+            this.deviceService.update(selectedDevice, this.tenantId).subscribe(() => {
+            });
+          }
+
+        }
+        this.activeModal.close(this.gateway);
       }
     }, (error) => {
-      console.log('Error saving device', this.device.id, error);
-      this.notificationService.error('Could not create device for id ' + this.device.id.toBold());
+      console.log('Error saving device', this.gateway.id, error);
+      this.notificationService.error('Could not create device for id ' + this.gateway.id.toBold());
     });
+
+
   }
 
-  protected isInvalid(): boolean {
-    return !this.device || !this.device.id || !this.tenantId ||
-      (this.sendViaGateway && (!this.device.via || this.device.via.length === 0));
+  public isInvalid(): boolean {
+    return !this.gateway || !this.gateway.id || !this.tenantId || !this.selectedDevices || this.selectedDevices.length === 0;
   }
 
-  private getDevicesToSendVia(devices: Device[]) {
-    for (const device of devices) {
-      if (device.via && device.via.length > 0) {
-        continue;
-      }
-      this.devices = [device, ...this.devices];
+  protected onPageOffsetChanged($event: number) {
+    this.pageOffset = $event;
+    this.listDevices();
+  }
+
+  public onSelectedDevicesChanged($event: Device[]) {
+    this.selectedDevices = $event;
+    for (const selectedDevice of this.selectedDevices) {
+      this.device.via?.push(selectedDevice.id);
     }
   }
 
+  private listDevices() {
+    this.deviceService.listByTenant(this.tenantId, this.pageSize, this.pageOffset, false).subscribe((listResult) => {
+      this.devices = listResult.result;
+      this.deviceListCount = listResult.total;
+    }, (error) => {
+      console.log(error);
+    });
+  }
 }

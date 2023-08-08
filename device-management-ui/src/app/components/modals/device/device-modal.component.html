@@ -24,12 +24,17 @@
         <label [innerHTML]="sendViaGatewayLabel" class="form-check-label" for="sendViaGatewaySwitch"></label>
       </div>
     </div>
-    <app-device-as-gateway
+    <app-selected-devices
+      [createDevice]="createDevice"
       [bindDevices] = "bindDevices"
       [sendViaGateway]="sendViaGateway || bindDevices"
       [device]="device"
-      [tenantId]="tenantId">
-    </app-device-as-gateway>
+      [tenantId]="tenantId"
+      [devices]="devices"
+      [pageSize]="pageSize"
+      (pageOffsetChanged)="onPageOffsetChanged($event)"
+      (selectedDevicesChanged)="onSelectedDevicesChanged($event)">
+    </app-selected-devices>
   </div>
 
   <app-modal-footer

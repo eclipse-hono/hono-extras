@@ -11,31 +11,36 @@ import {of, throwError} from "rxjs";
 import {NotificationService} from "../../../services/notification/notification.service";
 import {Device} from "../../../models/device";
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
+import {SelectDevicesComponent} from "../select-devices/select-devices.component";
 
-describe('CreateDeviceComponent', () => {
+describe('DeviceModalComponent', () => {
   let component: DeviceModalComponent;
   let fixture: ComponentFixture<DeviceModalComponent>;
   let activeModalSpy: jasmine.SpyObj<NgbActiveModal>;
-  let deviceServiceSpy: jasmine.SpyObj<DeviceService>;
+  let deviceServiceSpy: {
+    save: jasmine.Spy,
+    listAll: jasmine.Spy
+  };
   const notificationServiceSpy = {
     error: jasmine.createSpy('error')
   };
 
   beforeEach(async () => {
-    deviceServiceSpy = jasmine.createSpyObj('DeviceService', ['save']);
     activeModalSpy = jasmine.createSpyObj('NgbActiveModal', ['close']);
 
     await TestBed.configureTestingModule({
       imports: [HttpClientTestingModule, OAuthModule.forRoot(), FontAwesomeTestingModule, FormsModule],
-      declarations: [DeviceModalComponent, ModalHeadComponent, ModalFooterComponent],
+      declarations: [DeviceModalComponent, ModalHeadComponent, ModalFooterComponent, SelectDevicesComponent],
       providers: [
         {provide: NgbActiveModal, useValue: activeModalSpy},
-        {provide: DeviceService, useValue: deviceServiceSpy},
         {provide: NotificationService, useValue: notificationServiceSpy}
       ]
     })
       .compileComponents();
+  });
 
+  beforeEach(() => {
+    deviceServiceSpy = jasmine.createSpyObj('DeviceService', ['create', 'listAll']);
     fixture = TestBed.createComponent(DeviceModalComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -57,11 +62,26 @@ describe('CreateDeviceComponent', () => {
     component.device = device;
     component.tenantId = 'test-tenant-id';
 
-    deviceServiceSpy.save.and.returnValue(of(true));
+    const saveSpy = spyOn(component['deviceService'], 'create').and.returnValue(of(true));
 
-    component['onConfirm']();
-    expect(deviceServiceSpy.save).toHaveBeenCalledWith(device.id, component.tenantId);
+    component.onConfirm();
+    expect(saveSpy).toHaveBeenCalledWith(device, component.tenantId);
     expect(activeModalSpy.close).toHaveBeenCalledWith(component.device);
+  });
+
+  it('should do nothing when device is invalid', () => {
+    const device = new Device();
+    device.id = 'test-device-id';
+
+    component.device = device;
+    component.tenantId = 'test-tenant-id';
+    component['sendViaGateway'] = true;
+
+    const saveSpy = spyOn(component['deviceService'], 'create').and.callThrough();
+
+    component.onConfirm();
+    expect(saveSpy).not.toHaveBeenCalled();
+    expect(activeModalSpy.close).not.toHaveBeenCalled();
   });
 
   it('should show error notification when save fails', () => {
@@ -71,12 +91,30 @@ describe('CreateDeviceComponent', () => {
     component.device = device;
     component.tenantId = 'test-tenant-id';
 
-    deviceServiceSpy.save.and.returnValue(throwError(new Error('test error')));
+    const saveSpy = spyOn(component['deviceService'], 'create').and.returnValue(throwError(new Error('test error')));
 
-    component['onConfirm']();
+    component.onConfirm();
 
-    expect(deviceServiceSpy.save).toHaveBeenCalledWith('test-device-id', 'test-tenant-id');
+    expect(saveSpy).toHaveBeenCalledWith(device, 'test-tenant-id');
     expect(notificationServiceSpy.error).toHaveBeenCalledWith('Could not create device for id <strong>test-device-id</strong>');
+  });
+
+  it('should set pageOffset and call listAll function', () => {
+    component['pageOffset'] = 2;
+    component['pageSize'] = 10;
+    component.tenantId = 'test-tenant-id';
+
+    const listResult = {
+      result: [new Device(), new Device()],
+      total: 12
+    };
+    const listSpy = spyOn(component['deviceService'], 'listAll').and.returnValue(of(listResult));
+
+    component['onPageOffsetChanged'](3);
+
+    expect(listSpy).toHaveBeenCalledWith('test-tenant-id', 10, 3);
+    expect(component['pageOffset']).toEqual(3);
+    expect(component.devices.length).toEqual(2);
   });
 
 });
