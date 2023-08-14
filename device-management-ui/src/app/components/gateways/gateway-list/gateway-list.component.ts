@@ -7,8 +7,8 @@ import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {DeviceService} from "../../../services/device/device.service";
 import {SortableTableService} from "../../../services/sortable-table/sortable-table.service";
 import {NotificationService} from "../../../services/notification/notification.service";
-import {GatewayModalComponent} from '../../modals/gateway/gateway-modal.component';
 import {DeleteComponent} from "../../modals/delete/delete.component";
+import {CreateAndBindModalComponent} from "../../modals/create-and-bind-modal/create-and-bind-modal.component";
 
 @Component({
   selector: 'app-gateway-list',
@@ -84,8 +84,9 @@ export class GatewayListComponent {
   }
 
   protected createGateway(): void {
-    const modalRef = this.modalService.open(GatewayModalComponent, {size: 'lg'});
+    const modalRef = this.modalService.open(CreateAndBindModalComponent, {size: 'lg'});
     modalRef.componentInstance.tenantId = this.tenant.id;
+    modalRef.componentInstance.isGatewayFlag = true;
     modalRef.result.then((gateway) => {
       if (gateway) {
         this.gateways = [...this.gateways,gateway]

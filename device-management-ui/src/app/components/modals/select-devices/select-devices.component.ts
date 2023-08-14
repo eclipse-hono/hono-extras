@@ -31,6 +31,9 @@ export class SelectDevicesComponent {
   @Input()
   public bindDevices: boolean = false;
 
+  @Input()
+  public selectDevicesLabel: string = '';
+
   @Output()
   public pageOffsetChanged: EventEmitter<number> = new EventEmitter<number>();
 
@@ -42,7 +45,7 @@ export class SelectDevicesComponent {
   private pageOffset: number = 0;
   protected searchTerm!: string;
   protected searchLabel: string = 'Search';
-  protected selectDevicesLabel: string = 'Select device(s).';
+
 
 
   public selectDevice(selectedDevice: Device) {

@@ -37,7 +37,7 @@
       </button>
     </div>
     <div *ngIf="!isBoundDevice" class="function-element">
-      <button (click)="openBindDevicesModal()" [ngbTooltip]="'Bind Device'" class="btn btn-sm btn-primary"
+      <button (click)="bindNewDevicesToGateway()" [ngbTooltip]="'Bind Device'" class="btn btn-sm btn-primary"
               type="button">
         <fa-icon [icon]="['fas', 'plus']"></fa-icon>
       </button>

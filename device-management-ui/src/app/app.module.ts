@@ -9,7 +9,6 @@ import {TenantListComponent} from './components/tenants/tenant-list/tenant-list.
 import {TenantDetailComponent} from './components/tenants/tenant-detail/tenant-detail.component';
 import {DeviceListComponent} from './components/devices/device-list/device-list.component';
 import {DeviceDetailComponent} from './components/devices/device-detail/device-detail.component';
-import {DeviceModalComponent} from './components/modals/device/device-modal.component';
 import {TenantModalComponent} from './components/modals/tenant/tenant-modal.component';
 import {DeleteComponent} from './components/modals/delete/delete.component';
 
@@ -46,9 +45,8 @@ import {ToastContainerComponent} from './components/toast-container/toast-contai
 import {ConfigAccordionComponent} from './components/devices/device-detail/list-config/config-accordion/config-accordion.component';
 import {TruncatePipe} from './shared/truncate.pipe';
 import {GatewayListComponent} from './components/gateways/gateway-list/gateway-list.component';
-import { GatewayModalComponent } from './components/modals/gateway/gateway-modal.component';
 import { SelectDevicesComponent } from './components/modals/select-devices/select-devices.component';
-import { BindDevicesModalComponent } from './components/modals/bind-devices-modal/bind-devices-modal.component';
+import { CreateAndBindModalComponent } from './components/modals/create-and-bind-modal/create-and-bind-modal.component';
 
 @NgModule({
   declarations: [
@@ -57,7 +55,6 @@ import { BindDevicesModalComponent } from './components/modals/bind-devices-moda
     TenantDetailComponent,
     DeviceListComponent,
     DeviceDetailComponent,
-    DeviceModalComponent,
     TenantModalComponent,
     DeleteComponent,
     UpdateConfigModalComponent,
@@ -78,9 +75,8 @@ import { BindDevicesModalComponent } from './components/modals/bind-devices-moda
     ConfigAccordionComponent,
     TruncatePipe,
     GatewayListComponent,
-    GatewayModalComponent,
     SelectDevicesComponent,
-    BindDevicesModalComponent
+    CreateAndBindModalComponent
   ],
   imports: [
     BrowserModule,
