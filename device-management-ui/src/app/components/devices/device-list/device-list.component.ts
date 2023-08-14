@@ -1,7 +1,6 @@
 import {Component, EventEmitter, Input, Output, QueryList, ViewChildren} from '@angular/core';
 import {Router} from '@angular/router';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {DeviceModalComponent} from '../../modals/device/device-modal.component';
 import {DeleteComponent} from '../../modals/delete/delete.component';
 import {Tenant} from "../../../models/tenant";
 import {Device} from "../../../models/device";
@@ -9,7 +8,7 @@ import {DeviceService} from "../../../services/device/device.service";
 import {SortableTableDirective, SortEvent} from "../../../services/sortable-table/sortable-table.directive";
 import {SortableTableService} from "../../../services/sortable-table/sortable-table.service";
 import {NotificationService} from "../../../services/notification/notification.service";
-import {BindDevicesModalComponent} from "../../modals/bind-devices-modal/bind-devices-modal.component";
+import {CreateAndBindModalComponent} from "../../modals/create-and-bind-modal/create-and-bind-modal.component";
 
 @Component({
   selector: 'app-device-list',
@@ -107,8 +106,9 @@ export class DeviceListComponent {
   }
 
   protected createDevice(): void {
-    const modalRef = this.modalService.open(DeviceModalComponent, {size: 'lg'});
+    const modalRef = this.modalService.open(CreateAndBindModalComponent, {size: 'lg'});
     modalRef.componentInstance.tenantId = this.tenant.id;
+    modalRef.componentInstance.isDeviceFlag = true;
     modalRef.result.then((device) => {
       if (device) {
         this.deviceCreated.emit();
@@ -168,12 +168,12 @@ export class DeviceListComponent {
   }
 
   protected bindNewDevicesToGateway(){
-    const modalRef = this.modalService.open(BindDevicesModalComponent, {size: 'lg'});
+    const modalRef = this.modalService.open(CreateAndBindModalComponent, {size: 'lg'});
     modalRef.componentInstance.tenantId = this.tenant.id;
-    modalRef.componentInstance.bindDevices = true;
     modalRef.componentInstance.deviceId = this.deviceId;
-    modalRef.componentInstance.isGateway = this.isGateway;
+    modalRef.componentInstance.isBindDeviceFlag = true;
     modalRef.componentInstance.boundDevicesCount = this.boundDeviceListCount;
+    modalRef.componentInstance.isGateway = this.isGateway;
 
     modalRef.componentInstance.devicesSelected.subscribe((selectedDevices: Device[]) => {
       this.devices.push(...selectedDevices);

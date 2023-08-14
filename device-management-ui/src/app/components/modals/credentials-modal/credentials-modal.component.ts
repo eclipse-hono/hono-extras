@@ -105,7 +105,7 @@ export class CredentialsModalComponent implements OnInit {
           }
         }
         console.log('Error adding credentials for device', this.deviceId, error);
-        this.notificationService.error("Could not save credentials. Please check the key and the 'Not before' and 'Not after' inputs.")
+        this.notificationService.error("Could not save credentials. Please check your inputs again.")
       });
     }
   }

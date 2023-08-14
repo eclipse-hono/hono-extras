@@ -14,7 +14,7 @@ import {Credentials} from 'src/app/models/credentials/credentials';
 import {CredentialsService} from "../../../services/credentials/credentials.service";
 import {NotificationService} from "../../../services/notification/notification.service";
 import {DatePipe} from "@angular/common";
-import { BindDevicesModalComponent } from '../../modals/bind-devices-modal/bind-devices-modal.component';
+import {CreateAndBindModalComponent} from "../../modals/create-and-bind-modal/create-and-bind-modal.component";
 
 @Component({
   selector: 'app-device-detail',
@@ -25,7 +25,6 @@ export class DeviceDetailComponent {
 
 
   public isGateway: boolean = false;
-  public bindDevices: boolean = false;
   protected tenantIdLabel: string = 'Tenant ID:';
   protected creationTimeLabel: string = 'Created (UTC):';
   protected configLabel: string = 'Configuration';
@@ -215,14 +214,13 @@ export class DeviceDetailComponent {
     });
   }
 
-  protected openBindDevicesModal(){
-    const modalRef = this.modalService.open(BindDevicesModalComponent, {size: 'lg'});
-
+  protected bindNewDevicesToGateway(){
+    const modalRef = this.modalService.open(CreateAndBindModalComponent, {size: 'lg'});
     modalRef.componentInstance.tenantId = this.tenant.id;
-    modalRef.componentInstance.bindDevices = true;
     modalRef.componentInstance.deviceId = this.device.id;
-    modalRef.componentInstance.isGateway = this.isGateway;
+    modalRef.componentInstance.isBindDeviceFlag = true;
     modalRef.componentInstance.boundDevicesCount = this.boundDeviceListCount;
+    modalRef.componentInstance.isGateway = this.isGateway;
 
     modalRef.componentInstance.devicesSelected.subscribe((selectedDevices: Device[]) => {
       this.boundDevicesList.push(...selectedDevices);
