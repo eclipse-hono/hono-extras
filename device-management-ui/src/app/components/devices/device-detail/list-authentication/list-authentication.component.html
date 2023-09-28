@@ -2,19 +2,19 @@
   <thead>
   <tr>
     <th class="p-2 col-2">
-      <span [innerHTML]="authenticationTypeLabel"></span>
+      <span>Authentication type</span>
     </th>
     <th class="p-2 col-2">
-      <span [innerHTML]="authIdLabel"></span>
+      <span>Auth ID</span>
     </th>
     <th class="p-2 col-4">
-      <span [innerHTML]="secretIdLabel"></span>
+      <span>Secret ID</span>
     </th>
     <th class="p-2 col-3">
-      <span [innerHTML]="expiryDateLabel"></span>
+      <span>Expiry time (UTC)</span>
     </th>
     <th class="p-2 col-1 ml-auto last-column">
-      <span [innerHTML]="actionsLabel"></span>
+      <span>Actions</span>
     </th>
   </tr>
   </thead>
@@ -33,13 +33,13 @@
       <span [innerHTML]="authenticationValue['not-after']  | date:'medium': 'UTC'"></span>
     </td>
     <td class="p-2 col-1 ml-auto last-column">
-      <div [ngbTooltip]="isEditable(authenticationValue) ? editLabel : editDisabledLabel" class="auth-btn-wrapper">
+      <div [ngbTooltip]="isEditable(authenticationValue) ? 'Edit' : 'Edit not possible due to authentication method'" class="auth-btn-wrapper">
         <button (click)="edit(authenticationValue)" [disabled]="!isEditable(authenticationValue)"
           class="btn-auth btn btn-sm btn-primary" type="button">
           <fa-icon [icon]="['fas', 'pen-to-square']"></fa-icon>
         </button>
       </div>
-      <button (click)="delete(authenticationValue)" [ngbTooltip]="deleteLabel" class="btn btn-sm btn-secondary"
+      <button (click)="delete(authenticationValue)" [ngbTooltip]="'Delete'" class="btn btn-sm btn-secondary"
               type="button">
         <fa-icon [icon]="['fas', 'trash']"></fa-icon>
       </button>

@@ -17,7 +17,7 @@
         type="text">
     </div>
     <div class="form-group">
-      <label [innerHTML]="tenantMessagingTypeLabel" for="messagingTypeDropdown"></label>
+      <label for="messagingTypeDropdown">Messaging Type</label>
       <span class="ml-1 label-required">*</span>
       <ng-select
         [(ngModel)]="tenant.ext['messaging-type']"
@@ -35,7 +35,7 @@
         (cancelButtonPressed)="onClose()"
         (confirmButtonPressed)="onConfirm()"
         [buttonDisabled]="isInvalid()"
-        [confirmButtonLabel]="confirmButtonLabel">
+        [confirmButtonLabel]="'Save'">
       </app-modal-footer>
     </div>
   </div>

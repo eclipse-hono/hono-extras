@@ -1,6 +1,6 @@
 <div class="page-header">
   <div class="page-header-title d-flex align-items-center">
-    <span [innerHTML]="gatewayListLabel" [title]="gatewayListLabel" class="h3"></span>
+    <span class="h3">Gateway List</span>
     <div>
       <div class="page-header-counts">
         <div class="count">
@@ -12,34 +12,16 @@
   </div>
 
   <div class="page-functions">
-    <div *ngIf="!gatewayListIsEmpty()" class="function-element">
+    <div *ngIf="!gatewayListIsEmpty()" class="function-element me-2">
       <div class="search col-auto">
-        <input [(ngModel)]="searchTerm" [placeholder]="searchLabel" class="search form-control"
+        <input (search)="searchForGateway()" [(ngModel)]="searchTerm" [placeholder]="'Search exact Gateway ID'" class="search form-control"
                id="search" type="search">
       </div>
     </div>
-    <div *ngIf="!gatewayListIsEmpty()" class="function-element">
-      <div class="display-items col-auto">
-        <div ngbDropdown>
-          <button [innerHTML]="displayedItemsDropdownButton" class="btn btn-primary"
-                  id="displayedItemsDropDown" ngbDropdownToggle type="button">
-          </button>
-          <div aria-labelledby="displayedItemsDropDown" ngbDropdownMenu>
-            <button
-              (click)="setPageSize(option)"
-              *ngFor="let option of pageSizeOptions"
-              [innerHTML]="option"
-              ngbDropdownItem
-              type="button">
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
     <div class="function-element">
-      <button (click)="createGateway()" [ngbTooltip]="'Create Gateway'" class="btn btn-primary" type="button">
+      <button (click)="createGateway()" class="btn btn-primary" type="button">
         <fa-icon [icon]="['fas', 'plus']"></fa-icon>
-        <span [innerHTML]="newGatewayLabel"></span>
+        <span>Create New Gateway</span>
       </button>
     </div>
   </div>
@@ -47,7 +29,7 @@
 
 <div *ngIf="gatewayListIsEmpty()">
   <div class="alert alert-dark text-center">
-    <span [innerHTML]="noGatewayText"></span>
+    <span>Tenant has no gateways yet to display.</span>
   </div>
 </div>
 
@@ -56,18 +38,18 @@
     <thead>
     <tr>
       <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="id">
-        <span [innerHTML]="gatewayIdLabel"></span>
+        <span>Gateway ID</span>
       </th>
       <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="status.created">
-        <span [innerHTML]="gatewayCreatedLabel"></span>
+        <span>Created (UTC)</span>
       </th>
       <th class="p-2 ml-auto last-column">
-        <span [innerHTML]="actionsLabel"></span>
+        <span>Actions</span>
       </th>
     </tr>
     </thead>
     <tbody>
-    <tr *ngFor="let gateway of (gateways | searchFilter:searchTerm)"
+    <tr *ngFor="let gateway of gateways"
         class="list-item">
       <td (click)="selectGateway(gateway)" class="selectElement">
         <span [innerHTML]="gateway.id" class="p-2"></span>
@@ -76,7 +58,7 @@
         <span [innerHTML]="getCreationTime(gateway.status) | date:'medium': 'UTC'"></span>
       </td>
       <td class="p-2 col-sm-1 ml-auto last-column">
-        <button (click)="deleteGateway(gateway)" [ngbTooltip]="deleteLabel" class="btn btn-sm btn-secondary"
+        <button (click)="deleteGateway(gateway)" [ngbTooltip]="'Delete'" class="btn btn-sm btn-secondary"
                 type="button">
           <fa-icon [icon]="['fas', 'trash']"></fa-icon>
         </button>
@@ -85,13 +67,9 @@
     </tbody>
   </table>
 </div>
-<ngb-pagination
-  (pageChange)="changePage($event)"
-  [boundaryLinks]="true"
-  [collectionSize]="gatewayListCount"
-  [maxSize]="5"
-  [pageSize]="pageSize"
-  class="pagination d-flex justify-content-center">
-</ngb-pagination>
-
+<app-pagination
+  (pageNumberChange)="changePage($event)"
+  (pageSizeChange)="changePageSize($event)"
+  [deviceListCount]="gatewayListCount"
+></app-pagination>
 

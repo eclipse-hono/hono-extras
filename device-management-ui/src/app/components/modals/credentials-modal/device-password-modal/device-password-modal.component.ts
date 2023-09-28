@@ -1,3 +1,18 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {Component, EventEmitter, Output} from '@angular/core';
 import {Secret} from "../../../../models/credentials/secret";
 
@@ -8,24 +23,20 @@ import {Secret} from "../../../../models/credentials/secret";
 })
 export class DevicePasswordModalComponent {
 
-  @Output()
-  public passwordSecretChanged: EventEmitter<Secret> = new EventEmitter<Secret>();
-  protected passwordSecret: Secret = new Secret();
-  protected usePlainPasswordLabel: string = 'Use Plain Password';
-  protected usePasswordHashLabel: string = 'Use Password Hash';
-  protected plainPasswordLabel: string = 'Plain Password';
-  protected hashFunctionLabel: string = 'Password Hash Function';
-  protected pwdHashLabel: string = 'Password Hash';
-  protected saltLabel: string = 'Salt'
-  protected usePlainPassword: boolean = true;
+  @Output() public passwordSecretChanged: EventEmitter<Secret> = new EventEmitter<Secret>();
+  @Output() public passwordSecretTypeChanged: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  protected setUsePlainPassword(usePlainPassword: boolean) {
+  public passwordSecret: Secret = new Secret();
+  public usePlainPassword: boolean = true;
+
+  public setUsePlainPassword(usePlainPassword: boolean) {
     this.usePlainPassword = usePlainPassword;
     this.passwordSecret = new Secret();
     this.passwordSecretChanged.emit(undefined);
+    this.passwordSecretTypeChanged.emit(true);
   }
 
-  protected onPasswordSecretChanged() {
+  public onPasswordSecretChanged() {
     if (this.isInvalid()) {
       this.passwordSecretChanged.emit(undefined);
     } else {

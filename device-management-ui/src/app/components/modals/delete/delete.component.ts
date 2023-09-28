@@ -1,3 +1,18 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {Component, Input} from '@angular/core';
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 
@@ -8,27 +23,18 @@ import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 })
 export class DeleteComponent {
 
-  @Input()
-  public modalTitle: string = '';
-
-  @Input()
-  public body: string = '';
-
-  @Input()
-  public unbind: boolean = false;
-
-  protected deleteButtonLabel: string = 'Delete';
-
-  protected unbindButtonLabel: string = 'Unbind';
+  @Input() public modalTitle: string = '';
+  @Input() public body: string = '';
+  @Input() public unbind: boolean = false;
 
   constructor(private activeModal: NgbActiveModal) {
   }
 
-  protected onConfirm() {
+  public onConfirm() {
     this.activeModal.close(true);
   }
 
-  protected onCancel() {
+  public onCancel() {
     this.activeModal.close();
   }
 

@@ -1,3 +1,18 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {Component, OnInit, QueryList, ViewChildren} from '@angular/core';
 import {Router} from '@angular/router';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
@@ -20,20 +35,11 @@ export class TenantListComponent implements OnInit {
   public sortableHeaders: QueryList<SortableTableDirective> = new QueryList<SortableTableDirective>();
 
   public tenants: Tenant[] = [];
-  protected tenantListLabel: string = 'Tenants';
-  protected newTenantLabel: string = 'Create New Tenant';
-  protected idLabel: string = 'Tenant ID';
-  protected messagingTypeLabel: string = 'Messaging-Type';
-  protected actionsLabel: string = 'Actions';
-  protected editLabel: string = 'Edit';
-  protected deleteLabel: string = 'Delete';
-  protected searchLabel: string = 'Search';
-  protected displayedItemsDropdownButton: string = 'Displayed Tenants';
-  protected noTenantText: string = 'There are no tenants yet. Please create a new tenant.'
-  protected tenantListCount: number = 0;
-  protected searchTerm!: string;
-  protected pageSize: number = 50;
-  protected pageSizeOptions: number[] = [50, 100, 200];
+  public tenantListCount: number = 0;
+  public searchTerm!: string;
+  public pageSize: number = 50;
+  public pageSizeOptions: number[] = [50, 100, 200];
+
   private pageOffset: number = 0;
 
   constructor(private router: Router,
@@ -48,30 +54,30 @@ export class TenantListComponent implements OnInit {
     this.listTenants();
   }
 
-  protected changePage($event: number) {
+  public changePage($event: number) {
     this.pageOffset = ($event - 1) * this.pageSize;
     this.listTenants();
   }
 
-  protected setPageSize(size: number) {
+  public setPageSize(size: number) {
     this.pageSize = size;
     this.pageOffset = 0;
     this.listTenants();
   }
 
-  protected onSort({ column, direction }: SortEvent) {
+  public onSort({ column, direction }: SortEvent) {
     this.sortableHeaders = this.sortableTableService.resetHeaders(this.sortableHeaders, column);
     this.tenants = this.sortableTableService.sortItems<Tenant>(this.tenants, {column, direction});
   }
 
-  protected getMessagingType(ext: any) {
+  public getMessagingType(ext: any) {
     if (ext && ext['messaging-type']) {
       return ext['messaging-type'];
     }
     return '-';
   }
 
-  protected selectTenant(tenant: Tenant) {
+  public selectTenant(tenant: Tenant) {
     this.router.navigate(['tenant-detail', tenant.id], {
       state: {
         tenant: tenant
@@ -79,7 +85,7 @@ export class TenantListComponent implements OnInit {
     });
   }
 
-  protected createTenant(): void {
+  public createTenant(): void {
     const modalRef = this.modalService.open(TenantModalComponent, {size: 'lg'});
     modalRef.componentInstance.modalTitle = 'Create new tenant';
     modalRef.result.then((tenant) => {
@@ -93,7 +99,7 @@ export class TenantListComponent implements OnInit {
     });
   }
 
-  protected editTenant(tenant: Tenant): void {
+  public editTenant(tenant: Tenant): void {
     const modalRef = this.modalService.open(TenantModalComponent, {size: 'lg'});
     modalRef.componentInstance.tenant = tenant;
     modalRef.componentInstance.isNewTenant = false;
@@ -106,7 +112,7 @@ export class TenantListComponent implements OnInit {
     });
   }
 
-  protected deleteTenant(tenant: Tenant): void {
+  public deleteTenant(tenant: Tenant): void {
     const modalRef = this.modalService.open(DeleteComponent, {ariaLabelledBy: 'modal-basic-title'});
     modalRef.componentInstance.modalTitle = 'Delete tenant ' + tenant.id.toBold();
     modalRef.componentInstance.body = 'Do you really want to delete the tenant ' + tenant.id.toBold() + '?';
@@ -119,7 +125,7 @@ export class TenantListComponent implements OnInit {
     });
   }
 
-  protected tenantListIsEmpty(): boolean {
+  public tenantListIsEmpty(): boolean {
     return !this.tenants || this.tenants.length === 0;
   }
 

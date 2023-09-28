@@ -13,24 +13,21 @@
  *  *******************************************************************************
  */
 
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import {ListStateComponent} from './list-state.component';
-import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {OAuthModule} from "angular-oauth2-oidc";
+import { PaginationComponent } from './pagination.component';
 
-describe('ListStateComponent', () => {
-  let component: ListStateComponent;
-  let fixture: ComponentFixture<ListStateComponent>;
+describe('PaginationComponent', () => {
+  let component: PaginationComponent;
+  let fixture: ComponentFixture<PaginationComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, OAuthModule.forRoot()],
-      declarations: [ListStateComponent]
+      declarations: [ PaginationComponent ]
     })
-      .compileComponents();
+    .compileComponents();
 
-    fixture = TestBed.createComponent(ListStateComponent);
+    fixture = TestBed.createComponent(PaginationComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

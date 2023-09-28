@@ -1,4 +1,27 @@
-import {Component, EventEmitter, Input, Output, QueryList, ViewChildren} from '@angular/core';
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  QueryList,
+  ViewChildren
+} from '@angular/core';
 import {Router} from '@angular/router';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {DeleteComponent} from '../../modals/delete/delete.component';
@@ -15,63 +38,31 @@ import {CreateAndBindModalComponent} from "../../modals/create-and-bind-modal/cr
   templateUrl: './device-list.component.html',
   styleUrls: ['./device-list.component.scss']
 })
-export class DeviceListComponent {
+export class DeviceListComponent implements OnInit{
 
   @ViewChildren(SortableTableDirective)
   public sortableHeaders: QueryList<SortableTableDirective> = new QueryList<SortableTableDirective>();
 
-  @Input()
-  public tenant: Tenant = new Tenant();
+  @Input() public tenant: Tenant = new Tenant();
+  @Input() public devices: Device[] = [];
+  @Input() public deviceId: string = '';
+  @Input() public isGateway!: boolean;
+  @Input() public deviceListCount: number = 0;
+  @Input() public boundDevicesToGateway: boolean = false;
+  @Input() public unbindDevices: boolean = false;
 
-  @Input()
-  public devices: Device[] = [];
+  @Output() public pageSizeChanged: EventEmitter<number> = new EventEmitter<number>();
+  @Output() public selectedDevicesChanged: EventEmitter<Device[]> = new EventEmitter<Device[]>();
 
-  @Input()
-  public deviceId: string = '';
-
-  @Input()
-  public isGateway!: boolean;
-
-  @Input()
-  public deviceListCount: number = 0;
-
-  @Input()
-  public boundDeviceListCount: number = 0;
-
-  @Input()
-  public boundDevicesToGateway: boolean = false;
-
-
-  @Input()
-  public unbindDevices: boolean = false;
-
-  @Output()
-  public pageSizeChanged: EventEmitter<number> = new EventEmitter<number>();
-
-  @Output()
-  public deviceCreated: EventEmitter<any> = new EventEmitter<any>();
-
-  protected deviceListLabel: string = 'Device List';
-  protected newDeviceLabel: string = 'Create New Device';
-  protected bindDeviceLabel: string = 'Bind Device(s)';
-  protected unBindDeviceLabel: string = 'Unbind Device(s)';
-  protected deviceIdLabel: string = 'Device ID';
-  protected deviceCreatedLabel: string = 'Created (UTC)'
-  protected actionsLabel: string = 'Actions';
-  protected deleteLabel: string = 'Delete';
-  protected searchLabel: string = 'Search';
-  protected displayedItemsDropdownButton: string = 'Displayed Devices';
-  protected noDeviceText: string = 'Tenant has no devices yet. Please create a new device.'
-
-  protected searchTerm!: string;
-
-  protected pageSize: number = 50;
-  protected pageSizeOptions: number[] = [50, 100, 200];
-  protected selectedDevices: Device[] = [];
-
-  @Output()
-  public selectedDevicesChanged: EventEmitter<Device[]> = new EventEmitter<Device[]>();
-
+  public deviceIdLabel: string = 'Device ID';
+  public deviceCreatedLabel: string = 'Created (UTC)'
+  public searchLabel = '';
+  public searchTerm!: string;
+  private pageSize: number = 50;
+  private selectedDevices: Device[] = [];
+  private pageOffset: number = 0;
+  private exactSearchString: string = 'Search exact Device ID';
+  private searchString = 'Search';
 
   constructor(private router: Router,
               private modalService: NgbModal,
@@ -80,24 +71,25 @@ export class DeviceListComponent {
               private notificationService: NotificationService) {
   }
 
-  protected setPageSize(size: number) {
-    this.pageSizeChanged.emit(size);
+  ngOnInit() {
+    this.searchLabel = this.boundDevicesToGateway ? this.searchString : this.exactSearchString;
+    this.listDevices();
   }
 
-  protected onSort({ column, direction }: SortEvent) {
+  public onSort({ column, direction }: SortEvent) {
     this.sortableHeaders = this.sortableTableService.resetHeaders(this.sortableHeaders, column);
     this.devices = this.sortableTableService.sortItems<Device>(this.devices, {column, direction});
   }
 
-  protected getCreationTime(status: any) {
-    if (status && status['created']) {
-      return status['created'];
+  public getCreationTime(status: any) {
+    if (status && status.created) {
+      return status.created;
     }
     return '-';
   }
 
-  protected selectDevice(device: Device): void {
-    this.router.navigate(['device-detail', device.id], {
+  public selectDevice(device: Device): void {
+    this.router.navigate(['device-detail/' + this.tenant.id, device.id], {
       state: {
         tenant: this.tenant,
         device: device
@@ -105,13 +97,13 @@ export class DeviceListComponent {
     });
   }
 
-  protected createDevice(): void {
+  public createDevice(): void {
     const modalRef = this.modalService.open(CreateAndBindModalComponent, {size: 'lg'});
     modalRef.componentInstance.tenantId = this.tenant.id;
     modalRef.componentInstance.isDeviceFlag = true;
     modalRef.result.then((device) => {
       if (device) {
-        this.deviceCreated.emit();
+        this.listDevices();
         this.notificationService.success("Successfully created device " + device.id.toBold());
       }
     }, (reason: any) => {
@@ -119,7 +111,7 @@ export class DeviceListComponent {
     });
   }
 
-  protected deleteDevice(device: Device): void {
+  public deleteDevice(device: Device): void {
     const modalRef = this.modalService.open(DeleteComponent, {ariaLabelledBy: 'modal-basic-title'});
     modalRef.componentInstance.modalTitle = 'Confirm Delete';
     modalRef.componentInstance.body = 'Do you really want to delete the device ' + device.id.toBold() + '?';
@@ -132,25 +124,11 @@ export class DeviceListComponent {
     });
   }
 
-  private delete(device: Device) {
-    this.deviceService.delete(device, this.tenant.id).subscribe(() => {
-      const index = this.devices.indexOf(device);
-      if (index >= 0) {
-        this.devices.splice(index, 1);
-        this.deviceListCount = this.deviceListCount -1;
-        this.notificationService.success("Successfully deleted device " + device.id.toBold());
-      }
-    }, (error) => {
-      console.log(error);
-      this.notificationService.error("Could not delete device " + device.id.toBold());
-    })
-  }
-
-  protected deviceListIsEmpty(): boolean {
+  public deviceListIsEmpty(): boolean {
     return !this.devices || this.devices.length === 0;
   }
 
-  protected unbindDevicesFromGateway(){
+  public unbindDevicesFromGateway(){
     this.unbindDevices = true;
 
     const modalRef = this.modalService.open(DeleteComponent, {ariaLabelledBy: 'modal-basic-title'});
@@ -167,16 +145,78 @@ export class DeviceListComponent {
     });
   }
 
-  protected bindNewDevicesToGateway(){
+  public bindNewDevicesToGateway(){
     const modalRef = this.modalService.open(CreateAndBindModalComponent, {size: 'lg'});
     modalRef.componentInstance.tenantId = this.tenant.id;
     modalRef.componentInstance.deviceId = this.deviceId;
     modalRef.componentInstance.isBindDeviceFlag = true;
-    modalRef.componentInstance.boundDevicesCount = this.boundDeviceListCount;
+    modalRef.componentInstance.boundDevicesCount = this.deviceListCount;
     modalRef.componentInstance.isGateway = this.isGateway;
 
     modalRef.componentInstance.devicesSelected.subscribe((selectedDevices: Device[]) => {
       this.devices.push(...selectedDevices);
+    });
+  }
+
+
+  public navigateBack() {
+    this.router.navigate(['tenant-detail', this.tenant.id], {
+      state: {
+        tenant: this.tenant
+      }
+    });
+  }
+
+  public devicesSelectedCheck(): boolean{
+    return this.devices.some(device => device.checked);
+  }
+
+  public markDevice(selectedDevice: Device) {
+    selectedDevice.checked = !selectedDevice.checked;
+    this.selectedDevices = this.devices.filter(device => device.checked);
+    this.selectedDevicesChanged.emit(this.selectedDevices);
+  }
+
+  public searchForDevice() {
+    if (this.boundDevicesToGateway) {
+      return;
+    }
+    if (!this.searchTerm) {
+      this.listDevices()
+    } else {
+      this.deviceService.getByExactId(this.tenant.id, this.searchTerm).subscribe({
+        next: (result) => {
+          result.id = this.searchTerm
+          this.devices = [result];
+          this.deviceListCount = 1;
+        },
+        error: (_err) => {
+          this.notificationService.error('There is no device or gateway with such an ID. The search only finds exact matches.')
+        }
+      })
+    }
+  }
+
+  public changePage($event: number) {
+    this.pageOffset = ($event -1) * this.pageSize;
+    this.listDevices();
+  }
+
+  public changePageSize(size: number) {
+    this.pageSize = size;
+    this.pageOffset = 0;
+    this.listDevices();
+  }
+
+  private listDevices() {
+    if (this.boundDevicesToGateway) {
+      return;
+    }
+    this.deviceService.listByTenant(this.tenant.id, this.pageSize, this.pageOffset, false).subscribe((listResult) => {
+      this.devices = listResult.result;
+      this.deviceListCount = listResult.total;
+    }, (error) => {
+      console.log(error);
     });
   }
 
@@ -193,7 +233,7 @@ export class DeviceListComponent {
         }
         this.deviceService.update(selectedDevice, this.tenant.id).subscribe(
           () => {
-            this.boundDeviceListCount = this.devices.length
+            this.deviceListCount = this.devices.length
             if (this.devices.length <= 0) {
               this.navigateBack();
             }
@@ -207,21 +247,18 @@ export class DeviceListComponent {
     }
   }
 
-  protected navigateBack() {
-    this.router.navigate(['tenant-detail', this.tenant.id], {
-      state: {
-        tenant: this.tenant
+  private delete(device: Device) {
+    this.deviceService.delete(device, this.tenant.id).subscribe(() => {
+      const index = this.devices.indexOf(device);
+      if (index >= 0) {
+        this.devices.splice(index, 1);
+        this.deviceListCount = this.deviceListCount -1;
+        this.notificationService.success("Successfully deleted device " + device.id.toBold());
       }
-    });
+    }, (error) => {
+      console.log(error);
+      this.notificationService.error("Could not delete device " + device.id.toBold());
+    })
   }
 
-  public devicesSelectedCheck(): boolean{
-    return this.devices.some(device => device.checked);
-  }
-
-  protected markDevice(selectedDevice: Device) {
-    selectedDevice.checked = !selectedDevice.checked;
-    this.selectedDevices = this.devices.filter(device => device.checked);
-    this.selectedDevicesChanged.emit(this.selectedDevices);
-  }
 }

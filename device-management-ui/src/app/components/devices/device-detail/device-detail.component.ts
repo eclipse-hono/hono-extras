@@ -1,8 +1,23 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {Component} from '@angular/core';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {DeleteComponent} from '../../modals/delete/delete.component';
 import {Device} from "../../../models/device";
-import {Router} from "@angular/router";
+import { Router} from "@angular/router";
 import {Tenant} from "../../../models/tenant";
 import {UpdateConfigModalComponent} from '../../modals/update-config-modal/update-config-modal.component';
 import {SendCommandComponent} from '../../modals/send-command/send-command.component';
@@ -13,7 +28,7 @@ import {CredentialsModalComponent} from '../../modals/credentials-modal/credenti
 import {Credentials} from 'src/app/models/credentials/credentials';
 import {CredentialsService} from "../../../services/credentials/credentials.service";
 import {NotificationService} from "../../../services/notification/notification.service";
-import {DatePipe} from "@angular/common";
+import {DatePipe, Location} from "@angular/common";
 import {CreateAndBindModalComponent} from "../../modals/create-and-bind-modal/create-and-bind-modal.component";
 
 @Component({
@@ -23,40 +38,31 @@ import {CreateAndBindModalComponent} from "../../modals/create-and-bind-modal/cr
 })
 export class DeviceDetailComponent {
 
-
   public isGateway: boolean = false;
-  protected tenantIdLabel: string = 'Tenant ID:';
-  protected creationTimeLabel: string = 'Created (UTC):';
-  protected configLabel: string = 'Configuration';
-  protected stateLabel: string = 'State'
-  protected authenticationLabel: string = 'Authentication'
-  protected device: Device = new Device();
-  protected gateway: Device = new Device();
-  protected tenant: Tenant = new Tenant();
+  public device: Device = new Device();
+  public gateway: Device = new Device();
+  public tenant: Tenant = new Tenant();
   public devices: Device[] = [];
   public boundDevicesList: Device[] = [];
-  protected deleteLabel: string = 'Delete';
-  protected updateLabel: string = 'Update Config';
-  protected sendLabel: string = 'Send Command';
-  protected addAuthenticationLabel: string = 'Add Credentials';
-  protected boundDevices: string = 'Bound Devices';
-  protected viaLabel: string = 'Via:';
-  protected configs: Config[] = [];
-  protected credentials: Credentials[] = [];
-  protected deviceListCount: number = 0;
-  protected boundDeviceListCount: number = 0;
-  protected pageSize: number = 50;
+  public configs: Config[] = [];
+  public credentials: Credentials[] = [];
+  public deviceListCount: number = 0;
+  public boundDeviceListCount: number = 0;
+  public pageSize: number = 50;
+  public isBoundDevice: boolean = false;
+
   private pageOffset: number = 0;
-  protected isBoundDevice: boolean = false;
 
   constructor(private modalService: NgbModal,
               private router: Router,
+              private location: Location,
               private deviceService: DeviceService,
               private configService: ConfigService,
               private credentialsService: CredentialsService,
               private notificationService: NotificationService,
               private datePipe: DatePipe) {
     const navigation = this.router.getCurrentNavigation();
+    let accessedViaUrl: boolean = false;
     if (navigation) {
       const state = navigation.extras.state
       if (state && state['tenant']) {
@@ -65,12 +71,32 @@ export class DeviceDetailComponent {
       if (state && state['device']) {
         this.device = state['device'];
         this.setDevices();
-        const storedIsGateway = localStorage.getItem('isGateway_' + this.device.id);
-        this.isGateway = storedIsGateway ? JSON.parse(storedIsGateway) : this.deviceService.getActiveTab();
-        localStorage.setItem('isGateway_' + this.device.id, JSON.stringify(this.isGateway));
+        this.setIsGatewayFlag();
+      } else {
+        accessedViaUrl = true;
+        const urlSegments = window.location.pathname.substring(1).split("/");
+        const tenantId = String(urlSegments[1]);
+        const deviceId = String(urlSegments[2]);
+        this.deviceService.getByExactId(tenantId, deviceId).subscribe({
+          next: (result) => {
+            result.id = deviceId;
+            this.tenant = new Tenant();
+            this.tenant.id = tenantId;
+            this.device = result;
+            this.setDevices();
+            this.setIsGatewayFlag();
+            this.setUpDeviceDetail();
+          }
+        })
       }
 
     }
+    if (!accessedViaUrl) {
+      this.setUpDeviceDetail();
+    }
+  }
+
+  private setUpDeviceDetail() {
     if(this.isGateway) {
       this.gateway = this.device;
     }
@@ -78,6 +104,12 @@ export class DeviceDetailComponent {
     this.getCredentials();
     this.checkIsBoundDevice();
   }
+  private setIsGatewayFlag() {
+    const storedIsGateway = localStorage.getItem('isGateway_' + this.device.id);
+    this.isGateway = storedIsGateway ? JSON.parse(storedIsGateway) : this.deviceService.getActiveTab();
+    localStorage.setItem('isGateway_' + this.device.id, JSON.stringify(this.isGateway));
+  }
+
 
   public ngOnDestroy(){
     localStorage.removeItem('isGateway_' + this.device.id)

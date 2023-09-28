@@ -16,18 +16,27 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 
 @Component({
-  selector: 'app-modal-head',
-  templateUrl: './modal-head.component.html',
-  styleUrls: ['./modal-head.component.scss']
+  selector: 'app-pagination',
+  templateUrl: './pagination.component.html',
+  styleUrls: ['./pagination.component.scss']
 })
-export class ModalHeadComponent {
+export class PaginationComponent {
+  @Input() public deviceListCount: number = 0;
 
-  @Input() public modalTitle: string = '';
+  @Output() public pageNumberChange = new EventEmitter<number>();
+  @Output() public pageSizeChange = new EventEmitter<number>();
 
-  @Output() public closeModal: EventEmitter<boolean> = new EventEmitter<boolean>();
+  public pageSize: number = 50;
+  public pageSizeOptions: number[] = [50, 100, 200];
 
-  public cancel() {
-    this.closeModal.emit(true);
+  changePage($event: number) {
+    this.pageNumberChange.emit($event)
+  }
+  onPageSizeChange(event: any) {
+    const {value} = event.target;
+    if (+value) {
+      this.pageSizeChange.emit(+value);
+    }
   }
 
 }

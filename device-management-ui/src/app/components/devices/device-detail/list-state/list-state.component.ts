@@ -1,3 +1,18 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {Component, Input, OnInit} from '@angular/core';
 import {StatesService} from "../../../../services/states/states.service";
 import {State} from "../../../../models/state";
@@ -9,15 +24,10 @@ import {State} from "../../../../models/state";
 })
 export class ListStateComponent implements OnInit {
 
-  @Input()
-  public deviceId: string = '';
+  @Input() public deviceId: string = '';
+  @Input() public tenantId: string = '';
 
-  @Input()
-  public tenantId: string = '';
-  protected updateLabel: string = 'Cloud update time (UTC)';
-  protected dataLabel: string = 'Data';
-
-  protected states: State[] = [];
+  public states: State[] = [];
 
   constructor(private statesService: StatesService) {
   }

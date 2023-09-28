@@ -1,3 +1,18 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {Device} from "../../../models/device";
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
@@ -11,32 +26,17 @@ import {NotificationService} from "../../../services/notification/notification.s
 })
 export class CreateAndBindModalComponent implements OnInit{
 
-  @Input()
-  public device: Device = new Device();
+  @Input() public device: Device = new Device();
+  @Input() public tenantId: string = '';
+  @Input() public isDeviceFlag: boolean = false;
+  @Input() public isGatewayFlag: boolean = false;
+  @Input() public deviceId: string = '';
+  @Input() public isGateway: boolean = false;
+  @Input() public isBindDeviceFlag: boolean = false;
+  @Input() public boundDevicesCount: number = 0;
 
-  @Input()
-  public tenantId: string = '';
+  @Output() public devicesSelected: EventEmitter<Device[]> = new EventEmitter<Device[]>();
 
-  @Input()
-  public isDeviceFlag: boolean = false;
-
-  @Input()
-  public isGatewayFlag: boolean = false;
-
-  @Input()
-  public deviceId: string = '';
-
-  @Input()
-  public isGateway: boolean = false;
-
-  @Input()
-  public isBindDeviceFlag: boolean = false;
-
-  @Input()
-  public boundDevicesCount: number = 0;
-
-  @Output()
-  public devicesSelected: EventEmitter<Device[]> = new EventEmitter<Device[]>();
   public sendViaGateway: boolean = false;
   public selectedDevices: Device[] = [];
   public devices: Device[] = [];

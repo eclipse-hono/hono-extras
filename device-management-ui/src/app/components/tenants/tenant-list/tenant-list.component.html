@@ -8,7 +8,7 @@
 
 <div class="page-header">
   <div class="page-header-title d-flex align-items-center">
-    <span [innerHTML]="tenantListLabel" [title]="tenantListLabel" class="h3"></span>
+    <span class="h3">Tenants</span>
     <div>
       <div class="page-header-counts">
         <div class="count">
@@ -22,14 +22,14 @@
   <div class="page-functions">
     <div class="function-element" *ngIf="!tenantListIsEmpty()">
       <div class="search col-auto">
-        <input [(ngModel)]="searchTerm" [placeholder]="searchLabel" class="search form-control"
+        <input [(ngModel)]="searchTerm" [placeholder]="'Search'" class="search form-control"
                id="search" type="search">
       </div>
     </div>
     <div class="function-element" *ngIf="!tenantListIsEmpty()">
       <div class="display-items col-auto">
         <div ngbDropdown>
-          <button [innerHTML]="displayedItemsDropdownButton" class="btn btn-primary"
+          <button [innerHTML]="'Displayed Tenants'" class="btn btn-primary"
                   id="displayedItemsDropDown" ngbDropdownToggle type="button">
           </button>
           <div aria-labelledby="displayedItemsDropDown" ngbDropdownMenu>
@@ -45,7 +45,7 @@
     <div class="function-element">
       <button (click)="createTenant()" class="btn btn-primary" type="button">
         <fa-icon [icon]="['fas', 'plus']"></fa-icon>
-        <span [innerHTML]="newTenantLabel"></span>
+        <span>Create New Tenant</span>
       </button>
     </div>
 
@@ -53,7 +53,7 @@
 </div>
 <div *ngIf="tenantListIsEmpty()">
   <div class="alert alert-dark text-center">
-    <span [innerHTML]="noTenantText"></span>
+    <span>There are no tenants yet. Please create a new tenant.</span>
   </div>
 </div>
 <div class="card card-table-view mb-3" *ngIf="!tenantListIsEmpty()">
@@ -61,13 +61,13 @@
     <thead>
     <tr>
       <th (sort)="onSort($event)" class="sortable p-2" scope="col" sortable="id">
-        <span [innerHTML]="idLabel"></span>
+        <span>Tenant ID</span>
       </th>
       <th class="p2">
-        <span [innerHTML]="messagingTypeLabel"></span>
+        <span>Messaging-Type</span>
       </th>
       <th class="p-2 ml-auto last-column">
-        <span [innerHTML]="actionsLabel"></span>
+        <span>Actions</span>
       </th>
     </tr>
     </thead>
@@ -81,10 +81,10 @@
         <span [innerHTML]="getMessagingType(tenant.ext)"></span>
       </td>
       <td class="p-2 col-sm-1 ml-auto last-column">
-        <button (click)="editTenant(tenant)" [ngbTooltip]="editLabel" class="btn btn-sm btn-primary" type="button">
+        <button (click)="editTenant(tenant)" [ngbTooltip]="'Edit'" class="btn btn-sm btn-primary" type="button">
           <fa-icon [icon]="['fas', 'pen-to-square']"></fa-icon>
         </button>
-        <button (click)="deleteTenant(tenant)" [ngbTooltip]="deleteLabel" class="btn btn-sm btn-secondary"
+        <button (click)="deleteTenant(tenant)" [ngbTooltip]="'Delete'" class="btn btn-sm btn-secondary"
                 type="button">
           <fa-icon [icon]="['fas', 'trash']"></fa-icon>
         </button>
