@@ -2,16 +2,16 @@
   <thead>
   <tr>
     <th class="p-2 col-1">
-      <span [innerHTML]="versionLabel"></span>
+      <span>Version</span>
     </th>
     <th class="p-2 col-1 centered">
-      <span [innerHTML]="acknowledgementLabel"></span>
+      <span>Ack.</span>
     </th>
     <th class="p-2 col-4 centered">
-      <span [innerHTML]="updateLabel"></span>
+      <span>Cloud update time (UTC)</span>
     </th>
     <th class="p-2 col-6 ml-auto last-column">
-      <span [innerHTML]="dataLabel"></span>
+      <span>Data</span>
     </th>
   </tr>
   </thead>
@@ -23,13 +23,14 @@
     <td class="p-2 col-1 centered">
       <fa-icon [icon]="getDeviceAckTime(config)" [style]="iconColor(config)"></fa-icon>
     </td>
-    <td class="p-2 col-4 centered">
+    <td class="p-2 col-8 centered">
       <span [innerHTML]="config.cloudUpdateTime  | date:'medium': 'UTC'"></span>
     </td>
-    <td class="p-2 col-6 ml-auto last-column">
-      <app-config-accordion
-        [config]="config">
-      </app-config-accordion>
+    <td class="p-2 col-1 last-column">
+      <button (click)="showConfig(config)" class="btn btn-sm btn-primary" type="button">
+        <fa-icon [icon]="['fas', 'gears']"></fa-icon>
+        <span>Show Config</span>
+      </button>
     </td>
   </tr>
   </tbody>

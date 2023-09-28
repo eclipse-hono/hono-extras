@@ -1,3 +1,18 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {Component, Input, OnInit} from '@angular/core';
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 import {Tenant} from "../../../models/tenant";
@@ -12,19 +27,12 @@ import {NotificationService} from "../../../services/notification/notification.s
 })
 export class TenantModalComponent implements OnInit {
 
-  @Input()
-  public isNewTenant: boolean = true;
+  @Input() public isNewTenant: boolean = true;
+  @Input() public tenant: Tenant = new Tenant();
 
-  @Input()
-  public tenant: Tenant = new Tenant();
-
-  protected tenantIdLabel = 'Tenant ID';
-  protected tenantMessagingTypeLabel = 'Messaging Type';
-  protected confirmButtonLabel = 'Save';
-
-  protected modalTitle: string = '';
-
-  protected messagingTypes: {
+  public tenantIdLabel = 'Tenant ID';
+  public modalTitle: string = '';
+  public messagingTypes: {
     key: string,
     value: string,
   }[] = [
@@ -36,7 +44,6 @@ export class TenantModalComponent implements OnInit {
   constructor(private activeModal: NgbActiveModal,
               private tenantService: TenantService,
               private notificationService: NotificationService) {
-
   }
 
   public ngOnInit() {
@@ -50,7 +57,7 @@ export class TenantModalComponent implements OnInit {
     }
   }
 
-  protected onConfirm() {
+  public onConfirm() {
     if (this.isInvalid()) {
       return;
     }
@@ -61,11 +68,11 @@ export class TenantModalComponent implements OnInit {
     }
   }
 
-  protected onClose() {
+  public onClose() {
     this.activeModal.close();
   }
 
-  protected isInvalid() {
+  public isInvalid() {
     return !this.tenant || !this.tenant.id || !this.tenant.ext || !this.tenant.ext['messaging-type'];
   }
 

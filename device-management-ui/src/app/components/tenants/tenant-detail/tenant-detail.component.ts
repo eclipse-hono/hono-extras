@@ -1,3 +1,18 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {Component} from '@angular/core';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {DeleteComponent} from '../../modals/delete/delete.component';
@@ -15,21 +30,11 @@ import {Device} from "../../../models/device";
   styleUrls: ['./tenant-detail.component.scss']
 })
 export class TenantDetailComponent {
-  protected id: string = "ID: ";
-  protected messagingTypeLabel: string = "Messaging-Type:";
-  protected tenant: Tenant = new Tenant();
-  protected editLabel: string = 'Edit';
-  protected deleteLabel: string = 'Delete';
-  protected gatewayLabel: string = 'Gateways';
-  protected devicesLabel: string = 'Devices';
 
-  protected deviceListCount: number = 0;
-
-  protected pageSize: number = 50;
-
-  protected devices: Device[] = [];
-
-  private pageOffset: number = 0;
+  public tenant: Tenant = new Tenant();
+  public deviceListCount: number = 0;
+  public pageSize: number = 50;
+  public devices: Device[] = [];
 
   constructor(private modalService: NgbModal,
               private deviceService: DeviceService,
@@ -41,7 +46,6 @@ export class TenantDetailComponent {
       const state = navigation.extras.state
       if (state && state['tenant']) {
         this.tenant = state['tenant'];
-        this.listDevices();
         this.setActiveTab(false);
       }
     }
@@ -88,21 +92,6 @@ export class TenantDetailComponent {
     });
   }
 
-  protected changePage($event: number) {
-    this.pageOffset = ($event -1) * this.pageSize;
-    this.listDevices();
-  }
-
-  protected onPageSizeChanged($event: any) {
-    this.pageSize = $event;
-    this.pageOffset = 0;
-    this.listDevices();
-  }
-
-  protected onDeviceCreated() {
-    this.listDevices();
-  }
-
   private delete() {
     this.tenantService.delete(this.tenant.id).subscribe(() => {
       this.notificationService.success('Successfully deleted tenant ' + this.tenant.id.toBold());
@@ -113,17 +102,7 @@ export class TenantDetailComponent {
     })
   }
 
-  private listDevices() {
-    this.deviceService.listByTenant(this.tenant.id, this.pageSize, this.pageOffset, false).subscribe((listResult) => {
-      this.devices = listResult.result;
-      this.deviceListCount = listResult.total;
-    }, (error) => {
-      console.log(error);
-    });
-  }
-
   public setActiveTab(isGateway : boolean){
     this.deviceService.setActiveTab(isGateway);
-    this.listDevices();
   }
 }

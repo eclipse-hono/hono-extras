@@ -1,3 +1,18 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
@@ -42,11 +57,11 @@ import {SortableTableDirective} from './services/sortable-table/sortable-table.d
 import {FaIconLibrary, FontAwesomeModule} from "@fortawesome/angular-fontawesome";
 import {fas} from "@fortawesome/free-solid-svg-icons";
 import {ToastContainerComponent} from './components/toast-container/toast-container.component';
-import {ConfigAccordionComponent} from './components/devices/device-detail/list-config/config-accordion/config-accordion.component';
 import {TruncatePipe} from './shared/truncate.pipe';
 import {GatewayListComponent} from './components/gateways/gateway-list/gateway-list.component';
 import { SelectDevicesComponent } from './components/modals/select-devices/select-devices.component';
 import { CreateAndBindModalComponent } from './components/modals/create-and-bind-modal/create-and-bind-modal.component';
+import { PaginationComponent } from './components/pagination/pagination.component';
 
 @NgModule({
   declarations: [
@@ -72,11 +87,11 @@ import { CreateAndBindModalComponent } from './components/modals/create-and-bind
     LoaderSpinnerComponent,
     SortableTableDirective,
     ToastContainerComponent,
-    ConfigAccordionComponent,
     TruncatePipe,
     GatewayListComponent,
     SelectDevicesComponent,
-    CreateAndBindModalComponent
+    CreateAndBindModalComponent,
+    PaginationComponent
   ],
   imports: [
     BrowserModule,

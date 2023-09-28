@@ -1,11 +1,11 @@
 <div>
   <div class="page-header">
     <div class="page-header-title d-flex align-items-center">
-      <span [innerHTML]="deviceListLabel" [title]="deviceListLabel" class="h3"></span>
+      <span class="h3">Device List</span>
       <div>
         <div class="page-header-counts">
           <div class="count">
-            <span [innerHTML]="!boundDevicesToGateway ? deviceListCount : boundDeviceListCount" class="badge bg-primary"></span>
+            <span [innerHTML]="deviceListCount" class="badge bg-primary"></span>
             <span class="count-label">Devices</span>
           </div>
         </div>
@@ -13,42 +13,24 @@
     </div>
 
     <div class="page-functions">
-      <div *ngIf="!deviceListIsEmpty()" class="function-element">
+      <div *ngIf="!deviceListIsEmpty()" class="function-element me-2">
         <div class="search col-auto">
-          <input [(ngModel)]="searchTerm" [placeholder]="searchLabel" class="search form-control"
+          <input (search)="searchForDevice()" [(ngModel)]="searchTerm" [placeholder]="searchLabel" class="search form-control"
                  id="search" type="search">
         </div>
       </div>
-      <div *ngIf="!deviceListIsEmpty() && !boundDevicesToGateway" class="function-element">
-        <div class="display-items col-auto">
-          <div ngbDropdown>
-            <button [innerHTML]="displayedItemsDropdownButton" class="btn btn-primary"
-                    id="displayedItemsDropDown" ngbDropdownToggle type="button">
-            </button>
-            <div aria-labelledby="displayedItemsDropDown" ngbDropdownMenu>
-              <button
-                (click)="setPageSize(option)"
-                *ngFor="let option of pageSizeOptions"
-                [innerHTML]="option"
-                ngbDropdownItem
-                type="button">
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
       <div class="function-element" *ngIf="!boundDevicesToGateway">
-        <button (click)="createDevice()" [ngbTooltip]="'Create Device'" class="btn btn-primary" type="button">
+        <button (click)="createDevice()" class="btn btn-primary" type="button">
           <fa-icon [icon]="['fas', 'plus']"></fa-icon>
-          <span [innerHTML]="newDeviceLabel"></span>
+          <span>Create New Device</span>
         </button>
       </div>
       <div class="binding" *ngIf="boundDevicesToGateway && !deviceListIsEmpty()">
         <button  [ngbTooltip]="'Bound Device'" class="btn btn-primary" type="button" (click)="bindNewDevicesToGateway()">
-          <span [innerHTML]="bindDeviceLabel"></span>
+          <span>Bind Device(s)</span>
         </button>
         <button  [ngbTooltip]="'Unbind Device(s)'" class="btn btn-primary" type="button" (click)="unbindDevicesFromGateway()" [disabled]="!devicesSelectedCheck()">
-          <span [innerHTML]="unBindDeviceLabel"></span>
+          <span>Unbind Device(s)</span>
         </button>
       </div>
     </div>
@@ -56,11 +38,11 @@
 
   <div *ngIf="deviceListIsEmpty()">
     <div class="alert alert-dark text-center">
-      <span [innerHTML]="noDeviceText"></span>
+      <span>Tenant has no devices yet. Please create a new device.</span>
     </div>
   </div>
 
-  <div *ngIf="!deviceListIsEmpty() && !boundDevicesToGateway" class="card card-table-view mb-3">
+  <div *ngIf="!deviceListIsEmpty() && !boundDevicesToGateway" class="card card-table-view">
     <table class="table">
       <thead>
       <tr>
@@ -71,12 +53,12 @@
           <span [innerHTML]="deviceCreatedLabel"></span>
         </th>
         <th class="p-2 ml-auto last-column">
-          <span [innerHTML]="actionsLabel"></span>
+          <span>Actions</span>
         </th>
       </tr>
       </thead>
       <tbody>
-      <tr *ngFor="let device of (devices | searchFilter:searchTerm)"
+      <tr *ngFor="let device of devices"
           class="list-item">
         <td (click)="selectDevice(device)" class="selectElement">
           <span [innerHTML]="device.id" class="p-2"></span>
@@ -85,7 +67,7 @@
           <span [innerHTML]="getCreationTime(device.status) | date:'medium': 'UTC'"></span>
         </td>
         <td class="p-2 col-sm-1 ml-auto last-column">
-          <button (click)="deleteDevice(device)" [ngbTooltip]="deleteLabel" class="btn btn-sm btn-secondary"
+          <button (click)="deleteDevice(device)" [ngbTooltip]="'Delete'" class="btn btn-sm btn-secondary"
                   type="button">
             <fa-icon [icon]="['fas', 'trash']"></fa-icon>
           </button>
@@ -95,7 +77,7 @@
     </table>
   </div>
 
-  <div *ngIf="!deviceListIsEmpty() && boundDevicesToGateway" class="card card-table-view mb-3">
+  <div *ngIf="!deviceListIsEmpty() && boundDevicesToGateway" class="card card-table-view">
     <table class="table">
       <thead>
       <tr>
@@ -122,3 +104,9 @@
     </table>
   </div>
 </div>
+<app-pagination
+  (pageNumberChange)="changePage($event)"
+  (pageSizeChange)="changePageSize($event)"
+  [deviceListCount]="deviceListCount"
+></app-pagination>
+

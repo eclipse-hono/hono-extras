@@ -1,3 +1,12 @@
+.pagination-wrapper {
+    position: relative;
+    .page-size {
+      position: absolute;
+      padding-top: 1em;
+      right: 0;
+    }
+}
+
 .pagination {
     padding-top: 1em;
     .page-item {

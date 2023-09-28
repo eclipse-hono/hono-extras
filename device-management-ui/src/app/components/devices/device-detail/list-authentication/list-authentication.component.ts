@@ -1,3 +1,18 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {Component, Input, OnChanges, OnInit, SimpleChanges} from '@angular/core';
 import {Credentials, CredentialTypes} from "../../../../models/credentials/credentials";
 import {AuthenticationValue} from "../../../../models/authentication-value";
@@ -14,24 +29,11 @@ import {NotificationService} from "../../../../services/notification/notificatio
 })
 export class ListAuthenticationComponent implements OnInit, OnChanges {
 
-  @Input()
-  public deviceId: string = '';
+  @Input() public deviceId: string = '';
+  @Input() public tenantId: string = '';
+  @Input() public credentials: Credentials[] = [];
 
-  @Input()
-  public tenantId: string = '';
-
-  @Input()
-  public credentials: Credentials[] = [];
-
-  protected authenticationTypeLabel: string = 'Authentication type';
-  protected authIdLabel: string = 'Auth ID';
-  protected secretIdLabel: string = 'Secret ID';
-  protected expiryDateLabel: string = 'Expiry time (UTC)';
-  protected actionsLabel: string = 'Actions';
-  protected editLabel: string = 'Edit';
-  protected editDisabledLabel: string = 'Edit not possible due to authentication method';
-  protected deleteLabel: string = 'Delete';
-  protected authenticationValues: AuthenticationValue[] = [];
+  public authenticationValues: AuthenticationValue[] = [];
   private authIdKey: string = 'auth-id';
   private notBeforeKey: string = 'not-before';
   private notAfterKey: string = 'not-after';

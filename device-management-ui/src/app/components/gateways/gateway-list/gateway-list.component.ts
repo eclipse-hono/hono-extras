@@ -1,3 +1,18 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {Component, Input, QueryList, ViewChildren} from '@angular/core';
 import {SortableTableDirective, SortEvent} from "../../../services/sortable-table/sortable-table.directive";
 import {Tenant} from "../../../models/tenant";
@@ -20,23 +35,12 @@ export class GatewayListComponent {
   @ViewChildren(SortableTableDirective)
   public sortableHeaders: QueryList<SortableTableDirective> = new QueryList<SortableTableDirective>();
 
-  @Input()
-  public tenant: Tenant = new Tenant();
+  @Input() public tenant: Tenant = new Tenant();
 
-  protected gatewayListLabel: string = 'Gateway List';
-  protected newGatewayLabel: string = 'Create New Gateway';
-  protected gatewayIdLabel: string = 'Gateway ID';
-  protected gatewayCreatedLabel: string = 'Created (UTC)'
-  protected actionsLabel: string = 'Actions';
-  protected deleteLabel: string = 'Delete';
-  protected searchLabel: string = 'Search';
-  protected displayedItemsDropdownButton: string = 'Displayed Gateways';
-  protected noGatewayText: string = 'Tenant has no gateways yet to display.'
-  protected gatewayListCount: number = 0;
-  protected searchTerm!: string;
-  protected pageSize: number = 50;
-  protected pageSizeOptions: number[] = [50, 100, 200];
-  protected gateways: Device[] = [];
+  public gatewayListCount: number = 0;
+  public searchTerm!: string;
+  public pageSize: number = 50;
+  public gateways: Device[] = [];
   private pageOffset: number = 0;
 
   constructor(private router: Router,
@@ -50,31 +54,48 @@ export class GatewayListComponent {
     this.listGateways();
   }
 
-  protected changePage($event: number) {
+  public searchForGateway() {
+    if (!this.searchTerm) {
+      this.listGateways()
+    } else {
+      this.deviceService.getByExactId(this.tenant.id, this.searchTerm).subscribe({
+        next: (result) => {
+          result.id = this.searchTerm
+          this.gateways = [result];
+          this.gatewayListCount = 1;
+        },
+        error: (_err) => {
+          this.notificationService.error('There is no device or gateway with such an ID. The search only finds exact matches.')
+        }
+      })
+    }
+  }
+
+  public changePage($event: number) {
     this.pageOffset = ($event - 1) * this.pageSize;
     this.listGateways();
   }
 
-  protected setPageSize(size: number) {
+  public changePageSize(size: number) {
     this.pageSize = size;
     this.pageOffset = 0;
     this.listGateways();
   }
 
-  protected onSort({column, direction}: SortEvent) {
+  public onSort({column, direction}: SortEvent) {
     this.sortableHeaders = this.sortableTableService.resetHeaders(this.sortableHeaders, column);
     this.gateways = this.sortableTableService.sortItems<Device>(this.gateways, {column, direction});
   }
 
-  protected getCreationTime(status: any) {
+  public getCreationTime(status: any) {
     if (status && status['created']) {
       return status['created'];
     }
     return '-';
   }
 
-  protected selectGateway(gateway: Device): void {
-    this.router.navigate(['device-detail', gateway.id], {
+  public selectGateway(gateway: Device): void {
+    this.router.navigate(['device-detail/' + this.tenant.id, gateway.id], {
       state: {
         tenant: this.tenant,
         device: gateway,
@@ -83,7 +104,7 @@ export class GatewayListComponent {
     });
   }
 
-  protected createGateway(): void {
+  public createGateway(): void {
     const modalRef = this.modalService.open(CreateAndBindModalComponent, {size: 'lg'});
     modalRef.componentInstance.tenantId = this.tenant.id;
     modalRef.componentInstance.isGatewayFlag = true;
@@ -97,7 +118,7 @@ export class GatewayListComponent {
     });
   }
 
-  protected deleteGateway(gateway: Device): void {
+  public deleteGateway(gateway: Device): void {
     const modalRef = this.modalService.open(DeleteComponent, {ariaLabelledBy: 'modal-basic-title'});
     modalRef.componentInstance.modalTitle = 'Confirm Delete';
     modalRef.componentInstance.body = 'Do you really want to delete the gateway ' + gateway.id.toBold() + '?';
@@ -110,7 +131,7 @@ export class GatewayListComponent {
     });
   }
 
-  protected gatewayListIsEmpty(): boolean {
+  public gatewayListIsEmpty(): boolean {
     return !this.gateways || this.gateways.length === 0;
   }
 

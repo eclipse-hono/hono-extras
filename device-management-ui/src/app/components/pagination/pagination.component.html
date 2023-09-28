@@ -1,0 +1,25 @@
+<div class="pagination-wrapper d-flex justify-content-center">
+  <ngb-pagination
+    (pageChange)="changePage($event)"
+    [boundaryLinks]="true"
+    [collectionSize]="deviceListCount"
+    [maxSize]="5"
+    [pageSize]="pageSize"
+    class="pagination d-flex">
+  </ngb-pagination>
+  <div class="page-size mt-3">
+    <label for="rowsPerPage"
+           class="mr-sm-2 me-2"
+           translate>Entries per page</label>
+    <select [(ngModel)]="pageSize"
+            class="custom-select"
+            id="rowsPerPage"
+            (change)="onPageSizeChange($event)">
+      <option *ngFor="let itemsCount of pageSizeOptions"
+              [selected]="itemsCount === pageSize"
+              [value]="itemsCount"
+              [innerText]="itemsCount">
+      </option>
+    </select>
+    </div>
+</div>

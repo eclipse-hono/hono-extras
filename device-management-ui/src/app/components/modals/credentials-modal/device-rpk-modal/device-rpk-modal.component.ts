@@ -1,3 +1,18 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {Secret} from "../../../../models/credentials/secret";
 
@@ -8,31 +23,15 @@ import {Secret} from "../../../../models/credentials/secret";
 })
 export class DeviceRpkModalComponent implements OnInit {
 
-  @Output()
-  public rpkSecretChanged: EventEmitter<Secret> = new EventEmitter<Secret>();
+  @Input() public rpkSecret: Secret = new Secret();
+  @Input() public isNewCredentials: boolean = true;
 
-  @Input()
-  public rpkSecret: Secret = new Secret();
+  @Output() public rpkSecretChanged: EventEmitter<{secret: Secret|undefined, usePublicKey: boolean}> = new EventEmitter<{secret: Secret|undefined, usePublicKey: boolean}>();
 
-  @Input()
-  public isNewCredentials: boolean = true;
-
-  protected algorithmLabel: string = 'Algorithm';
-  protected publicKeyValueLabel: string = 'Public Key value';
-  protected certValueLabel: string = 'X509 Certificate value';
-  protected notBeforeLabel: string = 'Not before';
-  protected notAfterLabel: string = 'Not after';
-  protected publicKeyLabel: string = 'Public Key';
-  protected certificateLabel: string = 'X509 Certificate';
-  protected certTooltip: string = 'Please be aware that the X509 Certificate will be converted into a Public Key after it is saved. So you won´t longer see information about the certificate, but the public key instead.'
-
-  protected usePublicKey: boolean = true;
-
-  protected notBefore: boolean = false;
-
-  protected notAfter: boolean = false;
-
-  protected algorithmTypes: string[] = ['EC', 'RSA'];
+  public usePublicKey: boolean = true;
+  public notBefore: boolean = false;
+  public notAfter: boolean = false;
+  public algorithmTypes: string[] = ['EC', 'RSA'];
 
   public ngOnInit() {
     if (!this.rpkSecret) {
@@ -46,34 +45,39 @@ export class DeviceRpkModalComponent implements OnInit {
     }
   }
 
-  protected setUsePublicKey(usePublicKey: boolean) {
+  public setUsePublicKey(usePublicKey: boolean) {
     this.usePublicKey = usePublicKey;
-    this.rpkSecret = new Secret();
-    this.rpkSecretChanged.emit(undefined);
+    this.rpkSecretChanged.emit({secret: this.rpkSecret, usePublicKey: usePublicKey});
   }
 
-  protected onRpkSecretChanged() {
+  public onRpkSecretChanged() {
     if (this.isInvalid()) {
-      this.rpkSecretChanged.emit(undefined);
+      this.rpkSecretChanged.emit({secret: undefined, usePublicKey: this.usePublicKey});
     } else {
-      if (this.usePublicKey) {
-        delete this.rpkSecret.cert;
-      } else {
-        delete this.rpkSecret.algorithm;
-        delete this.rpkSecret.key;
-      }
-      this.rpkSecretChanged.emit(this.rpkSecret);
+      this.rpkSecretChanged.emit({secret: this.rpkSecret, usePublicKey: this.usePublicKey});
     }
   }
 
-  protected setNotBeforeDateTime($event: any) {
+  public setNotBeforeDateTime($event: any) {
     this.rpkSecret["not-before"] = this.setDateTime($event);
     this.onRpkSecretChanged();
   }
 
-  protected setNotAfterDateTime($event: any) {
+  public setNotAfterDateTime($event: any) {
     this.rpkSecret["not-after"] = this.setDateTime($event);
     this.onRpkSecretChanged();
+  }
+
+  public onChangeNotBefore() {
+    if (!this.notBefore) {
+      delete this.rpkSecret["not-before"];
+    }
+  }
+
+  public onChangeNotAfter() {
+    if (!this.notAfter) {
+      delete this.rpkSecret["not-after"];
+    }
   }
 
   private setDateTime($event: any): string | undefined {

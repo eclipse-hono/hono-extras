@@ -1,3 +1,18 @@
+/*
+ * *******************************************************************************
+ *  * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ *  *
+ *  * See the NOTICE file(s) distributed with this work for additional
+ *  * information regarding copyright ownership.
+ *  *
+ *  * This program and the accompanying materials are made available under the
+ *  * terms of the Eclipse Public License 2.0 which is available at
+ *  * http://www.eclipse.org/legal/epl-2.0
+ *  *
+ *  * SPDX-License-Identifier: EPL-2.0
+ *  *******************************************************************************
+ */
+
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {NgbCalendar, NgbDateStruct} from "@ng-bootstrap/ng-bootstrap";
 
@@ -8,15 +23,13 @@ import {NgbCalendar, NgbDateStruct} from "@ng-bootstrap/ng-bootstrap";
 })
 export class DateTimePickerComponent implements OnInit {
 
-  @Input()
-  public secretDate: string | undefined = '';
+  @Input() public secretDate: string | undefined = '';
 
-  @Output()
-  public dateTime: EventEmitter<any> = new EventEmitter<any>();
-  protected date: NgbDateStruct | any;
-  protected time: any = {hour: 0, minute: 0, second: 0};
+  @Output() public dateTime: EventEmitter<any> = new EventEmitter<any>();
 
-  protected maxDate: NgbDateStruct = {year: new Date().getUTCFullYear() + 100, month: 12, day: 31};
+  public date: NgbDateStruct | any;
+  public time: any = {hour: 0, minute: 0, second: 0};
+  public maxDate: NgbDateStruct = {year: new Date().getUTCFullYear() + 100, month: 12, day: 31};
 
   constructor(private calendar: NgbCalendar) {
   }
@@ -47,16 +60,16 @@ export class DateTimePickerComponent implements OnInit {
     });
   }
 
-  protected showTimezoneOffsetMessage(): boolean {
+  public showTimezoneOffsetMessage(): boolean {
     return this.timezoneOffset !== 0;
   }
 
-  protected getTimezoneOffsetMessage() {
+  public getTimezoneOffsetMessage() {
     return 'Your timezone differ to UTC time, please be aware that the UTC time (%h hour) will be taken.'
       .replace('%h', String(this.timezoneOffset));
   }
 
-  protected getTimeString(time: any): string {
+  public getTimeString(time: any): string {
     const paddedHour = String(time.hour).padStart(2, '0');
     const paddedMinute = String(time.minute).padStart(2, '0');
     const paddedSecond = String(time.second).padStart(2, '0');
