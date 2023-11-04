@@ -1,0 +1,32 @@
+.login-form {
+  border-radius: 2px;
+  box-shadow: 0 3px 20px rgba(black, 0.25);
+  background-color: white;
+  padding: 2em 2em 2em;
+}
+
+.login {
+  background: var(--theme);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+
+  .page-header {
+    display: flex;
+    justify-content: center;
+    border-bottom-color: var(--dyn-primary);
+    position: relative;
+
+    .logo {
+      height: 100px;
+      width: 100%;
+    }
+
+  }
+
+}

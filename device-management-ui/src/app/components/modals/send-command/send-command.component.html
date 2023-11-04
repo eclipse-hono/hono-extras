@@ -1,0 +1,63 @@
+<div class="modal-component">
+  <app-modal-head
+    (closeModal)="onClose()"
+    [modalTitle]="'Send command'">
+  </app-modal-head>
+
+  <div class="modal-body">
+    <p class="mb-0">
+      <span>Enter a once-off directive in the field below. Devices must be connected
+        to MQTT and subscribed to the commands topic at the time that your directive is sent.
+      </span>
+    </p>
+    <div class="form-group">
+      <label>Command response</label>
+      <div class="form-check">
+        <input #requestResponseCommandChecked [(ngModel)]="requestResponseCommandEnabled" class="form-check-input" id="requestResponseCommandEnabled" name="requestResponseCommandEnabled" type="checkbox" (change)="onChangeRequestResponseCommandEnabled(requestResponseCommandChecked.checked)">
+        <label class="form-check-label" for="requestResponseCommandEnabled"></label>
+        <span>Enable request/response command</span>
+      </div>
+      <div class="form-check">
+        <input #correlationIdChecked [(ngModel)]="correlationIdEnabled" [disabled]="!requestResponseCommandEnabled" class="form-check-input" id="correlationIdEnabled" name="correlationIdEnabled" type="checkbox" (change)="onChangeCorrelationIdEnabled(correlationIdChecked.checked)">
+        <label class="form-check-label" for="correlationIdEnabled"></label>
+        <span>Enable Correlation ID</span>
+      </div>
+      <div class="form-check">
+        <span class="me-2">Correlation ID:</span>
+        <input [(ngModel)]="correlationId" [disabled]="!correlationIdEnabled || !requestResponseCommandEnabled" class="input" id="correlationId" name="correlationId" type="number">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Format</label>
+      <div class="form-check">
+        <input class="form-check-input" id="radioButtonText" name="flexRadioDefault" type="radio" value="text" (change)="onChange($event)">
+        <label class="form-check-label" for="radioButtonText"></label>
+        <span>Text</span>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" id="radioButtonBase64" name="flexRadioDefault" type="radio" value="base64" (change)="onChange($event)">
+        <label class="form-check-label" for="radioButtonBase64"></label>
+        <span>Base 64</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="binaryData">Command Binary Data</label>
+      <span class="ml-1 label-required">*</span>
+      <textarea [(ngModel)]="command.binaryData" class="form-control" id="binaryData" rows="4"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="subfolder">Command Subfolder</label>
+      <input [(ngModel)]="command.subfolder" class="form-control" id="subfolder" type="text">
+    </div>
+  </div>
+
+  <div class="modal-buttons">
+    <app-modal-footer
+      (cancelButtonPressed)="onClose()"
+      (confirmButtonPressed)="onConfirm()"
+      [confirmButtonLabel]="'Send'">
+    </app-modal-footer>
+  </div>
+</div>

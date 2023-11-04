@@ -1,0 +1,106 @@
+body {
+  height: 100vh;
+  background-color: var(--backgroundlight)!important;
+}
+.content {
+  max-height: 100%;
+  padding: 2em;
+
+  .page-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 1.5em 0;
+    min-height: 38px;
+    padding: 0;
+    position: relative;
+
+    .page-header-counts {
+      border-left: 1px solid gray;
+      display: flex;
+      align-items: center;
+      margin-left: 10%;
+      padding-left: 10%;
+
+      .count {
+        display: flex;
+        align-items: center;
+        margin-right: 10em;
+
+        .badge {
+          margin-right: 0.5em;
+          color: white;
+          width: auto;
+          border: 1px solid white;
+        }
+      }
+    }
+
+    .page-header-title {
+      .h3 {
+        max-width: 45vw;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        margin-bottom: 0;
+      }
+    }
+
+    .page-functions {
+      display: flex;
+
+      .function-element {
+        display: flex;
+        position: relative;
+
+        .display-items {
+          padding-left: 5px;
+        }
+      }
+    }
+  }
+
+  a {
+    color: #333;
+    &:hover {
+      text-decoration: none;
+      color: var(--theme);
+    }
+  }
+
+  small {
+    color: #a1a1a1;
+    font-size: 0.8em;
+  }
+
+  .input-group .ng-select {
+    flex: 1 1 auto;
+  }
+
+}
+
+.toast  {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  width: auto;
+
+  .toast-body {
+    word-break: break-word;
+    text-align: center;
+  }
+}
+
+.table thead {
+  position: sticky;
+  top: 0;
+  background-color: white;
+}
+
+.timezoneOffset {
+    margin-top: 5px;
+}

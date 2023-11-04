@@ -1,0 +1,112 @@
+<div>
+  <div class="page-header">
+    <div class="page-header-title d-flex align-items-center">
+      <span class="h3">Device List</span>
+      <div>
+        <div class="page-header-counts">
+          <div class="count">
+            <span [innerHTML]="deviceListCount" class="badge bg-primary"></span>
+            <span class="count-label">Devices</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-functions">
+      <div *ngIf="!deviceListIsEmpty()" class="function-element me-2">
+        <div class="search col-auto">
+          <input (search)="searchForDevice()" [(ngModel)]="searchTerm" [placeholder]="searchLabel" class="search form-control"
+                 id="search" type="search">
+        </div>
+      </div>
+      <div class="function-element" *ngIf="!boundDevicesToGateway">
+        <button (click)="createDevice()" class="btn btn-primary" type="button">
+          <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+          <span>Create New Device</span>
+        </button>
+      </div>
+      <div class="binding" *ngIf="boundDevicesToGateway && !deviceListIsEmpty()">
+        <button  [ngbTooltip]="'Bound Device'" class="btn btn-primary" type="button" (click)="bindNewDevicesToGateway()">
+          <span>Bind Device(s)</span>
+        </button>
+        <button  [ngbTooltip]="'Unbind Device(s)'" class="btn btn-primary" type="button" (click)="unbindDevicesFromGateway()" [disabled]="!devicesSelectedCheck()">
+          <span>Unbind Device(s)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="deviceListIsEmpty()">
+    <div class="alert alert-dark text-center">
+      <span>Tenant has no devices yet. Please create a new device.</span>
+    </div>
+  </div>
+
+  <div *ngIf="!deviceListIsEmpty() && !boundDevicesToGateway" class="card card-table-view">
+    <table class="table">
+      <thead>
+      <tr>
+        <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="id">
+          <span [innerHTML]="deviceIdLabel"></span>
+        </th>
+        <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="status.created">
+          <span [innerHTML]="deviceCreatedLabel"></span>
+        </th>
+        <th class="p-2 ml-auto last-column">
+          <span>Actions</span>
+        </th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let device of devices"
+          class="list-item">
+        <td (click)="selectDevice(device)" class="selectElement">
+          <span [innerHTML]="device.id" class="p-2"></span>
+        </td>
+        <td class="p-2">
+          <span [innerHTML]="getCreationTime(device.status) | date:'medium': 'UTC'"></span>
+        </td>
+        <td class="p-2 col-sm-1 ml-auto last-column">
+          <button (click)="deleteDevice(device)" [ngbTooltip]="'Delete'" class="btn btn-sm btn-secondary"
+                  type="button">
+            <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+          </button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!deviceListIsEmpty() && boundDevicesToGateway" class="card card-table-view">
+    <table class="table">
+      <thead>
+      <tr>
+        <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="id">
+          <span [innerHTML]="deviceIdLabel"></span>
+        </th>
+        <th (sort)="onSort($event)" class="p-2 sortable" scope="col" sortable="status.created">
+          <span [innerHTML]="deviceCreatedLabel"></span>
+        </th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let device of (devices | searchFilter:searchTerm)"
+          class="list-item">
+        <td  class="selectElement">
+          <input (click)="markDevice(device)" type="checkbox" [(ngModel)]="device.selected" class="checkmark">
+          <span [innerHTML]="device.id" class="p-2"></span>
+        </td>
+        <td class="p-2">
+          <span [innerHTML]="getCreationTime(device.status) | date:'medium': 'UTC'"></span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<app-pagination
+  (pageNumberChange)="changePage($event)"
+  (pageSizeChange)="changePageSize($event)"
+  [deviceListCount]="deviceListCount"
+></app-pagination>
+

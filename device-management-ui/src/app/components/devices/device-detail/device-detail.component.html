@@ -1,0 +1,146 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a routerLink="/tenant-list">
+        <img alt="hono-logo" class="logo" src="../../../../assets/images/logo_300px276px.png">
+      </a>
+    </li>
+    <li class="breadcrumb-item">
+      <a (click)="navigateBack()" class="link">
+        <span [innerHTML]="this.tenant.id"></span>
+      </a>
+    </li>
+    <li class="breadcrumb-item"><span [innerHTML]="this.device.id"></span></li>
+  </ol>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-title d-flex align-items-center">
+    <span [innerHTML]="deviceDetail" [title]="deviceDetail" class="h3"></span>
+  </div>
+
+  <div class="page-functions small-buttons col-auto ml-auto">
+    <div class="function-element">
+      <button (click)="updateConfig()" class="btn btn-sm btn-primary" type="button">
+        <fa-icon [icon]="['fas', 'gears']"></fa-icon>
+        <span>Update Config</span>
+      </button>
+    </div>
+    <div class="function-element">
+      <button (click)="sendCommand()" class="btn btn-sm btn-primary" type="button">
+        <fa-icon [icon]="['fas', 'share']"></fa-icon>
+        <span>Send Command</span>
+      </button>
+    </div>
+    <div class="function-element">
+      <button (click)="addAuthentication()" class="btn btn-sm btn-primary"
+              type="button">
+          <fa-icon [icon]="['fas', 'key']"></fa-icon>
+          <span>Add Credentials</span>
+      </button>
+    </div>
+    <div *ngIf="!isBoundDevice" class="function-element">
+      <button (click)="bindNewDevicesToGateway()" class="btn btn-sm btn-primary"
+              type="button">
+        <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+        <span>Bind Device</span>
+      </button>
+    </div>
+    <div class="function-element">
+      <button (click)="deleteDevice()" class="btn btn-sm btn-secondary" type="button">
+        <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+        <span>Delete</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<hr>
+
+<div class="details">
+  <div>
+    <div class="d-inline-flex p-2 detail-label">
+      <span [innerHTML]="idLabel"></span>
+    </div>
+    <div class="d-inline-flex p-2 detail-value">
+      <span [innerHTML]="device.id"></span>
+    </div>
+  </div>
+
+  <div>
+    <div class="d-inline-flex p-2 detail-label">
+      <span>Tenant ID:</span>
+    </div>
+    <div class="d-inline-flex p-2 detail-value">
+      <span [innerHTML]="tenant.id"></span>
+    </div>
+  </div>
+
+  <div *ngIf="device.via">
+    <div class="d-inline-flex p-2 detail-label">
+      <span>Via:</span>
+    </div>
+    <div class="d-inline-flex p-2 detail-value">
+      <span [innerHTML]="device.via"></span>
+    </div>
+  </div>
+
+  <div>
+    <div class="d-inline-flex p-2 detail-label">
+      <span>Created (UTC):</span>
+    </div>
+    <div class="d-inline-flex p-2 detail-value">
+      <span [innerHTML]="getCreationTime(device.status)"></span>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<div class="detail-tabs">
+  <nav #nav="ngbNav" class="nav-tabs" ngbNav>
+    <ng-container ngbNavItem>
+      <a ngbNavLink>Configuration</a>
+      <ng-template ngbNavContent>
+        <app-list-config
+          [configs]="configs">
+        </app-list-config>
+      </ng-template>
+    </ng-container>
+    <ng-container ngbNavItem>
+      <a ngbNavLink>State</a>
+      <ng-template ngbNavContent>
+        <app-list-state
+          [deviceId]="device.id"
+          [tenantId]="tenant.id">
+        </app-list-state>
+      </ng-template>
+    </ng-container>
+    <ng-container ngbNavItem>
+      <a ngbNavLink>Authentication</a>
+      <ng-template ngbNavContent>
+        <app-list-authentication
+          [deviceId]="device.id"
+          [tenantId]="tenant.id"
+          [credentials]="credentials">
+        </app-list-authentication>
+      </ng-template>
+    </ng-container>
+    <ng-container ngbNavItem *ngIf="isGateway">
+      <a [innerHTML]="'Bound Devices'" ngbNavLink (click)="setBoundDevices()"></a>
+      <ng-template ngbNavContent>
+        <app-device-list
+          [deviceListCount]="boundDeviceListCount"
+          [tenant]="tenant"
+          [devices]="boundDevicesList"
+          [boundDevicesToGateway]="true"
+          [deviceId]="device.id"
+          [isGateway]="isGateway">
+        </app-device-list>
+      </ng-template>
+    </ng-container>
+  </nav>
+</div>
+
+<div [ngbNavOutlet]="nav" class="mt-2"></div>

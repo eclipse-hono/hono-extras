@@ -1,0 +1,104 @@
+<div class="form-group">
+  <div class="btn-group btn-toggle">
+    <button (click)="setUsePublicKey(true)" [ngClass]="usePublicKey ? 'btn-primary active' : 'btn-primary inactive'"
+            class="btn">
+      <span class="caret"></span>
+      <span>Public Key</span>
+    </button>
+    <button (click)="setUsePublicKey(false)" [ngClass]="usePublicKey ? 'btn-primary inactive' : 'btn-primary active'"
+            class="btn">
+      <span class="caret"></span>
+      <span>X509 Certificate</span>
+    </button>
+  </div>
+</div>
+<div *ngIf="usePublicKey">
+  <div class="form-group">
+    <label>Algorithm</label>
+    <span class="ml-1 label-required">*</span>
+    <ng-select
+      (change)="onRpkSecretChanged()"
+      [(ngModel)]="rpkSecret.algorithm"
+      [items]="algorithmTypes"
+      id="algorithm">
+    </ng-select>
+  </div>
+  <div class="form-group">
+    <label for="publicKeyValue">Public Key value</label>
+    <span class="ml-1 label-required">*</span>
+    <textarea
+      (change)="onRpkSecretChanged()"
+      (input)="onRpkSecretChanged()"
+      [(ngModel)]="rpkSecret.key"
+      class="form-control"
+      id="publicKeyValue"
+      rows="4">
+    </textarea>
+  </div>
+  <div>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="form-check form-switch">
+          <input
+            [(ngModel)]="notBefore"
+            [checked]="notBefore === true"
+            (change)="onChangeNotBefore()"
+            class="form-check-input"
+            id="notBeforeSwitch" type="checkbox">
+          <label class="form-check-label" for="notBeforeSwitch">Not before</label>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="form-check form-switch">
+          <input
+            [(ngModel)]="notAfter"
+            [checked]="notAfter === true"
+            (change)="onChangeNotAfter()"
+            class="form-check-input"
+            id="notAfterSwitch" type="checkbox">
+          <label class="form-check-label" for="notAfterSwitch">Not after</label>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+
+        <app-date-time-picker id="notBeforePicker"
+          [secretDate]="rpkSecret['not-before']"
+          (dateTime)="setNotBeforeDateTime($event)"
+          *ngIf="notBefore">
+        </app-date-time-picker>
+
+      </div>
+      <div class="col-sm-6">
+        <app-date-time-picker id="notAfterPicker"
+          [secretDate]="rpkSecret['not-after']"
+          (dateTime)="setNotAfterDateTime($event)"
+          *ngIf="notAfter">
+        </app-date-time-picker>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+<div *ngIf="!usePublicKey">
+  <div class="form-group">
+    <label for="certValue">X509 Certificate value</label>
+    <span class="ml-1 label-required">*</span>
+    <textarea
+      (change)="onRpkSecretChanged()"
+      (input)="onRpkSecretChanged()"
+      [(ngModel)]="rpkSecret.cert"
+      class="form-control"
+      id="certValue"
+      rows="4">
+    </textarea>
+  </div>
+
+  <div class="alert alert-dark text-center">
+    <span>Please be aware that the X509 Certificate will be converted into a Public Key after it is saved.
+      So you won´t longer see information about the certificate, but the public key instead.</span>
+  </div>
+
+</div>

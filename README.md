@@ -19,3 +19,12 @@ registry type to another.
 ## Device communication API
 
 See the [device-communication](device-communication) directory for api specifications and implementation.
+
+## Device Management User Interface
+
+See the [device-management-ui](device-management-ui) directory for an example User Interface containing a list
+of tenants with the option to create, update and delete a tenant. Each tenant contains a list of its devices with the
+option to create and delete a device. Furthermore, the credentials of a device can be listed, created and deleted.
+Currently only [Password Credentials](https://www.eclipse.org/hono/docs/concepts/device-identity/#usernamepassword-based-authentication)
+and [RPK Credentials](https://www.eclipse.org/hono/docs/concepts/device-identity/#json-web-token-based-authentication)
+are supported. This UI also contains the functionality to send a configuration or command through the [Device Communication API](device-communication).

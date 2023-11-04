@@ -1,0 +1,55 @@
+@media (max-width: 480px) {
+    .page {
+        font-size: small;
+        .content {
+            padding: 1em;
+            .breadcrumb {
+                margin-bottom: 0.5rem;
+            }
+            .page-header {
+                display: block;
+                .page-header-title {
+                    margin-bottom: 1em;
+                    .page-header-counts {
+                        .count {
+                            .count-label {
+                                display: none;
+                            }
+                        }
+                    }
+                    .h3 {
+                        max-width: unset;
+                    }
+                }
+                .page-functions {
+                    display: inline-block;
+                    width: 100%;
+                    .function-element {
+                        display: inline-block;
+                        width: 100%;
+                        &:not(:first-of-type) {
+                            width: 100%;
+                            margin: 5px 0 0 0;
+                        }
+                        .display-items {
+                            padding-left: 0;
+                        }
+                        .btn {
+                            width: 100%;
+                        }
+                    }
+                    &.small-buttons {
+                        .function-element {
+                            display: inline-flex;
+                            width: auto;
+                        }
+                    }
+                }
+            }
+            .tab-content {
+                max-width: 100vw;
+                overflow: scroll;
+            }
+        }
+    }
+}
